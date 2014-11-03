@@ -33,7 +33,7 @@ glm::vec3 Mesh::LightPosition() const {
   glm::vec3 max = bbox.getMax();
   glm::vec3 tmp;
   bbox.getCenter(tmp);
-  tmp += glm::vec3(0,1.5*(max.y-min.y),0);
+  tmp += glm::vec3(0,10.0*(max.y-min.y),0);
   tmp += glm::vec3(cos(args->timer) * (max.x-min.x), 0, 0);
   tmp += glm::vec3(0,0,sin(args->timer) * (max.z-min.z));
   return tmp;

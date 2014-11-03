@@ -76,8 +76,8 @@ public:
     input_file = "";
     path = "";
     shader_filename = "hw4_shader";
-    width = 300;
-    height = 300;
+    width = 800;
+    height = 600;
     mirror = false;
     shadow = false;
     geometry = true;

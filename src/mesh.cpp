@@ -136,11 +136,14 @@ void Mesh::Load() {
   int vert_count = 0;
   int vert_index = 1;
   
+  // get data of each line
   while (fgets(line, 200, objfile)) {   
+
+    // Make into string token
     int token_count = sscanf (line, "%s\n",token);
     if (token_count == -1) continue;
     a = b = c = d = e = -1;
-    if (!strcmp(token,"usemtl") ||
+    if (!strcmp(token,"usemtl") || !strcmp(token,"mtlib") ||
 	!strcmp(token,"g")) {
       vert_index = 1; 
       index++;
