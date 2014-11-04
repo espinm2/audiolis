@@ -33,9 +33,10 @@ glm::vec3 Mesh::LightPosition() const {
   glm::vec3 max = bbox.getMax();
   glm::vec3 tmp;
   bbox.getCenter(tmp);
-  tmp += glm::vec3(0,10.0*(max.y-min.y),0);
+  tmp += glm::vec3(0,5.0*(max.y-min.y),0);
   tmp += glm::vec3(cos(args->timer) * (max.x-min.x), 0, 0);
   tmp += glm::vec3(0,0,sin(args->timer) * (max.z-min.z));
+  // tmp = GLCanvas::camera->camera_position;
   return tmp;
 }
 
@@ -79,17 +80,37 @@ void Mesh::SetupMesh() {
     glm::vec3 na = ComputeNormal(a,b,c);
     glm::vec3 nb = na;
     glm::vec3 nc = na;
+
+
+    if( -1 <= na.y && na.y <= -1 + 0.01){
+      continue;
+    }
+
+
     if (args->gouraud_normals) {
       na = (*t)[0]->getGouraudNormal();
       nb = (*t)[1]->getGouraudNormal();
       nc = (*t)[2]->getGouraudNormal();
     }
+
+    glm::vec4 color;
+    color = glm::vec4(mesh_color.r * 0.1, mesh_color.g * 0.1, mesh_color.b*0.1,1);
+
+    TriVBOHelper(mesh_tri_verts,mesh_tri_indices,
+                 a,b,c,
+                 na,nb,nc,
+                 color,color,color
+                 );
+
+    /*
     int start = mesh_tri_verts.size();
     mesh_tri_verts.push_back(VBOPosNormalColor(a,na,mesh_color));
     mesh_tri_verts.push_back(VBOPosNormalColor(b,nb,mesh_color));
     mesh_tri_verts.push_back(VBOPosNormalColor(c,nc,mesh_color));
     mesh_tri_indices.push_back(VBOIndexedTri(start,start+1,start+2));
+    */
   }
+
   glBindBuffer(GL_ARRAY_BUFFER,mesh_tri_verts_VBO); 
   glBufferData(GL_ARRAY_BUFFER,
 	       sizeof(VBOPosNormalColor) * mesh_tri_verts.size(), 
@@ -99,6 +120,8 @@ void Mesh::SetupMesh() {
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
 	       sizeof(VBOIndexedTri) * mesh_tri_indices.size(),
 	       &mesh_tri_indices[0], GL_STATIC_DRAW);
+
+
 }
 
 
@@ -128,13 +151,39 @@ void Mesh::DrawMesh() {
   HandleGLError("enter draw mesh");
   glBindBuffer(GL_ARRAY_BUFFER,mesh_tri_verts_VBO); 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,mesh_tri_indices_VBO); 
+
+  // This is the posititons
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,sizeof(VBOPosNormalColor),(void*)0);
+  glVertexAttribPointer(0,
+                        3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(VBOPosNormalColor),
+                        (void*)0
+                        );
+
+  // This is the normal
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,sizeof(VBOPosNormalColor),(void*)sizeof(glm::vec3) );
+  glVertexAttribPointer(1,
+                        3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(VBOPosNormalColor),
+                        (void*)sizeof(glm::vec3)
+                        );
+
+  // Is this the color?
   glEnableVertexAttribArray(2);
-  glVertexAttribPointer(2, 3, GL_FLOAT,GL_FALSE,sizeof(VBOPosNormalColor), (void*)(sizeof(glm::vec3)*2));
+  glVertexAttribPointer(2,
+                        3,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(VBOPosNormalColor),
+                        (void*)(sizeof(glm::vec3)*2)
+                        );
   glDrawElements(GL_TRIANGLES, mesh_tri_indices.size()*3,GL_UNSIGNED_INT, 0);
+
+
   glDisableVertexAttribArray(0);
   glDisableVertexAttribArray(1);
   glDisableVertexAttribArray(2);
@@ -152,13 +201,13 @@ void Mesh::setupVBOs() {
 
   //edit
   extend_edges.clear();
-  
 
   // setup the new geometry
   glm::vec3 light_position = LightPosition();
   SetupLight(light_position);
   SetupMesh();
   bbox.setupVBOs();
+
 }
 
 void Mesh::drawVBOs() {
@@ -200,6 +249,86 @@ void Mesh::drawVBOs() {
   }
 
   HandleGLError(); 
+
 }
 
 // =================================================================
+void Mesh::TriVBOHelper(std::vector<VBOPosNormalColor> &mesh_tri_verts,
+                     std::vector<VBOIndexedTri> &mesh_tri_indices,
+                     const glm::vec3 &pos_a,
+                     const glm::vec3 &pos_b,
+                     const glm::vec3 &pos_c,
+                     const glm::vec3 &normal_a,
+                     const glm::vec3 &normal_b,
+                     const glm::vec3 &normal_c,
+                     const glm::vec4 &color_ab,
+                     const glm::vec4 &color_bc,
+                     const glm::vec4 &color_ca)
+{
+    // To create a wireframe rendering...
+  // Each mesh triangle is actually rendered as 3 small triangles
+  //           b
+  //          /|\
+  //         / | \
+  //        /  |  \
+  //       /   |   \
+  //      /    |    \
+  //     /    .'.    \
+  //    /  .'     '.  \
+  //   /.'           '.\
+  //  a-----------------c
+  //
+
+  // Final all the stuff for the centriod
+
+
+  int start;
+
+  if (args->wireframe) {
+
+    glm::vec4 center_color(1,1,1,1);
+    glm::vec3 centroid = 1.0f / 3.0f * (pos_a + pos_b + pos_c);
+    glm::vec3 normal = normal_a + normal_b + normal_c;
+    glm::normalize(normal);
+
+    // WIREFRAME
+
+    // make the 3 small triangles
+    start = mesh_tri_verts.size();
+    mesh_tri_verts.push_back(VBOPosNormalColor(pos_a,normal_a,color_ab));
+    mesh_tri_verts.push_back(VBOPosNormalColor(pos_b,normal_b,color_ab));
+    mesh_tri_verts.push_back(VBOPosNormalColor(centroid,normal,center_color));
+    mesh_tri_indices.push_back(VBOIndexedTri(start,start+1,start+2));
+
+
+    // make the 3 small triangles
+    start = mesh_tri_verts.size();
+    mesh_tri_verts.push_back(VBOPosNormalColor(pos_b,normal_b,color_bc));
+    mesh_tri_verts.push_back(VBOPosNormalColor(pos_c,normal_c,color_bc));
+    mesh_tri_verts.push_back(VBOPosNormalColor(centroid,normal,center_color));
+    mesh_tri_indices.push_back(VBOIndexedTri(start,start+1,start+2));
+
+
+
+    // make the 3 small triangles
+    start = mesh_tri_verts.size();
+    mesh_tri_verts.push_back(VBOPosNormalColor(pos_c,normal_c,color_ca));
+    mesh_tri_verts.push_back(VBOPosNormalColor(pos_a,normal_a,color_ca));
+    mesh_tri_verts.push_back(VBOPosNormalColor(centroid,normal,center_color));
+    mesh_tri_indices.push_back(VBOIndexedTri(start,start+1,start+2));
+
+
+  } else {
+    // NON WIREFRAME
+
+    start = mesh_tri_verts.size();
+    mesh_tri_verts.push_back(VBOPosNormalColor(pos_a,normal_a,mesh_color));
+    mesh_tri_verts.push_back(VBOPosNormalColor(pos_b,normal_b,mesh_color));
+    mesh_tri_verts.push_back(VBOPosNormalColor(pos_c,normal_c,mesh_color));
+
+    mesh_tri_indices.push_back(VBOIndexedTri(start,start+1,start+2));
+
+  }
+
+
+}

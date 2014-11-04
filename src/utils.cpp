@@ -12,6 +12,7 @@ void addEdgeGeometry(std::vector<VBOPosNormalColor> &verts,
   
   // find perpendicular axes
   float length = glm::length(a-b);
+  
   // std::cout << "length " << length << " vs " << std::min(a_th,b_th) << std::endl;
   if (length < 0.01*std::max(0.0000001f,std::min(a_th,b_th))) return;
   glm::vec3 dir = glm::normalize(b-a);

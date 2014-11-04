@@ -110,8 +110,6 @@ void GLCanvas::initialize(ArgParser *_args) {
   programID = LoadShaders(  args->path+"/"+args->shader_filename+".vs",
                             args->path+"/"+args->shader_filename+".fs");
 
-  GLCanvas::initializeVBOs();
-  GLCanvas::setupVBOs();
 
   // ===========================
   // initial placement of camera 
@@ -122,6 +120,10 @@ void GLCanvas::initialize(ArgParser *_args) {
   float angle = 20.0;
   camera = new PerspectiveCamera(camera_position, point_of_interest, up, angle);
   camera->glPlaceCamera(); 
+
+
+  GLCanvas::initializeVBOs();
+  GLCanvas::setupVBOs();
 
   HandleGLError("finished glcanvas initialize");
 }
@@ -197,9 +199,11 @@ void GLCanvas::animate(){
 
 
 void GLCanvas::initializeVBOs(){
+
   HandleGLError("enter initilizeVBOs()");
   glGenVertexArrays(1, &render_VAO);
   glBindVertexArray(render_VAO);
+
   GLCanvas::MatrixID = glGetUniformLocation(GLCanvas::programID, "MVP");
   GLCanvas::LightID = glGetUniformLocation(GLCanvas::programID, "LightPosition_worldspace");
   GLCanvas::ViewMatrixID = glGetUniformLocation(GLCanvas::programID, "V");
@@ -334,26 +338,6 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       args->geometry = !args->geometry;
       mesh->setupVBOs();
       break;
-    case 'm': case 'M':
-      args->mirror = !args->mirror;
-      mesh->setupVBOs();
-      break;
-    case 'r': case 'R':
-      args->reflected_geometry = !args->reflected_geometry;
-      mesh->setupVBOs();
-      break;
-    case 's': case 'S':
-      args->shadow = !args->shadow;
-      mesh->setupVBOs();
-      break;
-    case 'e': case 'E':
-      args->silhouette_edges = !args->silhouette_edges;
-      mesh->setupVBOs();
-      break;
-    case 'p': case 'P':
-      args->shadow_polygons = !args->shadow_polygons;
-      mesh->setupVBOs();
-      break;
     case 'a': case 'A':
       args->animate = !args->animate;
       break;
@@ -363,6 +347,10 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       break;
     case 'n': case 'N':
       args->gouraud_normals = !args->gouraud_normals;
+      mesh->setupVBOs();
+      break;
+    case 'w': case 'W':
+      args->wireframe = !args->wireframe;
       mesh->setupVBOs();
       break;
     case 'x': case 'X':

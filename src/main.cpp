@@ -30,11 +30,14 @@ int main(int argc, char *argv[]) {
   // Creates background color behind all objects (SKY)
   glClearColor(0.8,0.9,1.0,0.0);
 
+  glEnable(GL_MULTISAMPLE);
+
   // If enabled do depth comparisons and update the depth buffer
   glEnable(GL_DEPTH_TEST);
 
   // Specify the value used for depth buffer comparisons
   glDepthFunc(GL_LESS); 
+  glDisable(GL_CULL_FACE);
 
   // While we don't close this window
   while (!glfwWindowShouldClose(GLCanvas::window))  {

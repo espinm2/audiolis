@@ -78,17 +78,13 @@ public:
     shader_filename = "hw4_shader";
     width = 800;
     height = 600;
-    mirror = false;
-    shadow = false;
     geometry = true;
-    reflected_geometry = false;
     bounding_box = false;
-    silhouette_edges = false;
-    shadow_polygons = false;
     gouraud_normals = false;
     whichshader = 0;
     timer = 0.0;
     animate = false;
+    wireframe = false;
   }
 
   // ==============
@@ -100,17 +96,13 @@ public:
   std::string shader_filename;
   int width;
   int height;
-  bool shadow;
-  bool mirror;
   bool geometry;
-  bool reflected_geometry;
   bool bounding_box;
-  bool silhouette_edges;
-  bool shadow_polygons;
   bool gouraud_normals;
   int whichshader;
   float timer;
   bool animate;
+  bool wireframe;
 };
 
 

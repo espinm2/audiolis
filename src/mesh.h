@@ -60,6 +60,23 @@ public:
   const BoundingBox& getBoundingBox() const { return bbox; }
   glm::vec3 LightPosition() const;
 
+
+
+  // ===============
+  // RENDERING
+   void TriVBOHelper( std::vector<VBOPosNormalColor> &mesh_tri_verts,
+                     std::vector<VBOIndexedTri> &mesh_tri_indices,
+                     const glm::vec3 &pos_a,
+                     const glm::vec3 &pos_b,
+                     const glm::vec3 &pos_c,
+                     const glm::vec3 &normal_a,
+                     const glm::vec3 &normal_b,
+                     const glm::vec3 &normal_c,
+                     const glm::vec4 &color_ab,
+                     const glm::vec4 &color_bc,
+                     const glm::vec4 &color_ca);
+
+
 private:
 
   // Setup functions
@@ -88,7 +105,6 @@ private:
 
   //self
   std::vector<Edge*>extend_edges;
-
 
 };
 

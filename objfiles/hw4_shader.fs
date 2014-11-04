@@ -194,37 +194,41 @@ vec3 wood(vec3 pos, inout vec3 normal) {
 
 }
 
-vec3 watermelon(vec3 pos, inout vec3 normal) {
+// Wireframe fragment shader
+// vec3 wireframe(vec3 pos, inout vec3 normal) {
+// 
+//   vec3 LightColor = vec3(1,1,1);
+//   float LightPower = 50.0f; 
+// 
+//   // surface normal
+//   vec3 n =  normalize (EyeDirection_cameraspace);
+// 
+//   // Material Properties
+//   vec3 MaterialDiffuseColor;
+// 
+//   if (myColor.x > 0.1 &&
+//       myColor.y > 0.1 &&
+//       myColor.z > 0.1 ) {
+// 
+//     MaterialDiffuseColor = 0.7 * vec3(1,1,1);
+// 
+//   } else {
+// 
+//     MaterialDiffuseColor = myColor;
+// 
+//     if( myColor.x > 0.1 &&
+//         myColor.y > 0.1 &&
+//         myColor.z > 0.1 ) {
+//         
+//         MaterialDiffuseColor *= 7.0;
+//       }
+//   }
+// 
+//   return myColor
+// 
+// 
+// }
 
-  normal = normalize(normal+0.4*snoise(3.0*pos));
-  // Need to convert
-  float PI = 3.14159265358979323846264;
-
-  // Convert to cylander
-  float x = pos.x;
-  float y = pos.y;
-  float z = pos.z;
-
-  // Find radius
-  float r = sqrt(  (x*x) + (y*y ) );
-  float angle = 0.0;
-
-  if( x == 0.0){
-    angle = PI / 2.0;
-  }else{
-    angle = atan(z/y);
-  }
-
- r = r + (2 * sin( 20 * angle +( z / 150.0)));
- float grain = mod(r, 60.0);
-
- if (grain < 10) {
-    return vec3(0.0,0.2,0.0);
- }else{
-    return vec3(0.0,0.6,0.0);
- }
-
-}
 // ----------------------------------------------
 void main(){
 
@@ -233,21 +237,31 @@ void main(){
 
   // surface normal
   vec3 surface_normal =  vertexNormal_worldspace;
-  
-  // Material properties
-  vec3 MaterialDiffuseColor = myColor;
-  if (whichshader == 1) {
-    MaterialDiffuseColor = checkerboard(vertexPosition_worldspace);
-  } else if (whichshader == 2) {
-    vec3 normal2;
-    MaterialDiffuseColor = wood(vertexPosition_worldspace,surface_normal);
-  } else if (whichshader == 3) {
-    vec3 normal3;
-    MaterialDiffuseColor = watermelon(vertexPosition_worldspace,surface_normal);
+
+  // Material Properties
+  vec3 MaterialDiffuseColor;
+
+  if (myColor.x > 0.15 &&
+      myColor.y > 0.15 &&
+      myColor.z > 0.15 ) {
+
+    MaterialDiffuseColor = 0.7 * vec3(1,1,1);
+
+  } else {
+
+    MaterialDiffuseColor = myColor;
+
+    if( myColor.x > 0.15 &&
+        myColor.y > 0.15 &&
+        myColor.z > 0.15 ) {
+        
+        MaterialDiffuseColor *= 7.0;
+      }
   }
 
   vec3 MaterialAmbientColor = vec3(0.3,0.3,0.3) * MaterialDiffuseColor;
   vec3 MaterialSpecularColor = vec3(0.3,0.3,0.3);
+
   if(!gl_FrontFacing ) {
     MaterialDiffuseColor = vec3(0.0,0.0,0.6); 
     MaterialAmbientColor = vec3(0.3,0.3,0.3) * MaterialDiffuseColor;
@@ -256,9 +270,15 @@ void main(){
   }
 
   // Direction & distance to the light
-  vec3 dirToLight = (LightPosition_worldspace - vertexPosition_worldspace);
-  float distanceToLight = length( dirToLight );
-  dirToLight = normalize(dirToLight);
+   vec3 dirToLight = (LightPosition_worldspace - vertexPosition_worldspace);
+   float distanceToLight = length( dirToLight );
+   dirToLight = normalize(dirToLight);
+
+ // float distanceToLight = length ( LightPosition_worldspace -  vertexPosition_worldspace );
+
+  // This makes a headlamp kind of lightsource
+  //vec3 dirToLight = normalize ( vec3 ( 1.0, 0.8, 2.0 ) );
+
   
   // Cosine of the angle between the normal and the light direction, 
   // clamped above 0
@@ -278,23 +298,12 @@ void main(){
   //  - Looking elsewhere -> < 1
   float cosAlpha = clamp( dot( E,R ), 0,1 );
   
-
-  if (colormode == 0) {
-    // mode 0: NO LIGHTING
-    // mode 1: NO LIGHTING
-    color = MaterialDiffuseColor;
-  } else if (colormode == 1) {
-    // mode 1: STANDARD PHONG LIGHTING (LIGHT ON)
-    color = 
-      MaterialAmbientColor +
-      MaterialDiffuseColor * LightColor * LightPower * cosTheta / (distanceToLight) +
-      MaterialSpecularColor * LightColor * LightPower * pow(cosAlpha,5) / (distanceToLight); 
-    // NOTE: actually in real-world physics this should be divded by distance^2
-    //    (but the dynamic range is probably too big for typical screens)
-  } else if (colormode == 2) {
-    // mode 2: AMBIENT ONLY (LIGHT OFF) 
-    color = MaterialAmbientColor;
-  }
+  color = 
+    MaterialAmbientColor +
+    MaterialDiffuseColor * LightColor * LightPower * cosTheta / (distanceToLight) +
+    MaterialSpecularColor * LightColor * LightPower * pow(cosAlpha,5) / (distanceToLight); 
+  // NOTE: actually in real-world physics this should be divded by distance^2
+  //    (but the dynamic range is probably too big for typical screens)
 }
 
 

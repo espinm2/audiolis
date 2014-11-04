@@ -176,6 +176,7 @@ void Mesh::Load() {
   ComputeGouraudNormals();
 
   std::cout << "loaded " << numTriangles() << " triangles " << std::endl;
+
 }
 
 // =======================================================================
