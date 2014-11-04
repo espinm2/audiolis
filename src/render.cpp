@@ -213,13 +213,6 @@ void Mesh::setupVBOs() {
 void Mesh::drawVBOs() {
 
 
-  // mode 1: STANDARD PHONG LIGHTING (LIGHT ON)
-  glUniform1i(GLCanvas::colormodeID, 1);
-
-  // shader 0: NO SHADER
-  glUniform1i(GLCanvas::whichshaderID, 0);
-
-
   HandleGLError("enter draw vbos");
 
   // --------------------------
@@ -229,20 +222,12 @@ void Mesh::drawVBOs() {
   glDepthFunc(GL_LEQUAL);
   glEnable(GL_DEPTH_TEST);
   if (args->geometry) {
-    // shader 1: CHECKERBOARD
-    // shader 2: ORANGE
-    // shader 3: other
-    //
-    glUniform1i(GLCanvas::whichshaderID, args->whichshader);
     DrawMesh();
-    glUniform1i(GLCanvas::whichshaderID, 0);
   }
 
-
-  // mode 0: NO LIGHTING
-  glUniform1i(GLCanvas::colormodeID, 0);
-
-  DrawLight();
+  // If you want to draw light as glPoint
+  // Keeping as an example to use glPoint
+  // DrawLight();
   
   if (args->bounding_box) {
     bbox.drawVBOs();
@@ -263,23 +248,7 @@ void Mesh::TriVBOHelper(std::vector<VBOPosNormalColor> &mesh_tri_verts,
                      const glm::vec3 &normal_c,
                      const glm::vec4 &color_ab,
                      const glm::vec4 &color_bc,
-                     const glm::vec4 &color_ca)
-{
-    // To create a wireframe rendering...
-  // Each mesh triangle is actually rendered as 3 small triangles
-  //           b
-  //          /|\
-  //         / | \
-  //        /  |  \
-  //       /   |   \
-  //      /    |    \
-  //     /    .'.    \
-  //    /  .'     '.  \
-  //   /.'           '.\
-  //  a-----------------c
-  //
-
-  // Final all the stuff for the centriod
+                     const glm::vec4 &color_ca) {
 
 
   int start;
@@ -319,6 +288,7 @@ void Mesh::TriVBOHelper(std::vector<VBOPosNormalColor> &mesh_tri_verts,
 
 
   } else {
+
     // NON WIREFRAME
 
     start = mesh_tri_verts.size();

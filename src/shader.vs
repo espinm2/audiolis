@@ -36,6 +36,7 @@ void main(){
   
   // pass color to the fragment shader
   myColor = vertexColor;
+
 }
 
 

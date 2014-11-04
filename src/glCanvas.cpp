@@ -43,8 +43,6 @@ GLuint GLCanvas::ModelMatrixID;
 GLuint GLCanvas::LightID;
 GLuint GLCanvas::MatrixID;
 GLuint GLCanvas::programID;
-GLuint GLCanvas::whichshaderID;
-GLuint GLCanvas::colormodeID;
 
 
 // ========================================================
@@ -208,8 +206,6 @@ void GLCanvas::initializeVBOs(){
   GLCanvas::LightID = glGetUniformLocation(GLCanvas::programID, "LightPosition_worldspace");
   GLCanvas::ViewMatrixID = glGetUniformLocation(GLCanvas::programID, "V");
   GLCanvas::ModelMatrixID = glGetUniformLocation(GLCanvas::programID, "M");
-  GLCanvas::colormodeID = glGetUniformLocation(GLCanvas::programID, "colormode");
-  GLCanvas::whichshaderID = glGetUniformLocation(GLCanvas::programID, "whichshader");
   mesh->initializeVBOs();
   HandleGLError("leaving initilizeVBOs()");
 }

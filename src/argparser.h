@@ -75,7 +75,7 @@ public:
   void DefaultValues() {
     input_file = "";
     path = "";
-    shader_filename = "hw4_shader";
+    shader_filename = "../src/shader";
     width = 800;
     height = 600;
     geometry = true;

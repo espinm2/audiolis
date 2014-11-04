@@ -27,7 +27,6 @@ public:
   Edge* getNext() const { assert (next != NULL); return next; }
   Triangle* getTriangle() const { assert (triangle != NULL); return triangle; }
   Edge* getOpposite() const { return opposite; }
-  float getCrease() const { return crease; }
   float Length() const;
 
   // =========
@@ -51,7 +50,6 @@ public:
     assert (triangle == e->triangle);
     next = e;
   }
-  void setCrease(float c) { crease = c; }
 
 private:
 
@@ -63,13 +61,12 @@ private:
   // in the half edge data adjacency data structure, the edge stores everything!
   // note: it's technically not necessary to store both vertices, but it makes
   //   dealing with non-closed meshes easier
+  
   Vertex *start_vertex;
   Vertex *end_vertex;
   Triangle *triangle;
   Edge *opposite;
   Edge *next;
-  // the crease value is an extra field used during subdivision
-  float crease;
 };
 
 // ===================================================================

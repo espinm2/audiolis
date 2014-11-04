@@ -12,7 +12,6 @@ Edge::Edge(Vertex *vs, Vertex *ve, Triangle *t) {
   triangle = t;
   next = NULL;
   opposite = NULL;
-  crease = 0;
 }
 
 // EDGE DESTRUCTOR
