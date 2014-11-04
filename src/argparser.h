@@ -81,7 +81,6 @@ public:
     geometry = true;
     bounding_box = false;
     gouraud_normals = false;
-    whichshader = 0;
     timer = 0.0;
     animate = false;
     wireframe = false;
@@ -99,7 +98,6 @@ public:
   bool geometry;
   bool bounding_box;
   bool gouraud_normals;
-  int whichshader;
   float timer;
   bool animate;
   bool wireframe;

@@ -2,16 +2,9 @@
 #include "argparser.h"
 #include "camera.h"
 
-#include <unistd.h>
-
-#if _WIN32
-#include <Winsock2.h>
-#else
-#include <sys/time.h>
-#endif
-
 #include "mesh.h"
 #include "utils.h"
+#include "fpscounter.h"
 
 // ========================================================
 // static variables of GLCanvas class
@@ -130,68 +123,12 @@ void GLCanvas::initialize(ArgParser *_args) {
 
 
 void GLCanvas::animate(){
-#if _WIN32    
-  static int last_tick_count;
-  static int last_fps_count;
-  static int frames = -1;
-  if (frames == -1) {    
-    last_fps_count = last_tick_count = GetTickCount();
-    frames = 0;
-  }
-  if (args->animate) {
-    frames++;
-    int this_tick_count = GetTickCount();
-    // difference in milliseconds
-    double diff = 0.001*(this_tick_count-last_tick_count);
-    last_tick_count = this_tick_count;
-    args->timer += diff;
-    double diff_fps_time = 0.001*(this_tick_count-last_fps_count);
-    if (diff_fps_time > 1.00) {      
-      float fps = frames / float(diff_fps_time);
-      std::cout << "fps: " << fps << std::endl;
-      frames = 0;
-      last_fps_count = this_tick_count;
-    }
+  // We will use this to update time & fps
+  fpsCounter(args->animate, args->timer);
+
+  if(args->animate){
     mesh->setupVBOs();
-  } else {
-    last_tick_count = last_fps_count = GetTickCount();
   }
-#else
-  static timeval last_time;
-  static timeval last_fps_time;
-  static int frames = -1;
-  if (frames == -1) {
-    gettimeofday(&last_time,NULL);
-    last_fps_time = last_time;
-    frames = 0;
-  }
-  if (args->animate) {
-    frames++;
-    timeval this_time;
-    gettimeofday(&this_time,NULL);
-    // compute the difference from last time
-    double diff = this_time.tv_sec - last_time.tv_sec + 
-      0.000001 * (this_time.tv_usec - last_time.tv_usec);
-    double diff_fps_time = this_time.tv_sec - last_fps_time.tv_sec + 
-      0.000001 * (this_time.tv_usec - last_fps_time.tv_usec);
-    last_time = this_time;
-    // print out stats on the FPS occasionally
-    if (diff_fps_time > 1.00) {      
-      float fps = frames / float(diff_fps_time);
-      std::cout << "fps: " << fps << std::endl;
-      frames = 0;
-      last_fps_time = this_time;
-    }
-    args->timer += diff;
-    mesh->setupVBOs();
-  } else {
-    gettimeofday(&last_time, NULL);
-    last_fps_time = last_time;
-    frames = 0;
-    // if we aren't animating the light source, avoid busy-waiting!
-    //usleep (100);
-  }
-#endif
   
 }
 
@@ -347,15 +284,6 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       break;
     case 'w': case 'W':
       args->wireframe = !args->wireframe;
-      mesh->setupVBOs();
-      break;
-    case 'x': case 'X':
-      args->whichshader = (args->whichshader+1)%4;
-      std::cout << "CURRENT SHADER: " << args->whichshader;
-      if (args->whichshader == 0) { std::cout << " none" << std::endl; }
-      if (args->whichshader == 1) { std::cout << " checkerboard" << std::endl; }
-      if (args->whichshader == 2) { std::cout << " orange" << std::endl; }
-      if (args->whichshader == 3) { std::cout << " wood" << std::endl; }
       mesh->setupVBOs();
       break;
     case 'l' : case 'L':
