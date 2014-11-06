@@ -1,6 +1,9 @@
 #ifndef __VBO_STRUCTS_H__
 #define __VBO_STRUCTS_H__
 
+// Graphics Library Includes
+#include <glm/glm.hpp>
+
 // ======================================================================
 // helper structures for VBOs, for rendering (note, the data stored in
 // each of these is application specific, adjust as needed!)
