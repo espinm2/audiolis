@@ -270,6 +270,9 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
     glfwSetWindowShouldClose(GLCanvas::window, GL_TRUE);
   }
 
+  // Cursor Move Scale
+  double SCALE = 0.01;
+  
   // other normal ascii keys...
   if ( (action == GLFW_PRESS || action == GLFW_REPEAT) && key < 256) {
     switch (key) {
@@ -300,14 +303,36 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       args->render_top = !args->render_top;
       mesh->setupVBOs();
       break;
-    case 'l' : case 'L':
-      //LoadCompileLinkShaders();
-      mesh->setupVBOs();
-      break;
     case 'q':  case 'Q':
       // quit
       glfwSetWindowShouldClose(GLCanvas::window, GL_TRUE);
       break;
+    // Naviation of cursor //////////////////////////
+    case 'h' : case 'H':
+      particleSystem->moveCursor(SCALE,0,0);
+      particleSystem->setupVBOs();
+      break;
+    case 'l' : case 'L':
+      particleSystem->moveCursor(-1*SCALE,0,0);
+      particleSystem->setupVBOs();
+      break;
+    case 'j' : case 'J':
+      particleSystem->moveCursor(0,SCALE,0);
+      particleSystem->setupVBOs();
+      break;
+    case 'k' : case 'K':
+      particleSystem->moveCursor(0,-1*SCALE,0);
+      particleSystem->setupVBOs();
+      break;
+    case 'i' : case 'I':
+      particleSystem->moveCursor(0,0,SCALE);
+      particleSystem->setupVBOs();
+      break;
+    case 'm' : case 'M':
+      particleSystem->moveCursor(0,0,-1*SCALE);
+      particleSystem->setupVBOs();
+      break;
+    // End Naviation ////////////////////////////////
     default:
       std::cout << "UNKNOWN KEYBOARD INPUT  '" << (char)key << "'" << std::endl;
     }

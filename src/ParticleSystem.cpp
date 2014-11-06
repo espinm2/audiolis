@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "vectors.h"
+#include "boundingbox.h"
 
 ParticleSystem::~ParticleSystem(){
 
@@ -26,7 +27,10 @@ void ParticleSystem::update(){
 
 }
 
-void moveCursor( const double & dx, const double & dy ){
+void ParticleSystem::moveCursor( const double & dx, const double & dy, const double & dz ){
 
+  cursor = Vec3f(cursor.x() + dx,
+                 cursor.y() + dy,
+                 cursor.z() + dz);
 
 }

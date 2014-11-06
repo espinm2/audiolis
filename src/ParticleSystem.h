@@ -39,7 +39,7 @@ class ParticleSystem {
     ~ParticleSystem();
 
     // User interace functions
-    void moveCursor(const double & dx, const double & dy);
+    void moveCursor(const double & dx, const double & dy, const double & dz );
 
 
     // Simulation functions
