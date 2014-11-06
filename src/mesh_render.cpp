@@ -13,15 +13,8 @@
 #include <stdio.h>      /* printf */
 
 // Predefined colors to use
-glm::vec4 floor_color(0.9,0.8,0.7,1);
 glm::vec4 mesh_color(0.8,0.8,0.8,1);
-glm::vec4 mirror_color(0.1,0.1,0.2,1);
-glm::vec4 mirror_tint(0.85,0.9,0.95,1);
 
-glm::vec4 red(1.0,0,0,1);
-glm::vec4 green(0,1,0,0.5);
-
-float floor_factor = 0.75;
 
 // =======================================================================
 // =======================================================================
@@ -102,7 +95,7 @@ void Mesh::SetupMesh() {
                  color,color,color
                  );
 
-    /*
+    /* //TODO Keep for help making code
     int start = mesh_tri_verts.size();
     mesh_tri_verts.push_back(VBOPosNormalColor(a,na,mesh_color));
     mesh_tri_verts.push_back(VBOPosNormalColor(b,nb,mesh_color));

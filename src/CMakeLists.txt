@@ -8,7 +8,7 @@ add_executable(audiolis
   glCanvas.cpp
   camera.cpp
   mesh.cpp
-  render.cpp
+  mesh_render.cpp
   boundingbox.cpp
   render_utils.cpp
   render_utils.h
