@@ -2,13 +2,11 @@
 #define _PARTICLESYSTEM_H_
 
 
-/*
- *
- * [ ] TODO Add Mesh Ptr to class
- * [ ] TODO Expand Constrcutor to take in mesh
+/* [x] TODO Add Mesh Ptr to class
+ * [x] TODO Expand Constrcutor to take in mesh
  * [ ] TODO Alter Load() to take in inputs for simulation
- *
  */
+
 #include <vector>
 #include <iostream>
 #include "glCanvas.h"
@@ -39,7 +37,8 @@ class ParticleSystem {
     ~ParticleSystem();
 
     // User interace functions
-    void moveCursor(const double & dx, const double & dy, const double & dz );
+    void moveCursor(const double & dx, 
+        const double & dy, const double & dz );
 
 
     // Simulation functions
@@ -54,6 +53,9 @@ class ParticleSystem {
 
 
   private:
+
+    // Fuctions for Faking Depth
+    int getGLPointSize(const Vec3f & point);
 
     // Functions
     void setupParticles();

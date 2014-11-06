@@ -70,8 +70,11 @@ public:
   void glPlaceCamera();
   void zoomCamera(float factor);
 
-  friend std::ostream& operator<< (std::ostream& ostr, const OrthographicCamera &c);
-  friend std::istream& operator>> (std::istream& istr, OrthographicCamera &c);
+  friend std::ostream& operator<< (std::ostream& ostr, 
+      const OrthographicCamera &c);
+
+  friend std::istream& operator>> (std::istream& istr, 
+      OrthographicCamera &c);
 
 private:
   // REPRESENTATION
@@ -92,8 +95,11 @@ public:
   void glPlaceCamera();
   void zoomCamera(float dist);
 
-  friend std::ostream& operator<< (std::ostream& ostr, const PerspectiveCamera &c);
-  friend std::istream& operator>> (std::istream& istr, PerspectiveCamera &c);
+  friend std::ostream& operator<< (std::ostream& ostr, 
+      const PerspectiveCamera &c);
+
+  friend std::istream& operator>> (std::istream& istr, 
+      PerspectiveCamera &c);
 
 private:
   // REPRESENTATION

@@ -1,8 +1,8 @@
 #include "ParticleSystem.h"
 #include "boundingbox.h"
+#include "camera.h"
 
 void ParticleSystem::initializeVBOs(){
-  //TODO Implement
 
   // Get uniquie ids from buffers
   glGenBuffers(1,&particle_verts_VBO);
@@ -20,18 +20,20 @@ void ParticleSystem::setupVBOs(){
   // Setup new Data
   // setupParticles(); TODO
   setupCursorPoint();
-
 }
 
 void ParticleSystem::drawVBOs(){
   //TODO Implement
-  //
   HandleGLError("enter draw vbos");
 
   /*
   glDisable(GL_STENCIL_TEST);
   glClearDepth(1);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+  glClear(GL_COLOR_BUFFER_BIT 
+  |GL_DEPTH_BUFFER_BIT | 
+
+  GL_STENCIL_BUFFER_BIT);
   glDepthFunc(GL_LEQUAL);
   glEnable(GL_DEPTH_TEST);
   */
@@ -67,25 +69,34 @@ void ParticleSystem::setupCursorPoint(){
 
   // Binding the data
   cursor_verts.push_back( VBOPosNormalColor(cursorPos,normal,color));
+
   glBindBuffer(GL_ARRAY_BUFFER,cursor_verts_VBO); 
-  glBufferData(GL_ARRAY_BUFFER,sizeof(VBOPosNormalColor)*1,&cursor_verts[0],GL_STATIC_DRAW); 
+
+  glBufferData(
+      GL_ARRAY_BUFFER,
+      sizeof(VBOPosNormalColor)*1,
+      &cursor_verts[0],
+      GL_STATIC_DRAW); 
 
 }
 
 void ParticleSystem::drawCursorPoint(){
 
   HandleGLError("enter drawCursorPoint");
-  glPointSize(10);
+  glPointSize( getGLPointSize(cursor) ); // <------------------- Added
   glBindBuffer(GL_ARRAY_BUFFER, cursor_verts_VBO);
 
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,sizeof(VBOPosNormalColor),(void*)0);
+  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,
+      sizeof(VBOPosNormalColor),(void*)0);
 
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,sizeof(VBOPosNormalColor),(void*)sizeof(glm::vec3) );
+  glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,
+      sizeof(VBOPosNormalColor),(void*)sizeof(glm::vec3) );
 
   glEnableVertexAttribArray(2);
-  glVertexAttribPointer(2, 3, GL_FLOAT,GL_FALSE,sizeof(VBOPosNormalColor), (void*)(sizeof(glm::vec3)*2));
+  glVertexAttribPointer(2, 3, GL_FLOAT,GL_FALSE,
+      sizeof(VBOPosNormalColor), (void*)(sizeof(glm::vec3)*2));
 
   glDrawArrays(GL_POINTS, 0, cursor_verts.size());
 
@@ -94,5 +105,21 @@ void ParticleSystem::drawCursorPoint(){
   glDisableVertexAttribArray(2);
 
   HandleGLError("leaving drawCursorPoint");
+
+}
+
+
+int ParticleSystem::getGLPointSize(const Vec3f & point){
+
+  // Get Camera  Position
+  glm::vec3 cPos = GLCanvas::camera->camera_position;
+  Vec3f cameraPos(cPos.x, cPos.y, cPos.z);
+
+  double dist = point.Distance3f(cameraPos);
+  std::cout << dist << std::endl;
+
+
+  return 10;
+
 
 }

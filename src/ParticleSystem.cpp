@@ -6,9 +6,9 @@
 #include "boundingbox.h"
 
 ParticleSystem::~ParticleSystem(){
-
-  //TODO Implement
-
+  // Just delete all the particles we made
+  for(int i = 0; i < particles.size(); i++)
+    delete particles[i];
 }
 
 
@@ -27,10 +27,10 @@ void ParticleSystem::update(){
 
 }
 
-void ParticleSystem::moveCursor( const double & dx, const double & dy, const double & dz ){
+void ParticleSystem::moveCursor( const double & dx, 
+    const double & dy, const double & dz ){
 
   cursor = Vec3f(cursor.x() + dx,
                  cursor.y() + dy,
                  cursor.z() + dz);
-
 }

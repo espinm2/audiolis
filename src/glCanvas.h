@@ -64,25 +64,39 @@ public:
 
   // Setup VBO for rendering
   static void initializeVBOs();
+
   static void setupVBOs();
-  static void drawVBOs(const glm::mat4 &ProjectionMatrix,const glm::mat4 &ViewMatrix,const glm::mat4 &ModelMatrix);
+
+  static void drawVBOs(const glm::mat4 &ProjectionMatrix,
+      const glm::mat4 &ViewMatrix,const glm::mat4 &ModelMatrix);
+
   static void cleanupVBOs();
 
   // Change between frames
   static void animate();
 
   // Callback functions for mouse and keyboard events
-  static void mousebuttonCB(GLFWwindow *window, int which_button, int action, int mods);
-  static void mousemotionCB(GLFWwindow *window, double x, double y);
-  static void keyboardCB(GLFWwindow *window, int key, int scancode, int action, int mods);
+  static void mousebuttonCB(GLFWwindow *window, 
+      int which_button, int action, int mods);
+
+  static void mousemotionCB(GLFWwindow *window, 
+      double x, double y);
+
+  static void keyboardCB(GLFWwindow *window, 
+      int key, int scancode, int action, int mods);
+
   static void error_callback(int error, const char* description);
+
 };
 
 // ====================================================================
 
 // helper functions
-GLuint LoadShaders(const std::string &vertex_file_path,const std::string &fragment_file_path);
+GLuint LoadShaders(const std::string &vertex_file_path,
+    const std::string &fragment_file_path);
+
 std::string WhichGLError(GLenum &error);
+
 int HandleGLError(const std::string &message = "", bool ignore = false);
 
 #endif
