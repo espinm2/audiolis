@@ -10,11 +10,20 @@
  *
  */
 #include <vector>
-#include "vbo_structs.h"
-#include <GLFW/glfw3.h>
+#include <iostream>
+#include "glCanvas.h"
+#include "boundingbox.h"
 
+#include "vbo_structs.h"
+#include "vectors.h"
+
+
+
+// Forward declaration
 class ArgParser;
 class Particle;
+class BoundingBox;
+class Mesh;
 
 class ParticleSystem {
 
@@ -22,8 +31,16 @@ class ParticleSystem {
   public:
 
     // Constructors
-    ParticleSystem(ArgParser *_args) { args = _args; }
+    ParticleSystem(ArgParser *_args, Mesh * _mesh, BoundingBox * _bbox) { 
+      args = _args; 
+      mesh = _mesh; 
+      bbox = _bbox; }
+
     ~ParticleSystem();
+
+    // User interace functions
+    void moveCursor(const double & dx, const double & dy);
+
 
     // Simulation functions
     void load(); 
@@ -42,13 +59,24 @@ class ParticleSystem {
     void setupParticles();
     void drawParticles();
 
+    void setupCursorPoint();
+    void drawCursorPoint();
+
     // Memebers
     ArgParser * args;
+    BoundingBox * bbox;
+    Mesh * mesh;
+    
     std::vector<Particle *> particles;
+    Vec3f cursor;
 
-    // VBOs
+    // VBOs Ids
     GLuint particle_verts_VBO;
+    GLuint cursor_verts_VBO;
+
+    // Vertices for VBOs
     std::vector<VBOPosNormalColor> particle_verts;
+    std::vector<VBOPosNormalColor> cursor_verts;
     
 
 };

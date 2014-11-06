@@ -1,5 +1,9 @@
 #include "ParticleSystem.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include "vectors.h"
+
 ParticleSystem::~ParticleSystem(){
 
   //TODO Implement
@@ -8,10 +12,11 @@ ParticleSystem::~ParticleSystem(){
 
 
 void ParticleSystem::load(){
-
-  //TODO Implement fully
   
-  // Loading in random particles
+  // Initaite the cursor 
+  glm::vec3 centerScene;
+  bbox->getCenter(centerScene);
+  cursor = Vec3f(centerScene.x, centerScene.y, centerScene.z);
 
 }
 
@@ -21,3 +26,7 @@ void ParticleSystem::update(){
 
 }
 
+void moveCursor( const double & dx, const double & dy ){
+
+
+}

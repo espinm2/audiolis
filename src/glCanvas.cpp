@@ -5,6 +5,7 @@
 #include "mesh.h"
 #include "render_utils.h"
 #include "fpscounter.h"
+#include "ParticleSystem.h"
 
 // ========================================================
 // static variables of GLCanvas class
@@ -13,6 +14,8 @@ ArgParser* GLCanvas::args = NULL;
 Camera* GLCanvas::camera = NULL;
 
 Mesh* GLCanvas::mesh = NULL;
+ParticleSystem * GLCanvas::particleSystem = NULL;
+
 BoundingBox GLCanvas::bbox;
 GLFWwindow* GLCanvas::window = NULL;
 
@@ -51,6 +54,9 @@ void GLCanvas::initialize(ArgParser *_args) {
   mesh = new Mesh(args);
   mesh->Load();
   bbox.Set(mesh->getBoundingBox());
+
+  particleSystem = new ParticleSystem(args, mesh,  &bbox);
+  particleSystem->load();
 
   glfwSetErrorCallback(error_callback);
 
@@ -144,14 +150,16 @@ void GLCanvas::initializeVBOs(){
   GLCanvas::ViewMatrixID = glGetUniformLocation(GLCanvas::programID, "V");
   GLCanvas::ModelMatrixID = glGetUniformLocation(GLCanvas::programID, "M");
   mesh->initializeVBOs();
+  particleSystem->initializeVBOs();
   HandleGLError("leaving initilizeVBOs()");
 }
 
 
 void GLCanvas::setupVBOs(){
   HandleGLError("enter GLCanvas::setupVBOs()");
-  assert (mesh != NULL);
+  assert (mesh != NULL && particleSystem != NULL);
   mesh->setupVBOs();
+  particleSystem->setupVBOs();
   HandleGLError("leaving GLCanvas::setupVBOs()");
 }
 
@@ -171,6 +179,7 @@ void GLCanvas::drawVBOs(const glm::mat4 &ProjectionMatrix,const glm::mat4 &ViewM
   glUniformMatrix4fv(GLCanvas::ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
 
   mesh->drawVBOs();
+  particleSystem->drawVBOs();
   HandleGLError("leaving GlCanvas::drawVBOs()");
 }
 
@@ -178,6 +187,7 @@ void GLCanvas::drawVBOs(const glm::mat4 &ProjectionMatrix,const glm::mat4 &ViewM
 void GLCanvas::cleanupVBOs(){
   bbox.cleanupVBOs();
   mesh->cleanupVBOs();
+  particleSystem->cleanupVBOs();
 }
 
 

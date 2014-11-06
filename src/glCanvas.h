@@ -16,6 +16,7 @@
 
 class ArgParser;
 class Mesh;
+class ParticleSystem;
 class Camera;
 
 // ====================================================================
@@ -29,6 +30,7 @@ public:
   // various static variables
   static ArgParser *args;
   static Mesh *mesh;
+  static ParticleSystem * particleSystem;
 
   static BoundingBox bbox;
   static Camera* camera;

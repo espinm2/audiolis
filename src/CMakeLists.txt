@@ -22,11 +22,11 @@ add_executable(audiolis
   hash.h
   mesh.h
   vbo_structs.h
+  particle.h
+  vectors.h
   ParticleSystem.h
   ParticleSystem.cpp
   ParticleSystem_render.cpp
-  particle.h
-  vectors.h
 )
 
 
