@@ -1,5 +1,5 @@
-#ifndef _UTILS_H
-#define _UTILS_H
+#ifndef _RENDER_UTILS_H
+#define _RENDER_UTILS_H
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>

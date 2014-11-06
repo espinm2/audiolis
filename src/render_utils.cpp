@@ -1,5 +1,5 @@
 #include "glCanvas.h"
-#include "utils.h"
+#include "render_utils.h"
 
 // since glLineWidth is gone...  
 // instead we'll draw a rectangular box 

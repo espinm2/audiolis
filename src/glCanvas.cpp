@@ -3,7 +3,7 @@
 #include "camera.h"
 
 #include "mesh.h"
-#include "utils.h"
+#include "render_utils.h"
 #include "fpscounter.h"
 
 // ========================================================
@@ -284,6 +284,10 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       break;
     case 'w': case 'W':
       args->wireframe = !args->wireframe;
+      mesh->setupVBOs();
+      break;
+    case 'c': case 'C':
+      args->render_top = !args->render_top;
       mesh->setupVBOs();
       break;
     case 'l' : case 'L':

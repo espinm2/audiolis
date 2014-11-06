@@ -84,6 +84,7 @@ public:
     timer = 0.0;
     animate = false;
     wireframe = false;
+    render_top = false;
   }
 
   // ==============
@@ -101,6 +102,7 @@ public:
   float timer;
   bool animate;
   bool wireframe;
+  bool render_top;
 };
 
 

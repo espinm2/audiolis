@@ -2,7 +2,7 @@
 #include "glCanvas.h"
 #include "boundingbox.h"
 #include "vbo_structs.h"
-#include "utils.h"
+#include "render_utils.h"
 
 // ====================================================================
 // ====================================================================

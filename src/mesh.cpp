@@ -2,7 +2,7 @@
 
 #include "mesh.h"
 #include "edge.h"
-#include "utils.h"
+#include "render_utils.h"
 #include "vertex.h"
 #include "triangle.h"
 #include "argparser.h"

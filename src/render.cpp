@@ -6,7 +6,7 @@
 #include "vertex.h"
 #include "triangle.h"
 #include "argparser.h"
-#include "utils.h"
+#include "render_utils.h"
 #include <list>
 #include <algorithm>
 #include <math.h>       /* fabs */
@@ -82,9 +82,9 @@ void Mesh::SetupMesh() {
     glm::vec3 nc = na;
 
 
-    if( -1 <= na.y && na.y <= -1 + 0.01){
-      continue;
-    }
+    if(args->render_top)
+      if( -1 <= na.y && na.y <= -1 + 0.01)
+        continue;
 
 
     if (args->gouraud_normals) {
