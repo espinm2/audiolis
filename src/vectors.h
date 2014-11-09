@@ -102,6 +102,12 @@ public:
   }
 
 
+  double AngleBtwVec3f(const Vec3f &b) const {
+    // Experimental, didn't test
+
+    return acos( Dot3(b) / ( Length() * b.Length() ));
+  
+  }
 
   // Note this will only work in graphics coordinate systesms
   double AngleBetweenLimited(const Vec3f &b) const{

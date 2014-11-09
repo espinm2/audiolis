@@ -7,6 +7,7 @@
 #include "triangle.h"
 #include "argparser.h"
 #include "render_utils.h"
+#include "camera.h"
 #include <list>
 #include <algorithm>
 #include <math.h>       /* fabs */
@@ -29,6 +30,7 @@ glm::vec3 Mesh::LightPosition() const {
   tmp += glm::vec3(0,5.0*(max.y-min.y),0);
   tmp += glm::vec3(cos(args->timer) * (max.x-min.x), 0, 0);
   tmp += glm::vec3(0,0,sin(args->timer) * (max.z-min.z));
+
   // tmp = GLCanvas::camera->camera_position;
   return tmp;
 }

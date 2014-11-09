@@ -14,33 +14,21 @@ void ParticleSystem::initializeVBOs(){
 void ParticleSystem::setupVBOs(){
 
   // Delete old data
+  cursor_verts.clear();
   particle_verts.clear();
-  // cursor_verts.clear();
 
 
   // Setup new Data
+  setupCursorPoint();
   setupParticles(); 
-  //setupCursorPoint();
 }
 
 void ParticleSystem::drawVBOs(){
   //TODO Implement
   HandleGLError("enter draw vbos");
 
-  /*
-  glDisable(GL_STENCIL_TEST);
-  glClearDepth(1);
 
-  glClear(GL_COLOR_BUFFER_BIT 
-  |GL_DEPTH_BUFFER_BIT | 
-
-  GL_STENCIL_BUFFER_BIT);
-  glDepthFunc(GL_LEQUAL);
-  glEnable(GL_DEPTH_TEST);
-  */
-
-  // drawCursorPoint();
-
+  drawCursorPoint();
   drawParticles();
 
   HandleGLError("leaving draw vbos");
@@ -67,10 +55,10 @@ void ParticleSystem::setupParticles(){
     glm::vec3 pos(p.x(), p.y(), p.z());
 
     // Picking Normal
-    // Vec3f n = part->getCenter(); n.Negate();
-    // glm::vec3 normal(n.x(), n.y(), n.z());
+    Vec3f n = part->getDir(); 
+
+    glm::vec3 normal(n.x(), n.y(), n.z());
     
-    glm::vec3 normal(0, 1, 0);
     
     // Picking color
     glm::vec4 color(0,0,1,1);
@@ -92,7 +80,7 @@ void ParticleSystem::drawParticles(){
 
 
   HandleGLError("enter drawParticles");
-  glPointSize( 10 ) ; 
+  glPointSize( 2 ) ; 
   glBindBuffer(GL_ARRAY_BUFFER, particle_verts_VBO);
 
   glEnableVertexAttribArray(0);

@@ -85,6 +85,7 @@ public:
     animate = false;
     wireframe = false;
     render_top = false;
+    timestep = 0.001;
   }
 
   // ==============
@@ -103,6 +104,7 @@ public:
   bool animate;
   bool wireframe;
   bool render_top;
+  double timestep;
 };
 
 

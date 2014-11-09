@@ -134,6 +134,8 @@ void GLCanvas::animate(){
 
   if(args->animate){
     mesh->setupVBOs();
+    particleSystem->update();
+    particleSystem->setupVBOs();
   }
   
 }

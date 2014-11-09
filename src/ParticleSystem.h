@@ -4,10 +4,10 @@
 
 /* [x] TODO Add Mesh Ptr to class
  * [x] TODO Expand Constrcutor to take in mesh
- * [ ] TODO Create a uniform sphere of dots
- * [ ] TODO Alter Load() to take in inputs for simulation
- * [ ] TODO Run simulation where spheres project outwards
- * [ ] TODO Be able to create that uniform sphere by your cursor
+ * [x] TODO Create a uniform sphere of dots
+ * [x] TODO Alter Load() to take in inputs for simulation
+ * [x] TODO Run simulation where spheres project outwards
+ * [x] TODO Be able to create that uniform sphere by your cursor
  * [ ] TODO Work on Collision Detection, Make triangles turn red if hit
  */
 
@@ -47,6 +47,8 @@ class ParticleSystem {
     // Simulation functions
     void load(); 
     void update();
+    void moveParticle(Particle * &p);
+    
     
     // located in ParticleSystem_render.cpp
     void initializeVBOs();
