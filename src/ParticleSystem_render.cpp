@@ -1,4 +1,5 @@
 #include "ParticleSystem.h"
+#include "particle.h"
 #include "boundingbox.h"
 #include "camera.h"
 
@@ -14,12 +15,12 @@ void ParticleSystem::setupVBOs(){
 
   // Delete old data
   particle_verts.clear();
-  cursor_verts.clear();
+  // cursor_verts.clear();
 
 
   // Setup new Data
-  // setupParticles(); TODO
-  setupCursorPoint();
+  setupParticles(); 
+  //setupCursorPoint();
 }
 
 void ParticleSystem::drawVBOs(){
@@ -38,8 +39,9 @@ void ParticleSystem::drawVBOs(){
   glEnable(GL_DEPTH_TEST);
   */
 
-  // drawParticles(); TODO
-  drawCursorPoint();
+  // drawCursorPoint();
+
+  drawParticles();
 
   HandleGLError("leaving draw vbos");
 
@@ -53,11 +55,66 @@ void ParticleSystem::cleanupVBOs(){
 }
 
 void ParticleSystem::setupParticles(){
-  //TODO Implement
+
+  // Push everything into particle_verts
+  for(int i = 0 ; i < particles.size(); i++){
+
+    // Cur Particle
+    Particle * part = particles[i];
+    Vec3f p = part->getPos();
+
+    // Getting Pos
+    glm::vec3 pos(p.x(), p.y(), p.z());
+
+    // Picking Normal
+    // Vec3f n = part->getCenter(); n.Negate();
+    // glm::vec3 normal(n.x(), n.y(), n.z());
+    
+    glm::vec3 normal(0, 1, 0);
+    
+    // Picking color
+    glm::vec4 color(0,0,1,1);
+    
+    particle_verts.push_back(VBOPosNormalColor(pos,normal,color));
+  
+  }
+
+  glBindBuffer(GL_ARRAY_BUFFER,particle_verts_VBO); 
+
+  glBufferData(
+      GL_ARRAY_BUFFER,
+      sizeof(VBOPosNormalColor)*particle_verts.size(),
+      &particle_verts[0],
+      GL_STATIC_DRAW); 
 }
 
 void ParticleSystem::drawParticles(){
-  //TODO Implement
+
+
+  HandleGLError("enter drawParticles");
+  glPointSize( 10 ) ; 
+  glBindBuffer(GL_ARRAY_BUFFER, particle_verts_VBO);
+
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,
+      sizeof(VBOPosNormalColor),(void*)0);
+
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,
+      sizeof(VBOPosNormalColor),(void*)sizeof(glm::vec3) );
+
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(2, 4, GL_FLOAT,GL_FALSE,
+      sizeof(VBOPosNormalColor), (void*)(sizeof(glm::vec3)*2));
+
+  glDrawArrays(GL_POINTS, 0, particle_verts.size());
+
+  glDisableVertexAttribArray(0);
+  glDisableVertexAttribArray(1);
+  glDisableVertexAttribArray(2);
+
+  HandleGLError("leaving drawParticles");
+
 }
 
 
@@ -116,7 +173,6 @@ int ParticleSystem::getGLPointSize(const Vec3f & point){
   Vec3f cameraPos(cPos.x, cPos.y, cPos.z);
 
   double dist = point.Distance3f(cameraPos);
-  std::cout << dist << std::endl;
 
 
   return 10;

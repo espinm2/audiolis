@@ -4,7 +4,11 @@
 
 /* [x] TODO Add Mesh Ptr to class
  * [x] TODO Expand Constrcutor to take in mesh
+ * [ ] TODO Create a uniform sphere of dots
  * [ ] TODO Alter Load() to take in inputs for simulation
+ * [ ] TODO Run simulation where spheres project outwards
+ * [ ] TODO Be able to create that uniform sphere by your cursor
+ * [ ] TODO Work on Collision Detection, Make triangles turn red if hit
  */
 
 #include <vector>
@@ -14,7 +18,6 @@
 
 #include "vbo_structs.h"
 #include "vectors.h"
-
 
 
 // Forward declaration
