@@ -81,9 +81,14 @@ void Mesh::cleanupVBOs() {
 // ================================================================================
 
 void Mesh::SetupLight(const glm::vec3 &light_position) {
-  light_vert.push_back(VBOPosNormalColor(light_position,glm::vec3(1,0,0),glm::vec4(1,1,0,0)));
+
+  light_vert.push_back(
+      VBOPosNormalColor(light_position,glm::vec3(1,0,0),glm::vec4(1,1,0,0)));
+
   glBindBuffer(GL_ARRAY_BUFFER,light_vert_VBO); 
+
   glBufferData(GL_ARRAY_BUFFER,sizeof(VBOPosNormalColor)*1,&light_vert[0],GL_STATIC_DRAW); 
+
 }
 
 
@@ -104,6 +109,7 @@ void Mesh::SetupMesh() {
         continue;
 
 
+    // Looks really bad yo
     if (args->gouraud_normals) {
       na = (*t)[0]->getGouraudNormal();
       nb = (*t)[1]->getGouraudNormal();
@@ -111,13 +117,35 @@ void Mesh::SetupMesh() {
     }
 
     glm::vec4 color;
+
+    std::string mtl = t->getMaterial();
+    if(mtl.compare("EXTRA_floor")){
+
+      color = glm::vec4(0,0,1,1);
+    
+    // }else if(mtl.compare("")){ 
+    // }else if(mtl.compare("")){ 
+    // }else if(mtl.compare("")){ 
+    
+    }else{
+
+      color = glm::vec4(mesh_color.r * 0.1, 
+                        mesh_color.g * 0.1, 
+                        mesh_color.b*0.1,
+                        1);
+    }
+
+
+    
+
+
+
     color = glm::vec4(mesh_color.r * 0.1, mesh_color.g * 0.1, mesh_color.b*0.1,1);
 
     TriVBOHelper(mesh_tri_verts,mesh_tri_indices,
                  a,b,c,
                  na,nb,nc,
-                 color,color,color
-                 );
+                 color,color,color);
 
     /* //TODO Keep for help making code
     int start = mesh_tri_verts.size();
@@ -126,18 +154,21 @@ void Mesh::SetupMesh() {
     mesh_tri_verts.push_back(VBOPosNormalColor(c,nc,mesh_color));
     mesh_tri_indices.push_back(VBOIndexedTri(start,start+1,start+2));
     */
+
   }
 
   glBindBuffer(GL_ARRAY_BUFFER,mesh_tri_verts_VBO); 
+
   glBufferData(GL_ARRAY_BUFFER,
 	       sizeof(VBOPosNormalColor) * mesh_tri_verts.size(), 
 	       &mesh_tri_verts[0],
 	       GL_STATIC_DRAW); 
+
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,mesh_tri_indices_VBO); 
+
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
 	       sizeof(VBOIndexedTri) * mesh_tri_indices.size(),
 	       &mesh_tri_indices[0], GL_STATIC_DRAW);
-
 
 }
 

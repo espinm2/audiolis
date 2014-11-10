@@ -4,6 +4,7 @@
 #include "boundingbox.h"
 #include "edge.h"
 #include <glm/glm.hpp>
+#include <string>
 
 // ===========================================================
 // Simple half-edge data structure representation for a triangle mesh
@@ -30,11 +31,15 @@ public:
     if (i==2) return edge->getNext()->getNext()->getStartVertex();
     assert(0);
   }
+
   Edge* getEdge() { 
     assert (edge != NULL);
     return edge; 
   }
+
   int getID() { return id; }
+  
+  const std::string& getMaterial() const { return mtl; }
 
 
   //get center of triangle
@@ -47,7 +52,6 @@ public:
     return res;
 }
   
-
   // =========
   // MODIFIERS
   void setEdge(Edge *e) {
@@ -55,11 +59,17 @@ public:
     edge = e;
   }
 
+  void setMaterial(const std::string& m){
+    // Copy material
+    mtl = m;
+  }
+
 protected:
 
   // ==============
   // REPRESENTATION
   Edge *edge;
+  std::string mtl;
   int id;
 
   static int next_triangle_id;

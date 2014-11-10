@@ -49,9 +49,11 @@ Vertex* Mesh::addVertex(const glm::vec3 &position) {
 }
 
 
-void Mesh::addTriangle(Vertex *a, Vertex *b, Vertex *c) {
+void Mesh::addTriangle(std::string mtl, Vertex *a, Vertex *b, Vertex *c) {
   // create the triangle
   Triangle *t = new Triangle();
+  // Set material
+  t->setMaterial(mtl);
   // create the edges
   Edge *ea = new Edge(a,b,t);
   Edge *eb = new Edge(b,c,t);
@@ -131,6 +133,8 @@ void Mesh::Load() {
   char ctoken[100] = "";
   float x,y,z;
   int a,b,c,d,e;
+
+  std::string mtl = "";
   
   int index = 0;
   int vert_count = 0;
@@ -139,32 +143,50 @@ void Mesh::Load() {
   // get data of each line
   while (fgets(line, 200, objfile)) {   
 
-    // Make into string token
+    // Read in a line 
     int token_count = sscanf (line, "%s\n",token);
+
+    // If this line is empty, move to next line
     if (token_count == -1) continue;
+
+    // Valid line, clear previous values
     a = b = c = d = e = -1;
-    if (!strcmp(token,"usemtl") || !strcmp(token,"mtlib") ||
-	!strcmp(token,"g")) {
+
+    // If we see  mtlib, or g we incr  vert_index
+    if (!strcmp(token,"mtlib") || !strcmp(token,"g")) {
       vert_index = 1; 
       index++;
+      
+    // If we see a material associated with this
+    }else if (!strcmp(token,"usemtl")) {
+
+      sscanf (line, "%s %s\n",token,&mtl);
+      // vert_index = 1; 
+      index++;
+
+    // If we see a vertex, then addVertex (saves by index)
     } else if (!strcmp(token,"v")) {
       vert_count++;
       sscanf (line, "%s %f %f %f\n",token,&x,&y,&z);
       addVertex(glm::vec3(x,y,z));
+
+    // If we see a face
     } else if (!strcmp(token,"f")) {
+      
+      // Get indexes
       int num = sscanf (line, "%s %s %s %s\n",token,
 			atoken,btoken,ctoken);
       sscanf (atoken,"%d",&a);
       sscanf (btoken,"%d",&b);
       sscanf (ctoken,"%d",&c);
       assert (num == 4);
-      a -= vert_index;
-      b -= vert_index;
-      c -= vert_index;
+      a -= vert_index; // find index relative
+      b -= vert_index; 
+      c -= vert_index; 
       assert (a >= 0 && a < numVertices());
       assert (b >= 0 && b < numVertices());
       assert (c >= 0 && c < numVertices());
-      addTriangle(getVertex(a),getVertex(b),getVertex(c)); 
+      addTriangle(mtl,getVertex(a),getVertex(b),getVertex(c)); 
     } else if (!strcmp(token,"vt")) {
     } else if (!strcmp(token,"vn")) {
     } else if (token[0] == '#') {

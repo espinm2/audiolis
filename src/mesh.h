@@ -52,7 +52,7 @@ public:
   // =========
   // TRIANGLES
   int numTriangles() const { return triangles.size(); }
-  void addTriangle(Vertex *a, Vertex *b, Vertex *c);
+  void addTriangle(std::string mtl,Vertex *a, Vertex *b, Vertex *c);
   void removeTriangle(Triangle *t);
 
   // ===============
