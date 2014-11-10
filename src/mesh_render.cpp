@@ -23,16 +23,38 @@ glm::vec4 mesh_color(0.8,0.8,0.8,1);
 
 // the light position can be animated
 glm::vec3 Mesh::LightPosition() const {
+
+  // glm::vec3 min = bbox.getMin();
+  // glm::vec3 max = bbox.getMax();
+  // glm::vec3 tmp;
+  // bbox.getCenter(tmp);
+  // tmp += glm::vec3(0,5.0*(max.y-min.y),0);
+  // tmp += glm::vec3(cos(args->timer) * (max.x-min.x), 0, 0);
+  // tmp += glm::vec3(0,0,sin(args->timer) * (max.z-min.z));
+
+  // Orginal, hover camera over top of the scene
   glm::vec3 min = bbox.getMin();
   glm::vec3 max = bbox.getMax();
-  glm::vec3 tmp;
-  bbox.getCenter(tmp);
-  tmp += glm::vec3(0,5.0*(max.y-min.y),0);
-  tmp += glm::vec3(cos(args->timer) * (max.x-min.x), 0, 0);
-  tmp += glm::vec3(0,0,sin(args->timer) * (max.z-min.z));
+  float  radius = std::max((max.x-min.x), (max.z-min.z));
 
-  // tmp = GLCanvas::camera->camera_position;
-  return tmp;
+  // Get center
+  glm::vec3 t;
+  bbox.getCenter(t);
+
+  // Get camera dir from center without y comp
+  glm::vec3 dir = GLCanvas::camera->camera_position - t;
+  dir = glm::normalize(glm::vec3(dir.x,0,dir.z));
+
+  // Add offset
+  // Fing projected
+  t = t + (  dir * radius );
+  
+  // Add Y offset
+  t += glm::vec3(0,5.0*(max.y-min.y),0);
+
+
+  // glm::vec3 tmp = GLCanvas::camera->camera_position;
+  return t;
 }
 
 

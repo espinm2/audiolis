@@ -21,10 +21,10 @@ void ParticleSystem::setupVBOs(){
   // Setup new Data
   setupCursorPoint();
   setupParticles(); 
+
 }
 
 void ParticleSystem::drawVBOs(){
-  //TODO Implement
   HandleGLError("enter draw vbos");
 
 
@@ -36,7 +36,6 @@ void ParticleSystem::drawVBOs(){
 }
 
 void ParticleSystem::cleanupVBOs(){
-  //TODO Implement
   glDeleteBuffers(1,&particle_verts_VBO);
   glDeleteBuffers(1,&cursor_verts_VBO);
 
