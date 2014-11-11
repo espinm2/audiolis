@@ -8,6 +8,7 @@
 #include "argparser.h"
 #include "render_utils.h"
 #include "camera.h"
+#include "MersenneTwister.h"
 #include <list>
 #include <algorithm>
 #include <math.h>       /* fabs */
@@ -104,10 +105,11 @@ void Mesh::SetupMesh() {
     glm::vec3 nc = na;
 
 
+    // TODO Make Render Floor Option
+    
     if(args->render_top)
-      if( -1 <= na.y && na.y <= -1 + 0.01)
+      if( -1 <= na.y && na.y <= -1 + 0.001)
         continue;
-
 
     // Looks really bad yo
     if (args->gouraud_normals) {
@@ -116,44 +118,50 @@ void Mesh::SetupMesh() {
       nc = (*t)[2]->getGouraudNormal();
     }
 
-    glm::vec4 color;
+    // Color of triangle
+    glm::vec4 center_color;
+    glm::vec4 wire_color;
 
     std::string mtl = t->getMaterial();
-    if(mtl.compare("EXTRA_floor")){
+    
+    // Finding colors
 
-      color = glm::vec4(0,0,1,1);
+    if(mtl.compare(0,4,"wall") == 0){
+
+      center_color = glm::vec4(0.5,0,0,1);
+      wire_color = center_color;
     
-    // }else if(mtl.compare("")){ 
-    // }else if(mtl.compare("")){ 
-    // }else if(mtl.compare("")){ 
-    
+    }else if(mtl.compare(0,5,"GLASS") == 0){ 
+
+      center_color = glm::vec4(0.00,1.00,0.80,1);
+      wire_color = center_color;
+      
+    }else if(mtl.compare(0,6,"FILLIN") == 0){ 
+
+      center_color = glm::vec4(0.2,0.3,0,1);
+      wire_color = center_color;
+      wire_color = center_color;
+      
     }else{
+      
+      center_color = mesh_color;
 
-      color = glm::vec4(mesh_color.r * 0.1, 
-                        mesh_color.g * 0.1, 
-                        mesh_color.b*0.1,
-                        1);
+      wire_color = glm::vec4(
+          mesh_color.r * 0.1, 
+          mesh_color.g * 0.1, 
+          mesh_color.b*0.1,
+          1);
+
     }
 
 
-    
 
-
-
-    color = glm::vec4(mesh_color.r * 0.1, mesh_color.g * 0.1, mesh_color.b*0.1,1);
-
+    // Sending color
     TriVBOHelper(mesh_tri_verts,mesh_tri_indices,
                  a,b,c,
                  na,nb,nc,
-                 color,color,color);
-
-    /* //TODO Keep for help making code
-    int start = mesh_tri_verts.size();
-    mesh_tri_verts.push_back(VBOPosNormalColor(a,na,mesh_color));
-    mesh_tri_verts.push_back(VBOPosNormalColor(b,nb,mesh_color));
-    mesh_tri_verts.push_back(VBOPosNormalColor(c,nc,mesh_color));
-    mesh_tri_indices.push_back(VBOIndexedTri(start,start+1,start+2));
-    */
+                 center_color,
+                 wire_color,wire_color,wire_color);
 
   }
 
@@ -294,16 +302,19 @@ void Mesh::TriVBOHelper(std::vector<VBOPosNormalColor> &mesh_tri_verts,
                      const glm::vec3 &normal_a,
                      const glm::vec3 &normal_b,
                      const glm::vec3 &normal_c,
+                     const glm::vec4 &center_color,
                      const glm::vec4 &color_ab,
                      const glm::vec4 &color_bc,
                      const glm::vec4 &color_ca) {
 
 
+  // Center color gets rendered in non-wireframe visualization
+  // Otherwise we render the outlines provided
+  
   int start;
 
   if (args->wireframe) {
 
-    glm::vec4 center_color(1,1,1,1);
     glm::vec3 centroid = 1.0f / 3.0f * (pos_a + pos_b + pos_c);
     glm::vec3 normal = normal_a + normal_b + normal_c;
     glm::normalize(normal);
@@ -314,7 +325,7 @@ void Mesh::TriVBOHelper(std::vector<VBOPosNormalColor> &mesh_tri_verts,
     start = mesh_tri_verts.size();
     mesh_tri_verts.push_back(VBOPosNormalColor(pos_a,normal_a,color_ab));
     mesh_tri_verts.push_back(VBOPosNormalColor(pos_b,normal_b,color_ab));
-    mesh_tri_verts.push_back(VBOPosNormalColor(centroid,normal,center_color));
+    mesh_tri_verts.push_back(VBOPosNormalColor(centroid,normal,mesh_color));
     mesh_tri_indices.push_back(VBOIndexedTri(start,start+1,start+2));
 
 
@@ -322,7 +333,7 @@ void Mesh::TriVBOHelper(std::vector<VBOPosNormalColor> &mesh_tri_verts,
     start = mesh_tri_verts.size();
     mesh_tri_verts.push_back(VBOPosNormalColor(pos_b,normal_b,color_bc));
     mesh_tri_verts.push_back(VBOPosNormalColor(pos_c,normal_c,color_bc));
-    mesh_tri_verts.push_back(VBOPosNormalColor(centroid,normal,center_color));
+    mesh_tri_verts.push_back(VBOPosNormalColor(centroid,normal,mesh_color));
     mesh_tri_indices.push_back(VBOIndexedTri(start,start+1,start+2));
 
 
@@ -331,7 +342,7 @@ void Mesh::TriVBOHelper(std::vector<VBOPosNormalColor> &mesh_tri_verts,
     start = mesh_tri_verts.size();
     mesh_tri_verts.push_back(VBOPosNormalColor(pos_c,normal_c,color_ca));
     mesh_tri_verts.push_back(VBOPosNormalColor(pos_a,normal_a,color_ca));
-    mesh_tri_verts.push_back(VBOPosNormalColor(centroid,normal,center_color));
+    mesh_tri_verts.push_back(VBOPosNormalColor(centroid,normal,mesh_color));
     mesh_tri_indices.push_back(VBOIndexedTri(start,start+1,start+2));
 
 
@@ -340,9 +351,9 @@ void Mesh::TriVBOHelper(std::vector<VBOPosNormalColor> &mesh_tri_verts,
     // NON WIREFRAME
 
     start = mesh_tri_verts.size();
-    mesh_tri_verts.push_back(VBOPosNormalColor(pos_a,normal_a,mesh_color));
-    mesh_tri_verts.push_back(VBOPosNormalColor(pos_b,normal_b,mesh_color));
-    mesh_tri_verts.push_back(VBOPosNormalColor(pos_c,normal_c,mesh_color));
+    mesh_tri_verts.push_back(VBOPosNormalColor(pos_a,normal_a,center_color));
+    mesh_tri_verts.push_back(VBOPosNormalColor(pos_b,normal_b,center_color));
+    mesh_tri_verts.push_back(VBOPosNormalColor(pos_c,normal_c,center_color));
 
     mesh_tri_indices.push_back(VBOIndexedTri(start,start+1,start+2));
 

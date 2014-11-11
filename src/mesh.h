@@ -72,6 +72,7 @@ public:
                      const glm::vec3 &normal_a,
                      const glm::vec3 &normal_b,
                      const glm::vec3 &normal_c,
+                     const glm::vec4 &center_color,
                      const glm::vec4 &color_ab,
                      const glm::vec4 &color_bc,
                      const glm::vec4 &color_ca);

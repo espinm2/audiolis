@@ -160,7 +160,9 @@ void Mesh::Load() {
     // If we see a material associated with this
     }else if (!strcmp(token,"usemtl")) {
 
-      sscanf (line, "%s %s\n",token,&mtl);
+      char mat[100] = "";
+      sscanf (line, "%s %s\n",token,mat);
+      mtl = std::string(mat);
       // vert_index = 1; 
       index++;
 
