@@ -16,6 +16,7 @@
 #include "hash.h"
 #include "mesh.h"
 #include "collision_utils.h"
+#include "render_utils.h"
 
 
 // Used for update
@@ -101,7 +102,20 @@ void ParticleSystem::moveParticle(Particle * &p){
     p->decSteps(); // count down
   
   }else{
-  
+
+    dir = MirrorDirection(p->getHitNorm(), p->getDir());
+    dir = dir * (float)(-1.0);
+
+    float radius = glm::distance(p->getCenter(), p->getOldPos());
+
+    p->setCenter(oldPos + dir * radius);
+
+    setStepBeforeCollision(p);
+    // New upated for new center/dir
+    glm::vec3 newdir = p->getDir();
+    glm::vec3 newPos( oldPos + newdir * args->timestep );
+    p->setPos(newPos);
+    p->decSteps(); // count down
   
   }
 
@@ -141,6 +155,7 @@ void ParticleSystem::setStepBeforeCollision(Particle * &p){
   if(hitTriangle){
     float time =  h.getT();
     p->setSteps( (int)(time / args->timestep) );
+    p->setHitNorm(h.getNormal());
 
   }else{
     p->setSteps( 1000000 );

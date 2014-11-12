@@ -37,6 +37,7 @@ public:
   const   glm::vec3 & getPos()        const { return position; }
   const   glm::vec3 & getOldPos()     const { return oldPosition;}
   const   glm::vec3 & getCenter()     const { return center; }
+  const   glm::vec3 & getHitNorm()     const { return hitNorm; }
 
   double  getAmp()               const { return ampage; }
   int     getSplit()             const { return splits; }
@@ -53,6 +54,7 @@ public:
   void setPos     (const glm::vec3 & pos) { position = pos; }
   void setOldPos  (const glm::vec3 & pos) { oldPosition = pos; }
   void setCenter  (const glm::vec3 & pos) { center = pos; }
+  void setHitNorm (const glm::vec3 & pos) { hitNorm = pos; }
   void setAmp     (const double & a)  { ampage = a; }
   void setSplit   (const int    & s)  { splits = s; }
   void setSteps   (const int    & c)  { stepsLeft = c; }
@@ -67,9 +69,11 @@ private:
   glm::vec3 position;
   glm::vec3 oldPosition;
   glm::vec3 center;
+  glm::vec3 hitNorm;
   double    ampage;
   int       splits;
   int       stepsLeft;
+
 
 };
 
