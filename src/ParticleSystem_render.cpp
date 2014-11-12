@@ -106,7 +106,7 @@ void ParticleSystem::drawParticles(){
 
 void ParticleSystem::setupCursorPoint(){
 
-  glm::vec3 cursorPos( cursor.x(), cursor.y(), cursor.z() );
+  glm::vec3 cursorPos = cursor;
   glm::vec3 normal(0,1,0);
   glm::vec4 color(1,0,0,1);
 
