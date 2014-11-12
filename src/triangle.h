@@ -51,6 +51,36 @@ public:
     res = res * (1.0f/3.0f);
     return res;
 }
+
+  glm::vec3 getNormal(){
+    
+    glm::vec3  p1 = edge->getStartVertex()->getPos();
+    glm::vec3  p2 = edge->getNext()->getStartVertex()->getPos();              
+    glm::vec3  p3 = edge->getNext()->getNext()->getStartVertex()->getPos();   
+  
+    glm::vec3 v12 = p2;
+    v12 -= p1;
+    glm::vec3 v23 = p3;
+    v23 -= p2;
+    glm::vec3 normal = glm::normalize(glm::cross(v12,v23));
+    return normal;
+  
+  }
+
+
+  glm::vec3 getNormalRev(){
+
+    glm::vec3  p3 = edge->getStartVertex()->getPos();
+    glm::vec3  p2 = edge->getNext()->getStartVertex()->getPos();              
+    glm::vec3  p1 = edge->getNext()->getNext()->getStartVertex()->getPos();   
+  
+    glm::vec3 v12 = p2;
+    v12 -= p1;
+    glm::vec3 v23 = p3;
+    v23 -= p2;
+    glm::vec3 normal = glm::normalize(glm::cross(v12,v23));
+    return normal;
+  }
   
   // =========
   // MODIFIERS

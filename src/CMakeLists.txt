@@ -23,10 +23,10 @@ add_executable(audiolis
   mesh.h
   vbo_structs.h
   particle.h
-  vectors.h
   ParticleSystem.h
   ParticleSystem.cpp
   ParticleSystem_render.cpp
+  collision_utils.cpp
 )
 
 
