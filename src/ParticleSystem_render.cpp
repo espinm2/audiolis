@@ -1,3 +1,5 @@
+#include <glm/glm.hpp>
+
 #include "ParticleSystem.h"
 #include "particle.h"
 #include "boundingbox.h"
@@ -48,15 +50,12 @@ void ParticleSystem::setupParticles(){
 
     // Cur Particle
     Particle * part = particles[i];
-    Vec3f p = part->getPos();
 
-    // Getting Pos
-    glm::vec3 pos(p.x(), p.y(), p.z());
+    // Getting pos
+    glm::vec3 pos = part->getPos();
 
     // Picking Normal
-    Vec3f n = part->getDir(); 
-
-    glm::vec3 normal(n.x(), n.y(), n.z());
+    glm::vec3 normal = part->getDir(); 
     
     
     // Picking color
@@ -153,14 +152,12 @@ void ParticleSystem::drawCursorPoint(){
 }
 
 
-int ParticleSystem::getGLPointSize(const Vec3f & point){
+int ParticleSystem::getGLPointSize(const glm::vec3 & point){
 
   // Get Camera  Position
-  glm::vec3 cPos = GLCanvas::camera->camera_position;
-  Vec3f cameraPos(cPos.x, cPos.y, cPos.z);
+  glm::vec3 cameraPos = GLCanvas::camera->camera_position;
 
-  double dist = point.Distance3f(cameraPos);
-
+  double dist = glm::distance(point,cameraPos);
 
   return 10;
 

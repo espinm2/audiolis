@@ -104,7 +104,7 @@ public:
   bool animate;
   bool wireframe;
   bool render_top;
-  double timestep;
+  float timestep;
 };
 
 

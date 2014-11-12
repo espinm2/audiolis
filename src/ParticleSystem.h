@@ -13,11 +13,11 @@
 
 #include <vector>
 #include <iostream>
+#include <glm/glm.hpp>
+
 #include "glCanvas.h"
 #include "boundingbox.h"
-
 #include "vbo_structs.h"
-#include "vectors.h"
 
 
 // Forward declaration
@@ -40,8 +40,8 @@ class ParticleSystem {
     ~ParticleSystem();
 
     // User interace functions
-    void moveCursor(const double & dx, 
-        const double & dy, const double & dz );
+    void moveCursor(const float & dx, 
+        const float & dy, const float & dz );
 
 
     // Simulation functions
@@ -60,7 +60,7 @@ class ParticleSystem {
   private:
 
     // Fuctions for Faking Depth
-    int getGLPointSize(const Vec3f & point);
+    int getGLPointSize(const glm::vec3 & point);
 
     // Functions
     void setupParticles();
@@ -75,7 +75,7 @@ class ParticleSystem {
     Mesh * mesh;
     
     std::vector<Particle *> particles;
-    Vec3f cursor;
+    glm::vec3 cursor;
 
     // VBOs Ids
     GLuint particle_verts_VBO;

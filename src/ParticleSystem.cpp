@@ -1,10 +1,9 @@
 #include "ParticleSystem.h"
 
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include <cmath>
-#include "vectors.h"
+
 #include "boundingbox.h"
 #include "MersenneTwister.h"
 #include "particle.h"
@@ -24,8 +23,10 @@ void ParticleSystem::load(){
   
   // Initaite the cursor 
   glm::vec3 centerScene;
+
   bbox->getCenter(centerScene);
-  cursor = Vec3f(centerScene.x, centerScene.y, centerScene.z);
+
+  cursor = glm::vec3(centerScene.x, centerScene.y, centerScene.z);
 
   // Using cursor
   MTRand randomGen;
@@ -34,23 +35,22 @@ void ParticleSystem::load(){
   // Create Box of ranodm points
   for( int i = 0; i < 1000; i++){
     // Find x,y,z
-    double x = cursor.x() - s/2.0 + randomGen.rand(s);
-    double y = cursor.y() - s/2.0 + randomGen.rand(s);
-    double z = cursor.z() - s/2.0 + randomGen.rand(s);
+    float x = cursor.x - s/2.0 + (float) randomGen.rand(s);
+    float y = cursor.y - s/2.0 + (float) randomGen.rand(s);
+    float z = cursor.z - s/2.0 + (float) randomGen.rand(s);
 
-    Vec3f pos(x,y,z);
+    glm::vec3 pos(x,y,z);
 
     // Project into a circle
-    double radius = s * sqrt(2.0);
+    float radius = s * sqrt(2.0);
     
-    Vec3f dir = pos - cursor;
-    dir.Normalize();
+    glm::vec3 dir = pos - cursor;
+
+    dir = glm::normalize(dir);
 
     pos = cursor + dir * radius;
 
     Particle * p = new Particle(pos,cursor,cursor,100,0);
-
-    std::cout << dir.x() <<  " " << dir.y() << " " << dir.z() << std::endl;
 
     // put particle there
     particles.push_back(p);
@@ -60,16 +60,16 @@ void ParticleSystem::load(){
 }
 
 void ParticleSystem::update(){
+
   // TODO Implement collision detection + splits
 
   for(ParticleIter iter = particles.begin(); iter != particles.end(); iter++){
 
-    
     Particle * curPart = (*iter);
 
     // New position is now old
     curPart->setOldPos(curPart->getPos());
-    // curPart->setPos(Vec3f(0,0,0)); // New is cleared
+
     moveParticle(curPart);
   
   }
@@ -78,22 +78,21 @@ void ParticleSystem::update(){
 
 void ParticleSystem::moveParticle(Particle * &p){
 
-  Vec3f oldPos = p->getOldPos();
-  Vec3f dir = p->getDir();
-
+  glm::vec3 oldPos = p->getOldPos();
+  glm::vec3 dir = p->getDir();
 
 
   // TODO Figure out if we want to use center for time, or baby ray tech
-  Vec3f newPos( oldPos + dir * args->timestep );
+  glm::vec3 newPos( oldPos + dir * args->timestep );
 
   p->setPos(newPos);
 
 }
 
-void ParticleSystem::moveCursor( const double & dx, 
-    const double & dy, const double & dz ){
+void ParticleSystem::moveCursor( const float & dx, 
+    const float & dy, const float & dz ){
 
-  cursor = Vec3f(cursor.x() + dx,
-                 cursor.y() + dy,
-                 cursor.z() + dz);
+  // TODO FIX
+  cursor+= glm::vec3(dx,dy,dz);
+
 }
