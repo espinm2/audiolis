@@ -87,12 +87,15 @@ private:
   void DrawLight();
   void DrawMesh();
 
+public:
+  edgeshashtype edges;
+  triangleshashtype triangles;
+
+private:
   // ==============
   // REPRESENTATION
   ArgParser *args;
   std::vector<Vertex*> vertices;
-  edgeshashtype edges;
-  triangleshashtype triangles;
   BoundingBox bbox;
 
   // VBOs

@@ -17,17 +17,19 @@ public:
     oldPosition  = glm::vec3(0,0,0);
     ampage       = 0;
     splits       = 0;
+    stepsLeft    = -1;
   }
 
   // constructor
   Particle(const glm::vec3 & pos, const glm::vec3 & old, 
-      const glm::vec3 c, double a, int s){
+      const glm::vec3 c, double a, int s, int steps){
 
       position    = pos;
       oldPosition = old;
+      center      = c;
       ampage      = a;
       splits      = s;
-      center      = c;
+      stepsLeft   = steps;
 
   }
 
@@ -38,6 +40,7 @@ public:
 
   double  getAmp()               const { return ampage; }
   int     getSplit()             const { return splits; }
+  int     getSteps()             const { return stepsLeft; }
 
   glm::vec3 getDir() const { 
     glm::vec3 res = (position-center); 
@@ -52,6 +55,8 @@ public:
   void setCenter  (const glm::vec3 & pos) { center = pos; }
   void setAmp     (const double & a)  { ampage = a; }
   void setSplit   (const int    & s)  { splits = s; }
+  void setSteps   (const int    & c)  { stepsLeft = c; }
+  void decSteps   () { stepsLeft--; }
 
   // Debugging Functions
   friend std::ostream& operator<<(std::ostream &, const Particle &);
@@ -62,8 +67,10 @@ private:
   glm::vec3 position;
   glm::vec3 oldPosition;
   glm::vec3 center;
-  double   ampage;
-  int      splits;
+  double    ampage;
+  int       splits;
+  int       stepsLeft;
+
 };
 
 

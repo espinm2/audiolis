@@ -48,6 +48,7 @@ class ParticleSystem {
     void load(); 
     void update();
     void moveParticle(Particle * &p);
+    void setStepBeforeCollision(Particle * &p);
     
     
     // located in ParticleSystem_render.cpp

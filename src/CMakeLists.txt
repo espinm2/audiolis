@@ -26,7 +26,6 @@ add_executable(audiolis
   ParticleSystem.h
   ParticleSystem.cpp
   ParticleSystem_render.cpp
-  collision_utils.cpp
 )
 
 

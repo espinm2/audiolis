@@ -5,6 +5,7 @@
 #include "edge.h"
 #include <glm/glm.hpp>
 #include <string>
+#include "vertex.h"
 
 // ===========================================================
 // Simple half-edge data structure representation for a triangle mesh
