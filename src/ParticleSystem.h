@@ -34,7 +34,7 @@ class ParticleSystem {
     // Constructors
     ParticleSystem(ArgParser *_args, Mesh * _mesh, BoundingBox * _bbox) { 
       args = _args; 
-      mesh = _mesh; 
+      mesh = _mesh;
       bbox = _bbox; }
 
     ~ParticleSystem();
@@ -47,8 +47,9 @@ class ParticleSystem {
     // Simulation functions
     void load(); 
     void update();
-    void moveParticle(Particle * &p);
+    bool moveParticle(Particle * p);
     void setStepBeforeCollision(Particle * &p);
+    void createParticleWave();
     
     
     // located in ParticleSystem_render.cpp

@@ -297,6 +297,10 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       args->gouraud_normals = !args->gouraud_normals;
       mesh->setupVBOs();
       break;
+    case 'p': case 'P':
+      particleSystem->createParticleWave();
+      particleSystem->setupVBOs();
+      break;
     case 'w': case 'W':
       args->wireframe = !args->wireframe;
       mesh->setupVBOs();
@@ -311,27 +315,27 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       break;
     // Naviation of cursor //////////////////////////
     case 'h' : case 'H':
-      particleSystem->moveCursor(SCALE,0,0);
-      particleSystem->setupVBOs();
-      break;
-    case 'l' : case 'L':
       particleSystem->moveCursor(-1*SCALE,0,0);
       particleSystem->setupVBOs();
       break;
+    case 'l' : case 'L':
+      particleSystem->moveCursor(SCALE,0,0);
+      particleSystem->setupVBOs();
+      break;
     case 'j' : case 'J':
-      particleSystem->moveCursor(0,SCALE,0);
-      particleSystem->setupVBOs();
-      break;
-    case 'k' : case 'K':
-      particleSystem->moveCursor(0,-1*SCALE,0);
-      particleSystem->setupVBOs();
-      break;
-    case 'i' : case 'I':
       particleSystem->moveCursor(0,0,SCALE);
       particleSystem->setupVBOs();
       break;
-    case 'm' : case 'M':
+    case 'k' : case 'K':
       particleSystem->moveCursor(0,0,-1*SCALE);
+      particleSystem->setupVBOs();
+      break;
+    case 'i' : case 'I':
+      particleSystem->moveCursor(0,SCALE,0);
+      particleSystem->setupVBOs();
+      break;
+    case 'm' : case 'M':
+      particleSystem->moveCursor(0,-1*SCALE,0);
       particleSystem->setupVBOs();
       break;
     // End Naviation ////////////////////////////////

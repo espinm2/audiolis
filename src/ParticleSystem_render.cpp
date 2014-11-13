@@ -78,7 +78,7 @@ void ParticleSystem::drawParticles(){
 
 
   HandleGLError("enter drawParticles");
-  glPointSize( 2 ) ; 
+  glPointSize( 4 ) ; 
   glBindBuffer(GL_ARRAY_BUFFER, particle_verts_VBO);
 
   glEnableVertexAttribArray(0);
