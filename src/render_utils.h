@@ -49,6 +49,13 @@ inline float srgb_to_linear(float x) {
 
 // =========================================================================
 // utility functions 
+
+
+inline glm::vec4 getColor(int r, int g, int b, float a){
+  return glm::vec4(r/255.0, g/255.0, b/255.0, a);
+}
+
+
 inline float DistanceBetweenTwoPoints(const glm::vec3 &p1, const glm::vec3 &p2) {
   glm::vec3 v = p1-p2;
   return glm::length(v);
@@ -94,6 +101,11 @@ void addEdgeGeometry(std::vector<VBOPosNormalColor> &verts,
 
 inline std::ostream& operator<<(std::ostream& ostr, const glm::vec3 &v) {
   ostr << "<" << v.x << "," << v.y << "," << v.z << ">";
+  return ostr;
+}
+
+inline std::ostream& operator<<(std::ostream& ostr, const glm::vec4 &v) {
+  ostr << "<" << v.r << "," << v.g << "," << v.b << ","  <<  v.a << ">";
   return ostr;
 }
 

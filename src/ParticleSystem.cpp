@@ -18,7 +18,7 @@
 #include "collision_utils.h"
 #include "render_utils.h"
 
-#define MAX_ITERATIONS 300
+#define MAX_ITERATIONS 600
 
 // Used for update
 typedef std::vector<Particle *>::iterator ParticleIter;
@@ -135,7 +135,6 @@ bool ParticleSystem::moveParticle(Particle * p){
 void ParticleSystem::moveCursor( const float & dx, 
     const float & dy, const float & dz ){
 
-  // TODO FIX
   cursor+= glm::vec3(dx,dy,dz);
 
 }
@@ -183,7 +182,7 @@ void ParticleSystem::createParticleWave(){
   double s = 0.01;
 
   // Create Box of ranodm points
-  for( int i = 0; i < 10; i++){
+  for( int i = 0; i < 10000; i++){
     // Find x,y,z
     float x = cursor.x - s/2.0 + (float) randomGen.rand(s);
     float y = cursor.y - s/2.0 + (float) randomGen.rand(s);

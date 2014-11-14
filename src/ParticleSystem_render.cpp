@@ -5,6 +5,8 @@
 #include "boundingbox.h"
 #include "camera.h"
 
+#define MAX_ITERATIONS 600
+
 void ParticleSystem::initializeVBOs(){
 
   // Get uniquie ids from buffers
@@ -58,8 +60,10 @@ void ParticleSystem::setupParticles(){
     glm::vec3 normal = part->getDir(); 
     
     
+    float lifespanColor = ( MAX_ITERATIONS - part->getIter()) / (1.0 * MAX_ITERATIONS);
+
     // Picking color
-    glm::vec4 color(0,0,1,1);
+    glm::vec4 color(0,0,lifespanColor,1);
     
     particle_verts.push_back(VBOPosNormalColor(pos,normal,color));
   
@@ -78,7 +82,7 @@ void ParticleSystem::drawParticles(){
 
 
   HandleGLError("enter drawParticles");
-  glPointSize( 4 ) ; 
+  glPointSize( 2 ) ; 
   glBindBuffer(GL_ARRAY_BUFFER, particle_verts_VBO);
 
   glEnableVertexAttribArray(0);
