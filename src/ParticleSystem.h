@@ -1,14 +1,12 @@
 #ifndef _PARTICLESYSTEM_H_
 #define _PARTICLESYSTEM_H_
 
-
 /* [x] TODO Add Mesh Ptr to class
  * [x] TODO Expand Constrcutor to take in mesh
  * [x] TODO Create a uniform sphere of dots
  * [x] TODO Alter Load() to take in inputs for simulation
  * [x] TODO Run simulation where spheres project outwards
  * [x] TODO Be able to create that uniform sphere by your cursor
- * [ ] TODO Work on Collision Detection, Make triangles turn red if hit
  */
 
 #include <vector>
@@ -86,7 +84,6 @@ class ParticleSystem {
     // Vertices for VBOs
     std::vector<VBOPosNormalColor> particle_verts;
     std::vector<VBOPosNormalColor> cursor_verts;
-    
 
 };
 

@@ -17,6 +17,7 @@
 #include "mesh.h"
 #include "collision_utils.h"
 #include "render_utils.h"
+#include "split_utils.h"
 
 #define MAX_ITERATIONS 600
 
@@ -29,16 +30,12 @@ ParticleSystem::~ParticleSystem(){
     delete particles[i];
 }
 
-
 void ParticleSystem::load(){
-  
   // Initaite the cursor 
   glm::vec3 centerScene;
 
   bbox->getCenter(centerScene);
   cursor = glm::vec3(centerScene.x, centerScene.y, centerScene.z);
-
-
 }
 
 void ParticleSystem::update(){
@@ -75,13 +72,9 @@ void ParticleSystem::update(){
           particles.pop_back();
 
 
-
-        }
-
+      }
     }
-  
   }
-
 }
 
 bool ParticleSystem::moveParticle(Particle * p){
@@ -109,6 +102,28 @@ bool ParticleSystem::moveParticle(Particle * p){
 
     p->setPos(newPos);
     p->decSteps(); // count down
+
+    
+    // Testing_________________________________________________________________
+    if(p->getSteps % 100 == 0){
+      // All based on old postions
+      
+      std::vector< glm::vec3> newPart;
+
+      circle_points_on_plane()
+ 
+
+      for(int i = 0; i < newPart.size(); i++){
+      
+        Particle * p = new Particle(newPart[i], ,cursor,100,0,1000);
+        setStepBeforeCollision(p);
+      
+        // put particle there
+        particles.push_back(p);
+      
+      }
+
+    } //_______________________________________________________________________
   
   }else{
 
@@ -177,34 +192,38 @@ void ParticleSystem::setStepBeforeCollision(Particle * &p){
 void ParticleSystem::createParticleWave(){
 
 
+  // Testing function to create circle in 3d space
+
+  // Phonon Mapping to create particle wave
   // Using cursor
   MTRand randomGen;
   double s = 0.01;
-
+  
   // Create Box of ranodm points
   for( int i = 0; i < 10000; i++){
     // Find x,y,z
     float x = cursor.x - s/2.0 + (float) randomGen.rand(s);
     float y = cursor.y - s/2.0 + (float) randomGen.rand(s);
     float z = cursor.z - s/2.0 + (float) randomGen.rand(s);
-
+  
     glm::vec3 pos(x,y,z);
-
+  
     // Project into a circle
     float radius = s * sqrt(2.0);
     
     glm::vec3 dir = pos - cursor;
-
+  
     dir = glm::normalize(dir);
-
+  
     pos = cursor + dir * radius;
+  
 
     Particle * p = new Particle(pos,cursor,cursor,100,0,1000);
     setStepBeforeCollision(p);
-
+  
     // put particle there
     particles.push_back(p);
-
+  
   }
 
 }
