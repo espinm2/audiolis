@@ -48,6 +48,9 @@ class ParticleSystem {
     bool moveParticle(Particle * p);
     void setStepBeforeCollision(Particle * &p);
     void createParticleWave();
+    void particleSplit(Particle * &p);
+
+    void splitAllParticles();
     
     
     // located in ParticleSystem_render.cpp
@@ -75,6 +78,7 @@ class ParticleSystem {
     Mesh * mesh;
     
     std::vector<Particle *> particles;
+    std::vector<Particle *> newParticles;
     glm::vec3 cursor;
 
     // VBOs Ids

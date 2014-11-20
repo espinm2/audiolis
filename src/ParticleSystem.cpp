@@ -19,7 +19,20 @@
 #include "render_utils.h"
 #include "split_utils.h"
 
-#define MAX_ITERATIONS 600
+
+// FIXME ////////////////////////////////////////////
+// [ ] Particle waves should happen with distance
+// [ ] Get low resolution of a mesh to use (tri count)
+// [ ] when you split, fix behind timestep issue
+// [ ] Change the radius_particle_wave depending how many spits done
+// [ ] ReIntroduce splits
+
+#define MAX_ITERATIONS 600 // refactor with below
+#define RADIUS_PARTICLE_WAVE 0.001 //TODO hex created size should very
+#define RADIUS_INIT_SPHERE 0.01
+#define NUM_INIT_PARTICLES  100
+#define NUM_INIT_LIFESPACE  1000 // refactor
+#define SPLIT_AMOUNT 6
 
 // Used for update
 typedef std::vector<Particle *>::iterator ParticleIter;
@@ -40,7 +53,6 @@ void ParticleSystem::load(){
 
 void ParticleSystem::update(){
 
-  // TODO Implement collision detection + splits
 
   // for(ParticleIter iter = particles.begin(); iter != particles.end();){
   for(int i = 0; i < particles.size();){
@@ -75,6 +87,7 @@ void ParticleSystem::update(){
       }
     }
   }
+
 }
 
 bool ParticleSystem::moveParticle(Particle * p){
@@ -98,32 +111,13 @@ bool ParticleSystem::moveParticle(Particle * p){
 
   if( p->getSteps() > 0 ){
   
+
     glm::vec3 newPos( oldPos + dir * args->timestep );
 
     p->setPos(newPos);
     p->decSteps(); // count down
 
     
-    // Testing_________________________________________________________________
-    if(p->getSteps % 100 == 0){
-      // All based on old postions
-      
-      std::vector< glm::vec3> newPart;
-
-      circle_points_on_plane()
- 
-
-      for(int i = 0; i < newPart.size(); i++){
-      
-        Particle * p = new Particle(newPart[i], ,cursor,100,0,1000);
-        setStepBeforeCollision(p);
-      
-        // put particle there
-        particles.push_back(p);
-      
-      }
-
-    } //_______________________________________________________________________
   
   }else{
 
@@ -152,6 +146,49 @@ void ParticleSystem::moveCursor( const float & dx,
 
   cursor+= glm::vec3(dx,dy,dz);
 
+}
+
+void ParticleSystem::splitAllParticles(){
+
+  
+  for(int i = 0; i < particles.size(); i++){
+    particleSplit(particles[i]);
+  }
+
+  for(int i = 0; i < newParticles.size(); i++){
+    particles.push_back(newParticles[i]);
+  }
+
+  newParticles.clear();
+
+}
+
+//tag
+void ParticleSystem::particleSplit(Particle * &p){
+  // Side effects: Adds new particles to end of particles list
+
+    // Where I will store new particles
+    std::vector< glm::vec3> newPart;
+
+    circle_points_on_plane(p->getOldPos(), 
+        p->getDir(), RADIUS_PARTICLE_WAVE, SPLIT_AMOUNT, newPart);
+ 
+    cirlce_point_on_sphere(p->getCenter(),
+        glm::distance( p->getOldPos(), p->getCenter()),newPart);
+
+    for(int i = 0; i < newPart.size(); i++){
+    
+      // FIXME this could cause a problem in future
+      // If you ever use oldPos or newPos for any visual
+      Particle * s = new Particle(newPart[i],newPart[i],
+          p->getCenter(),100,0, NUM_INIT_LIFESPACE);
+
+      setStepBeforeCollision(s);
+    
+      // put particle there to be "moved" when its their turn
+      newParticles.push_back(s);
+    
+    }// for
 }
 
 void ParticleSystem::setStepBeforeCollision(Particle * &p){
@@ -197,10 +234,10 @@ void ParticleSystem::createParticleWave(){
   // Phonon Mapping to create particle wave
   // Using cursor
   MTRand randomGen;
-  double s = 0.01;
+  double s = RADIUS_INIT_SPHERE;
   
   // Create Box of ranodm points
-  for( int i = 0; i < 10000; i++){
+  for( int i = 0; i < NUM_INIT_PARTICLES; i++){
     // Find x,y,z
     float x = cursor.x - s/2.0 + (float) randomGen.rand(s);
     float y = cursor.y - s/2.0 + (float) randomGen.rand(s);
@@ -218,7 +255,7 @@ void ParticleSystem::createParticleWave(){
     pos = cursor + dir * radius;
   
 
-    Particle * p = new Particle(pos,cursor,cursor,100,0,1000);
+    Particle * p = new Particle(pos,cursor,cursor,100,0,NUM_INIT_LIFESPACE);
     setStepBeforeCollision(p);
   
     // put particle there

@@ -309,6 +309,12 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       args->render_top = !args->render_top;
       mesh->setupVBOs();
       break;
+    case 's': case 'S':
+      args->animate = !args->animate;
+      particleSystem->setupVBOs();
+      particleSystem->splitAllParticles();
+      particleSystem->setupVBOs();
+      break;
     case 'q':  case 'Q':
       // quit
       glfwSetWindowShouldClose(GLCanvas::window, GL_TRUE);

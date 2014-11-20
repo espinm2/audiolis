@@ -20,7 +20,7 @@ glm::vec3 parametric_circle_3d(glm::vec3 a, glm::vec3 b,
     glm::vec3 c, float r, float theta);
 
 void circle_points_on_plane( const glm::vec3 c, const glm::vec3 n, 
-    const int r, const int numberPoints, std::vector<glm::vec3> &pts);
+    const float r, const int numberPoints, std::vector<glm::vec3> &pts);
 
 void cirlce_point_on_sphere( const glm::vec3 &center, const float radius, 
   std::vector<glm::vec3> &pts);
@@ -34,7 +34,7 @@ void cirlce_point_on_sphere( const glm::vec3 &center, const float radius,
 // ╩╩ ╩╩  ╩═╝╚═╝╩ ╩╚═╝╝╚╝ ╩ ╩ ╩ ╩ ╩╚═╝╝╚╝
 
 void circle_points_on_plane( const glm::vec3 c, const glm::vec3 n, 
-    const int r, const int numberPoints, std::vector<glm::vec3> &pts){
+    const float r, const int numberPoints, std::vector<glm::vec3> &pts){
 
   float theta = 2 * M_PI / numberPoints;
 
@@ -52,7 +52,6 @@ void circle_points_on_plane( const glm::vec3 c, const glm::vec3 n,
   }
 
   a = glm::normalize(a);
-  
   
   glm::vec3 b = glm::cross(n,a);
   b = glm::normalize(b);
