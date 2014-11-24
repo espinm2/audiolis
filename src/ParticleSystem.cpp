@@ -105,7 +105,7 @@ void ParticleSystem::update(){
     }else{
 
         // Update postiton and move to next particle
-        moveParticle(curPart);
+        moveParticle(curPart,args->timestep);
 
 
         deleteMask[maskIndex++] = 0;
@@ -153,7 +153,7 @@ void ParticleSystem::update(){
       particles.push_back(newParticles[i]);
 }
 
-bool ParticleSystem::moveParticle(Particle * p){
+bool ParticleSystem::moveParticle(Particle * p, float timestep){
   /*
    * Input : Particle ptr
    * Output: That particle moved a timestep
@@ -165,23 +165,23 @@ bool ParticleSystem::moveParticle(Particle * p){
 
   // Stuff for calc
   float time_until_impact = p->getTimeLeft();
-  float time_after_impact = args->timestep - p->getTimeLeft();
+  float time_after_impact = timestep - p->getTimeLeft();
 
   glm::vec3 oldPos = p->getOldPos();
   glm::vec3 dir = p->getDir();
 
   // We didn't hit an object in this interval of time
-  if(time_until_impact - args->timestep > 0){
+  if(time_until_impact - timestep > 0){
 
-    glm::vec3 newPos( oldPos + dir * args->timestep );
+    glm::vec3 newPos( oldPos + dir * timestep );
     p->setPos(newPos);
-    p->decTime(args->timestep);
+    p->decTime(timestep);
   
   }else{
 
     // Get  Times
     float time_until_impact = p->getTimeLeft();
-    float time_after_impact = args->timestep - p->getTimeLeft();
+    float time_after_impact = timestep - p->getTimeLeft();
 
     // We where we hit in space
     glm::vec3 impactPos(oldPos + dir * time_until_impact);
@@ -190,17 +190,13 @@ bool ParticleSystem::moveParticle(Particle * p){
     glm::vec3 mir_dir = MirrorDirection(p->getHitNorm(), p->getDir());
     mir_dir = mir_dir * (float)(-1.0);
     float radius = glm::distance(p->getCenter(), impactPos);
+    
+    // Move up to line
     p->setCenter(impactPos + mir_dir * radius);
+    p->setOldPos(impactPos);
+    calcMeshCollision(p); // new timeLeft Case a) we move a little up
 
-    // New upated for new center/dir
-    glm::vec3 newdir = p->getDir();
-    glm::vec3 newPos( impactPos + newdir * time_after_impact);
-    p->setPos(newPos);
-
-    // Find where we hit next
-    calcMeshCollision(p);
-    p->decTime(time_after_impact);
-  
+    moveParticle(p, time_after_impact); // this dude will move
   }
   // up inter
   p->incIter();

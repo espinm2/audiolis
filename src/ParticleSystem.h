@@ -45,7 +45,7 @@ class ParticleSystem {
     // Simulation functions
     void load(); 
     void update();
-    bool moveParticle(Particle * p);
+    bool moveParticle(Particle * p, float timestep);
     void calcMeshCollision(Particle * &p);
     void createInitWave();
     void particleSplit(Particle * &p);
