@@ -133,7 +133,6 @@ void GLCanvas::animate(){
   fpsCounter(args->animate, args->timer);
 
   if(args->animate){
-    mesh->setupVBOs();
     particleSystem->update();
     particleSystem->setupVBOs();
   }

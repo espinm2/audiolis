@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <iostream>
 #include <cmath>
+#include <limits>
 
 #include "boundingbox.h"
 #include "geometry_utils.h"
@@ -29,9 +30,10 @@
 #define MAX_ITERATIONS        600   // When to kill particles
 #define RADIUS_PARTICLE_WAVE  0.001 // Radius of hex shape
 #define RADIUS_INIT_SPHERE    0.01  // Radius of source sphere
-#define NUM_INIT_PARTICLES    100   // Inital Number of Particles
+#define NUM_INIT_PARTICLES    100000 // Inital Number of Particles
 #define INITAL_AMPLATUDE      100   // Amp we start off with
 #define SPLIT_AMOUNT          6     // What sized polygon we split into
+#define MIN_AMP               10    // When particles should die
 
 // Used for update
 typedef std::vector<Particle *>::iterator ParticleIter;
@@ -50,96 +52,159 @@ void ParticleSystem::load(){
   cursor = glm::vec3(centerScene.x, centerScene.y, centerScene.z);
 }
 
+// tag
 void ParticleSystem::update(){
+  /*
+   * Input : None
+   * Output: This function will update our particle simuations
+   * Asumpt: There are particles to move
+   * SideEf: Updates postition of particles/ removes particles
+   */
+
+  // Hold new particles from split
+  std::vector<Particle *> newParticles;
+
+  // Marked for removal mask, 1 == delete, 0 == keep
+  std::vector<int>deleteMask (particles.size(), 0);
+  unsigned int maskIndex = 0;
+
+  for(ParticleIter iter = particles.begin(); iter != particles.end();){
+
+     // This current Particle
+     Particle * curPart = (*iter);
+     curPart->setOldPos(curPart->getPos());
 
 
-  // for(ParticleIter iter = particles.begin(); iter != particles.end();){
-  for(int i = 0; i < particles.size();){
+    // Are we below a threhold just kill and move to another
+    if(curPart->getAmp() < MIN_AMP){
 
-    //Particle * curPart = (*iter);
-    Particle * curPart = particles[i];
+      // Kill this partcile and move to next
+      deleteMask[maskIndex++] = 1;
+      iter++;
+      continue;
+
+    }
+
+    // Particles are beyond a threshold init a split
+    if(shouldSplit(curPart)){
+
+        // Debug ///////
+        // if( curPart->getSplit() == 1 ){ splitReached= true ; }
+
+        // Create new particles
+
+        // Move them a timestep
+
+        // Push them into newParticles list for l8 addition
+
+        // Remove and kill the current particle
+        deleteMask[maskIndex++] = 1;
+        iter++;
 
 
-    if(moveParticle(curPart)){
-      i++;
     }else{
 
-        //TODO  Make this erease more effiecent
-        Particle * backParticle = particles.back();
-
-        if( curPart == backParticle ){
-
-          delete curPart; // kill what p is pointing to
-          particles.pop_back();
+        // Update postiton and move to next particle
+        moveParticle(curPart);
 
 
-        }else{
+        deleteMask[maskIndex++] = 0;
+        iter++;
+    }//ifelse
+
+  } //forloop
 
 
-          delete curPart;
+  // Deletetion step
+  for( unsigned int i = 0 ; i < particles.size(); i++){
+      // Keep if 0, else delete
+      if(deleteMask[i] == 1){
 
-          particles[i] = backParticle;
+          if(!newParticles.empty()){
 
-          particles.pop_back();
+              // Put in new particle to fill gap
+              delete particles[i];
+              particles[i] = newParticles.back();
+              newParticles.pop_back();
 
+          }else{
 
+              // there is stuff to push off
+              if(i != particles.size()-1){
+
+                // Pop off back of vector to fill the gap
+                delete particles[i];
+                particles[i] = particles.back();
+                particles.pop_back();
+
+              }else{
+
+                // Just delete the last element, nothing need be poped
+                delete particles[i];
+                particles.pop_back();
+
+              }
+          }
       }
-    }
   }
 
+  // Add into the main vector those new particles yet added
+  for( unsigned int i = 0; i < newParticles.size(); i++)
+      particles.push_back(newParticles[i]);
 }
 
 bool ParticleSystem::moveParticle(Particle * p){
-
-
-  if(p->getIter() > MAX_ITERATIONS){
-
-
-    return false;
-  }
-
-  // up inter
-  p->incIter();
-  
-  // New position is now old
-  p->setOldPos(p->getPos());
+  /*
+   * Input : Particle ptr
+   * Output: That particle moved a timestep
+   * Asumpt: That particle exisit
+   * SideEf: Changes p->position + might chug  when we change dir
+   * SideEf: Changes center of particles
+   *         
+   */
 
   // Stuff for calc
+  float time_until_impact = p->getTimeLeft();
+  float time_after_impact = args->timestep - p->getTimeLeft();
+
   glm::vec3 oldPos = p->getOldPos();
   glm::vec3 dir = p->getDir();
 
-  if( p->getSteps() > 0 ){
-  
+  // We didn't hit an object in this interval of time
+  if(time_until_impact - args->timestep > 0){
 
     glm::vec3 newPos( oldPos + dir * args->timestep );
-
     p->setPos(newPos);
-    p->decSteps(); // count down
-
-    
+    p->decTime(args->timestep);
   
   }else{
 
-    dir = MirrorDirection(p->getHitNorm(), p->getDir());
-    dir = dir * (float)(-1.0);
+    // Get  Times
+    float time_until_impact = p->getTimeLeft();
+    float time_after_impact = args->timestep - p->getTimeLeft();
 
-    float radius = glm::distance(p->getCenter(), p->getOldPos());
+    // We where we hit in space
+    glm::vec3 impactPos(oldPos + dir * time_until_impact);
 
-    p->setCenter(oldPos + dir * radius);
+    // Get the new center to change direction
+    glm::vec3 mir_dir = MirrorDirection(p->getHitNorm(), p->getDir());
+    mir_dir = mir_dir * (float)(-1.0);
+    float radius = glm::distance(p->getCenter(), impactPos);
+    p->setCenter(impactPos + mir_dir * radius);
 
-    calcMeshCollision(p);
     // New upated for new center/dir
     glm::vec3 newdir = p->getDir();
-    glm::vec3 newPos( oldPos + newdir * args->timestep );
+    glm::vec3 newPos( impactPos + newdir * time_after_impact);
     p->setPos(newPos);
-    p->decSteps(); // count down
+
+    // Find where we hit next
+    calcMeshCollision(p);
+    p->decTime(time_after_impact);
   
   }
-
-  return true;
-
+  // up inter
+  p->incIter();
 }
-
 
 void ParticleSystem::moveCursor( const float & dx, 
     const float & dy, const float & dz ){
@@ -191,9 +256,11 @@ void ParticleSystem::particleSplit(Particle * &p){
     }// for
 }
 
-// Maybe you should be part of mesh obj stuff?
 void ParticleSystem::calcMeshCollision(Particle * &p){
-  // Assuming that directiona and center work
+  // Input  :  Give a particle
+  // Output :  None
+  // Assumpt:  That direction and center are setup
+  // SideEff:  Sets timeLeft until collision
   
   // Create a ray
   Ray r(p->getPos(), p->getDir());
@@ -215,20 +282,18 @@ void ParticleSystem::calcMeshCollision(Particle * &p){
       hitTriangle = true;
   }
 
+  // Get the closest  hit
   if(hitTriangle){
-    float time =  h.getT();
-    p->setSteps( (int)(time / args->timestep) );
+    p->setTime(h.getT());
     p->setHitNorm(h.getNormal());
-
   }else{
-    p->setSteps( 1000000 );
-
+    // We don't hit any triangles
+    p->setTime(10000000); 
   }
 }
 
 
 void ParticleSystem::createInitWave(){
-
 
   // Testing function to create circle in 3d space
 

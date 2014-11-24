@@ -19,7 +19,7 @@ public:
     hitNorm      = (glm::vec3) NULL;
     ampage       = 0;
     splits       = 0;
-    stepsLeft    = 0;
+    timeLeft     = 0;
     iterations   = 0;
   }
 
@@ -33,7 +33,7 @@ public:
       center      = c;
       ampage      = a;
       splits      = s;
-      stepsLeft   = 0;
+      timeLeft    = 0;
       iterations  = 0;
 
   }
@@ -46,7 +46,7 @@ public:
 
   double  getAmp()               const { return ampage; }
   int     getSplit()             const { return splits; }
-  int     getSteps()             const { return stepsLeft; }
+  float   getTimeLeft()          const { return timeLeft; }
   int     getIter()              const { return iterations; }
 
   glm::vec3 getDir() const { 
@@ -63,8 +63,8 @@ public:
   void setHitNorm (const glm::vec3 & pos) { hitNorm = pos; }
   void setAmp     (const double & a)  { ampage = a; }
   void setSplit   (const int    & s)  { splits = s; }
-  void setSteps   (const int    & c)  { stepsLeft = c; }
-  void decSteps   () { stepsLeft--; }
+  void setTime    (const float  & c)  { timeLeft = c;   }
+  void decTime    (const double & t)  { timeLeft -= (float)t; }
   void incIter    () { iterations++; }
 
   // Debugging Functions
@@ -80,10 +80,8 @@ private:
   
   double    ampage;         // Used to calc Power of wave
   int       splits;         // How many times our particle split
-  int       stepsLeft;      // How many stepsLeft before hitting mesh
+  float     timeLeft;       // How much time left until you hit wall
   int       iterations;     // How many iterations have I been around for
-
-
 };
 
 
@@ -112,7 +110,7 @@ inline std::ostream & operator<<(std::ostream & leftOp,
 
     leftOp << "spl " << rightOp.splits << " ";
 
-    leftOp << "stp " << rightOp.stepsLeft << " ";
+    leftOp << "stp " << rightOp.timeLeft << " ";
 
     leftOp << "itr " << rightOp.iterations;
 
