@@ -1,13 +1,24 @@
+#include "glCanvas.h"
 #include <iostream>
+#include <fstream>
+#include <assert.h>
+#include <string>
+#include <utility>
 
+#include "vertex.h"
+#include "boundingbox.h"
 #include "mesh.h"
 #include "edge.h"
-#include "render_utils.h"
-#include "vertex.h"
+#include "ray.h"
+#include "hit.h"
+#include "camera.h"
 #include "triangle.h"
 #include "argparser.h"
 
-int Triangle::next_triangle_id = 0;
+
+
+
+#include "geometry_utils.h"
 
 // =======================================================================
 // MESH DESTRUCTOR 
@@ -216,7 +227,7 @@ void Mesh::ComputeGouraudNormals() {
   for (triangleshashtype::iterator iter = triangles.begin();
        iter != triangles.end(); iter++) {
     Triangle *t = iter->second;
-    glm::vec3 n = ComputeNormal((*t)[0]->getPos(),
+    glm::vec3 n = compute_normal((*t)[0]->getPos(),
                                 (*t)[1]->getPos(),
                                 (*t)[2]->getPos());
     (*t)[0]->incrGouraudNormal(n);

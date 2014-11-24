@@ -46,9 +46,10 @@ class ParticleSystem {
     void load(); 
     void update();
     bool moveParticle(Particle * p);
-    void setStepBeforeCollision(Particle * &p);
-    void createParticleWave();
+    void calcMeshCollision(Particle * &p);
+    void createInitWave();
     void particleSplit(Particle * &p);
+    bool shouldSplit(Particle * &p);
 
     void splitAllParticles();
     

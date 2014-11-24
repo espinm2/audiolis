@@ -10,16 +10,6 @@
 
 #include "vbo_structs.h"
 
-#define square(x) ((x)*(x))
-
-
-// =========================================================================
-// EPSILON is a necessary evil for raytracing implementations
-// The appropriate value for epsilon depends on the precision of
-// the floating point calculations on your hardware **AND** on the
-// overall dimensions of the scene and your camera projection matrix.
-#define EPSILON 0.0001
-
 
 // =========================================================================
 // These two functions convert between linear intensity values
@@ -49,42 +39,8 @@ inline float srgb_to_linear(float x) {
 
 // =========================================================================
 // utility functions 
-
-
 inline glm::vec4 getColor(int r, int g, int b, float a){
   return glm::vec4(r/255.0, g/255.0, b/255.0, a);
-}
-
-
-inline float DistanceBetweenTwoPoints(const glm::vec3 &p1, const glm::vec3 &p2) {
-  glm::vec3 v = p1-p2;
-  return glm::length(v);
-}
-
-inline float AreaOfTriangle(float a, float b, float c) {
-  // from the lengths of the 3 edges, compute the area
-  // Area of Triangle = (using Heron's Formula)
-  //  sqrt[s*(s-a)*(s-b)*(s-c)]
-  //    where s = (a+b+c)/2
-  // also... Area of Triangle = 0.5 * x * c
-  float s = (a+b+c) / (float)2;
-  return sqrt(s*(s-a)*(s-b)*(s-c));
-}
-
-inline float AreaOfTriangle(const glm::vec3 &a, const glm::vec3 &b, const glm::vec3 &c) {
-  float aside = DistanceBetweenTwoPoints(a,b);
-  float bside = DistanceBetweenTwoPoints(b,c);
-  float cside = DistanceBetweenTwoPoints(c,a);
-  return AreaOfTriangle(aside,bside,cside);
-}
-
-glm::vec3 ComputeNormal(const glm::vec3 &p1, const glm::vec3 &p2, const glm::vec3 &p3);
-
-// compute the perfect mirror direction
-inline glm::vec3 MirrorDirection(const glm::vec3 &normal, const glm::vec3 &incoming) {
-  float dot = glm::dot(incoming,normal);
-  glm::vec3 r = (incoming*-1.0f) + normal * (2 * dot);
-  return r*-1.0f;
 }
 
 // =========================================================================

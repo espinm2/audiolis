@@ -298,7 +298,7 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       mesh->setupVBOs();
       break;
     case 'p': case 'P':
-      particleSystem->createParticleWave();
+      particleSystem->createInitWave();
       particleSystem->setupVBOs();
       break;
     case 'w': case 'W':

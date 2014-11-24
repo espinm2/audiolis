@@ -9,6 +9,7 @@
 #include "render_utils.h"
 #include "camera.h"
 #include "MersenneTwister.h"
+#include "geometry_utils.h"
 #include <list>
 #include <algorithm>
 #include <math.h>       /* fabs */
@@ -101,7 +102,7 @@ void Mesh::SetupMesh() {
     glm::vec3 a = (*t)[0]->getPos();
     glm::vec3 b = (*t)[1]->getPos();
     glm::vec3 c = (*t)[2]->getPos();    
-    glm::vec3 na = ComputeNormal(a,b,c);
+    glm::vec3 na = compute_normal(a,b,c);
     glm::vec3 nb = na;
     glm::vec3 nc = na;
 

@@ -15,9 +15,8 @@
 #include "vertex.h"
 #include "hash.h"
 #include "mesh.h"
-#include "collision_utils.h"
 #include "render_utils.h"
-#include "split_utils.h"
+#include "geometry_utils.h"
 
 
 // FIXME ////////////////////////////////////////////
@@ -27,12 +26,12 @@
 // [ ] Change the radius_particle_wave depending how many spits done
 // [ ] ReIntroduce splits
 
-#define MAX_ITERATIONS 600 // refactor with below
-#define RADIUS_PARTICLE_WAVE 0.001 //TODO hex created size should very
-#define RADIUS_INIT_SPHERE 0.01
-#define NUM_INIT_PARTICLES  100
-#define NUM_INIT_LIFESPACE  1000 // refactor
-#define SPLIT_AMOUNT 6
+#define MAX_ITERATIONS        600   // When to kill particles
+#define RADIUS_PARTICLE_WAVE  0.001 // Radius of hex shape
+#define RADIUS_INIT_SPHERE    0.01  // Radius of source sphere
+#define NUM_INIT_PARTICLES    100   // Inital Number of Particles
+#define INITAL_AMPLATUDE      100   // Amp we start off with
+#define SPLIT_AMOUNT          6     // What sized polygon we split into
 
 // Used for update
 typedef std::vector<Particle *>::iterator ParticleIter;
@@ -128,7 +127,7 @@ bool ParticleSystem::moveParticle(Particle * p){
 
     p->setCenter(oldPos + dir * radius);
 
-    setStepBeforeCollision(p);
+    calcMeshCollision(p);
     // New upated for new center/dir
     glm::vec3 newdir = p->getDir();
     glm::vec3 newPos( oldPos + newdir * args->timestep );
@@ -140,6 +139,7 @@ bool ParticleSystem::moveParticle(Particle * p){
   return true;
 
 }
+
 
 void ParticleSystem::moveCursor( const float & dx, 
     const float & dy, const float & dz ){
@@ -163,27 +163,27 @@ void ParticleSystem::splitAllParticles(){
 
 }
 
-//tag
 void ParticleSystem::particleSplit(Particle * &p){
   // Side effects: Adds new particles to end of particles list
+  // Note: Particles are not updated at this step
 
     // Where I will store new particles
     std::vector< glm::vec3> newPart;
 
+    // Get hex shape on plane
     circle_points_on_plane(p->getOldPos(), 
         p->getDir(), RADIUS_PARTICLE_WAVE, SPLIT_AMOUNT, newPart);
  
+    // Project back on sphere
     cirlce_point_on_sphere(p->getCenter(),
         glm::distance( p->getOldPos(), p->getCenter()),newPart);
 
+    // For each calculated pos, make particle
     for(int i = 0; i < newPart.size(); i++){
     
-      // FIXME this could cause a problem in future
-      // If you ever use oldPos or newPos for any visual
       Particle * s = new Particle(newPart[i],newPart[i],
-          p->getCenter(),100,0, NUM_INIT_LIFESPACE);
-
-      setStepBeforeCollision(s);
+        p->getCenter(),INITAL_AMPLATUDE, p->getSplit() + 1);
+      calcMeshCollision(s);
     
       // put particle there to be "moved" when its their turn
       newParticles.push_back(s);
@@ -191,7 +191,8 @@ void ParticleSystem::particleSplit(Particle * &p){
     }// for
 }
 
-void ParticleSystem::setStepBeforeCollision(Particle * &p){
+// Maybe you should be part of mesh obj stuff?
+void ParticleSystem::calcMeshCollision(Particle * &p){
   // Assuming that directiona and center work
   
   // Create a ray
@@ -226,7 +227,7 @@ void ParticleSystem::setStepBeforeCollision(Particle * &p){
 }
 
 
-void ParticleSystem::createParticleWave(){
+void ParticleSystem::createInitWave(){
 
 
   // Testing function to create circle in 3d space
@@ -254,9 +255,8 @@ void ParticleSystem::createParticleWave(){
   
     pos = cursor + dir * radius;
   
-
-    Particle * p = new Particle(pos,cursor,cursor,100,0,NUM_INIT_LIFESPACE);
-    setStepBeforeCollision(p);
+    Particle * p = new Particle(pos,cursor,cursor,INITAL_AMPLATUDE,0);
+    calcMeshCollision(p);
   
     // put particle there
     particles.push_back(p);
@@ -265,5 +265,9 @@ void ParticleSystem::createParticleWave(){
 
 }
 
-
+bool ParticleSystem::shouldSplit(Particle * &p){
+  // TODO Implement should split
+  // TODO Requires distance check
+  return false;
+}
 

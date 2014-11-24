@@ -12,6 +12,11 @@ class ArgParser;
 class Vertex;
 class Edge;
 class Triangle;
+class Camera;
+class Ray;
+class Hit;
+class ArgParser;
+class BoundingBox;
 
 // ======================================================================
 // ======================================================================
