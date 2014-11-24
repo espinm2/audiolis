@@ -5,6 +5,7 @@
 #include <cmath>
 
 #include "boundingbox.h"
+#include "geometry_utils.h"
 #include "MersenneTwister.h"
 #include "particle.h"
 #include "argparser.h"
@@ -16,7 +17,6 @@
 #include "hash.h"
 #include "mesh.h"
 #include "render_utils.h"
-#include "geometry_utils.h"
 
 
 // FIXME ////////////////////////////////////////////

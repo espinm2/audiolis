@@ -10,20 +10,9 @@ add_executable(audiolis
   mesh.cpp
   mesh_render.cpp
   boundingbox.cpp
+  geometry_utils.cpp
   render_utils.cpp
   render_utils.h
-  argparser.h
-  camera.h
-  glCanvas.h
-  triangle.h
-  vertex.h
-  boundingbox.h
-  edge.h
-  hash.h
-  mesh.h
-  vbo_structs.h
-  particle.h
-  ParticleSystem.h
   ParticleSystem.cpp
   ParticleSystem_render.cpp
 )

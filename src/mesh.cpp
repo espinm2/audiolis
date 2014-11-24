@@ -14,11 +14,10 @@
 #include "camera.h"
 #include "triangle.h"
 #include "argparser.h"
-
-
-
-
 #include "geometry_utils.h"
+
+
+int Triangle::next_triangle_id = 0;
 
 // =======================================================================
 // MESH DESTRUCTOR 
