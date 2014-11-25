@@ -28,9 +28,9 @@
 // [ ] ReIntroduce splits
 
 #define MAX_ITERATIONS        600   // When to kill particles
-#define RADIUS_PARTICLE_WAVE  0.001 // Radius of hex shape
+#define RADIUS_PARTICLE_WAVE  0.01 // Radius of hex shape
 #define RADIUS_INIT_SPHERE    0.01  // Radius of source sphere
-#define NUM_INIT_PARTICLES    100000 // Inital Number of Particles
+#define NUM_INIT_PARTICLES    1 // Inital Number of Particle
 #define INITAL_AMPLATUDE      100   // Amp we start off with
 #define SPLIT_AMOUNT          6     // What sized polygon we split into
 #define MIN_AMP               10    // When particles should die
@@ -52,7 +52,6 @@ void ParticleSystem::load(){
   cursor = glm::vec3(centerScene.x, centerScene.y, centerScene.z);
 }
 
-// tag
 void ParticleSystem::update(){
   /*
    * Input : None
@@ -88,29 +87,32 @@ void ParticleSystem::update(){
     // Particles are beyond a threshold init a split
     if(shouldSplit(curPart)){
 
-        // Debug ///////
-        // if( curPart->getSplit() == 1 ){ splitReached= true ; }
+        // Get new particles to be made
+        std::vector<Particle *> splitParticles;
+        particleSplit(curPart, splitParticles);
 
-        // Create new particles
 
-        // Move them a timestep
+        // Move them a timestep + add to new list
+        for(int i = 0; i < splitParticles.size(); i++){
+          moveParticle(splitParticles[i], args->timestep);
+          newParticles.push_back(splitParticles[i]);
+        }
 
-        // Push them into newParticles list for l8 addition
-
-        // Remove and kill the current particle
-        deleteMask[maskIndex++] = 1;
-        iter++;
+      deleteMask[maskIndex++] = 0; // kills center
+      iter++;
 
 
     }else{
+    
+      // Update postiton and move to next particle
+      moveParticle(curPart,args->timestep);
 
-        // Update postiton and move to next particle
-        moveParticle(curPart,args->timestep);
 
+      deleteMask[maskIndex++] = 0;
+      iter++;
+    
+    }
 
-        deleteMask[maskIndex++] = 0;
-        iter++;
-    }//ifelse
 
   } //forloop
 
@@ -211,21 +213,23 @@ void ParticleSystem::moveCursor( const float & dx,
 
 void ParticleSystem::splitAllParticles(){
 
-  
-  for(int i = 0; i < particles.size(); i++){
-    particleSplit(particles[i]);
-  }
+  // Dead to me!
+  // for(int i = 0; i < particles.size(); i++){
+  //   particleSplit(particles[i]);
+  // }
 
-  for(int i = 0; i < newParticles.size(); i++){
-    particles.push_back(newParticles[i]);
-  }
+  // for(int i = 0; i < newParticles.size(); i++){
+  //   particles.push_back(newParticles[i]);
+  // }
 
-  newParticles.clear();
+  // newParticles.clear();
 
 }
 
-void ParticleSystem::particleSplit(Particle * &p){
-  // Side effects: Adds new particles to end of particles list
+void ParticleSystem::particleSplit(Particle * &p,
+ std::vector<Particle *> &vec){
+
+  // Side effects: fills vec with new particles
   // Note: Particles are not updated at this step
 
     // Where I will store new particles
@@ -247,9 +251,9 @@ void ParticleSystem::particleSplit(Particle * &p){
       calcMeshCollision(s);
     
       // put particle there to be "moved" when its their turn
-      newParticles.push_back(s);
-    
+      vec.push_back(s);
     }// for
+
 }
 
 void ParticleSystem::calcMeshCollision(Particle * &p){
@@ -327,8 +331,25 @@ void ParticleSystem::createInitWave(){
 }
 
 bool ParticleSystem::shouldSplit(Particle * &p){
-  // TODO Implement should split
-  // TODO Requires distance check
-  return false;
+
+  // tag
+  glm::vec3 pos = p->getOldPos();
+  float nearestDistance = 100000;
+  float threshold = RADIUS_PARTICLE_WAVE * 2;
+
+  // for each particle in the system
+  for(int i = 0; i < particles.size(); i++){
+
+    if(particles[i] == p)
+      continue;
+
+    float dist = glm::distance(p->getOldPos(), particles[i]->getOldPos());
+    if(nearestDistance > dist)
+      nearestDistance = dist;
+  }
+
+  // I now have nearest distance
+  return( fabs( nearestDistance - threshold) <= EPSILON || 
+      nearestDistance > threshold);
 }
 

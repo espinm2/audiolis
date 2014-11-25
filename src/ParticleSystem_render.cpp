@@ -130,7 +130,7 @@ void ParticleSystem::setupCursorPoint(){
 void ParticleSystem::drawCursorPoint(){
 
   HandleGLError("enter drawCursorPoint");
-  glPointSize( getGLPointSize(cursor) ); // <------------------- Added
+  glPointSize( 10 ); // <------------------- Added
   glBindBuffer(GL_ARRAY_BUFFER, cursor_verts_VBO);
 
   glEnableVertexAttribArray(0);
@@ -156,14 +156,3 @@ void ParticleSystem::drawCursorPoint(){
 }
 
 
-int ParticleSystem::getGLPointSize(const glm::vec3 & point){
-
-  // Get Camera  Position
-  glm::vec3 cameraPos = GLCanvas::camera->camera_position;
-
-  double dist = glm::distance(point,cameraPos);
-
-  return 10;
-
-
-}

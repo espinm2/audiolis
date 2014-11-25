@@ -48,7 +48,7 @@ class ParticleSystem {
     bool moveParticle(Particle * p, float timestep);
     void calcMeshCollision(Particle * &p);
     void createInitWave();
-    void particleSplit(Particle * &p);
+    void particleSplit(Particle * &p, std::vector<Particle *> &vec);
     bool shouldSplit(Particle * &p);
 
     void splitAllParticles();
@@ -63,8 +63,6 @@ class ParticleSystem {
 
   private:
 
-    // Fuctions for Faking Depth
-    int getGLPointSize(const glm::vec3 & point);
 
     // Functions
     void setupParticles();

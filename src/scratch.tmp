@@ -1,0 +1,47 @@
+
+// Stuff for move
+  if(p->getIter() > MAX_ITERATIONS){
+
+
+    return false;
+  }
+
+  // up inter
+  p->incIter();
+  
+  // New position is now old
+  p->setOldPos(p->getPos());
+
+  // Stuff for calc
+  glm::vec3 oldPos = p->getOldPos();
+  glm::vec3 dir = p->getDir();
+
+  if( p->getSteps() > 0 ){
+  
+
+    glm::vec3 newPos( oldPos + dir * args->timestep );
+
+    p->setPos(newPos);
+    p->decSteps(); // count down
+
+    
+  
+  }else{
+
+    dir = MirrorDirection(p->getHitNorm(), p->getDir());
+    dir = dir * (float)(-1.0);
+
+    float radius = glm::distance(p->getCenter(), p->getOldPos());
+
+    p->setCenter(oldPos + dir * radius);
+
+    calcMeshCollision(p);
+    // New upated for new center/dir
+    glm::vec3 newdir = p->getDir();
+    glm::vec3 newPos( oldPos + newdir * args->timestep );
+    p->setPos(newPos);
+    p->decSteps(); // count down
+  
+  }
+
+  return true;
