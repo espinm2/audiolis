@@ -9,6 +9,7 @@
 #include "ray.h"
 #include "hit.h"
 
+class ArgParser; // only for circle_points_on_plane
 /*
  * Notice:
  *   In this header you put all geometry related math that doesn't
@@ -36,7 +37,8 @@ glm::vec3 parametric_circle_3d(glm::vec3 a, glm::vec3 b,
 // Given a center n, normal n, radius r, and number of points, and empty vec
 // pts we fill with points
 void circle_points_on_plane( const glm::vec3 c, const glm::vec3 n, 
-    const float r, const int numberPoints, std::vector<glm::vec3> &pts);
+    const float r, const int numberPoints, std::vector<glm::vec3> &pts, 
+    ArgParser * &args);
 
 // Given points, we project them on a sphere 
 // Modified pts

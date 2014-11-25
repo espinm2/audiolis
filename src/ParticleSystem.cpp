@@ -31,7 +31,7 @@
 #define RADIUS_PARTICLE_WAVE  0.01 // Radius of hex shape
 #define RADIUS_INIT_SPHERE    0.01  // Radius of source sphere
 #define NUM_INIT_PARTICLES    1 // Inital Number of Particle
-#define INITAL_AMPLATUDE      100   // Amp we start off with
+#define INITAL_AMPLATUDE      10000   // Amp we start off with
 #define SPLIT_AMOUNT          6     // What sized polygon we split into
 #define MIN_AMP               10    // When particles should die
 
@@ -76,22 +76,25 @@ void ParticleSystem::update(){
 
 
     // Are we below a threhold just kill and move to another
-    if(curPart->getAmp() < MIN_AMP){
-
-      // Kill this partcile and move to next
-      deleteMask[maskIndex++] = 1;
-      iter++;
-      continue;
-
-    }
 
     // Particles are beyond a threshold init a split
     if(shouldSplit(curPart)){
+
+        if(curPart->getAmp() < MIN_AMP){
+
+          // Kill this partcile and move to next
+          deleteMask[maskIndex++] = 1;
+          iter++;
+          continue;
+
+        }
 
         // Get new particles to be made
         std::vector<Particle *> splitParticles;
         particleSplit(curPart, splitParticles);
 
+        // change cur particle amp
+        curPart->setAmp(curPart->getAmp() / (double)(SPLIT_AMOUNT + 1.0));
 
         // Move them a timestep + add to new list
         for(int i = 0; i < splitParticles.size(); i++){
@@ -213,7 +216,6 @@ void ParticleSystem::moveCursor( const float & dx,
 }
 
 void ParticleSystem::splitAllParticles(){
-
   // Dead to me!
   // for(int i = 0; i < particles.size(); i++){
   //   particleSplit(particles[i]);
@@ -224,12 +226,10 @@ void ParticleSystem::splitAllParticles(){
   // }
 
   // newParticles.clear();
-
 }
 
 void ParticleSystem::particleSplit(Particle * &p,
  std::vector<Particle *> &vec){
-
   // Side effects: fills vec with new particles
   // Note: Particles are not updated at this step
 
@@ -238,7 +238,7 @@ void ParticleSystem::particleSplit(Particle * &p,
 
     // Get hex shape on plane
     circle_points_on_plane(p->getOldPos(), 
-        p->getDir(), RADIUS_PARTICLE_WAVE, SPLIT_AMOUNT, newPart);
+        p->getDir(), RADIUS_PARTICLE_WAVE, SPLIT_AMOUNT, newPart,args);
  
     // Project back on sphere
     cirlce_point_on_sphere(p->getCenter(),
@@ -249,14 +249,13 @@ void ParticleSystem::particleSplit(Particle * &p,
     
       Particle * s = new Particle(
           newPart[i], newPart[i], p->getCenter(),
-          p->getAmp() / (double)newPart.size(), 
+          p->getAmp() / (double)(SPLIT_AMOUNT + 1.0), 
           p->getSplit() + 1);
       calcMeshCollision(s);
     
       // put particle there to be "moved" when its their turn
       vec.push_back(s);
     }// for
-
 }
 
 void ParticleSystem::calcMeshCollision(Particle * &p){
@@ -302,15 +301,14 @@ void ParticleSystem::createInitWave(){
 
   // Phonon Mapping to create particle wave
   // Using cursor
-  MTRand randomGen;
   double s = RADIUS_INIT_SPHERE;
   
   // Create Box of ranodm points
   for( int i = 0; i < NUM_INIT_PARTICLES; i++){
     // Find x,y,z
-    float x = cursor.x - s/2.0 + (float) randomGen.rand(s);
-    float y = cursor.y - s/2.0 + (float) randomGen.rand(s);
-    float z = cursor.z - s/2.0 + (float) randomGen.rand(s);
+    float x = cursor.x - s/2.0 + (float) args->randomGen.rand(s);
+    float y = cursor.y - s/2.0 + (float) args->randomGen.rand(s);
+    float z = cursor.z - s/2.0 + (float) args->randomGen.rand(s);
   
     glm::vec3 pos(x,y,z);
   
@@ -356,3 +354,7 @@ bool ParticleSystem::shouldSplit(Particle * &p){
       nearestDistance > threshold);
 }
 
+void particleMerge(const Particle * &a, const Particle * &b, Particle * &c){
+
+
+}

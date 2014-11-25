@@ -27,6 +27,7 @@ class Mesh;
 class ParticleSystem {
 
 
+  //TODO move comment over here to header
   public:
 
     // Constructors
@@ -50,6 +51,8 @@ class ParticleSystem {
     void createInitWave();
     void particleSplit(Particle * &p, std::vector<Particle *> &vec);
     bool shouldSplit(Particle * &p);
+
+    void particleMerge(const Particle * &a, const Particle * &b, Particle * &c);
 
     void splitAllParticles();
     

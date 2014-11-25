@@ -1,4 +1,5 @@
 #include "geometry_utils.h"
+#include "argparser.h" // This if only for the MTRand obj
 #include <cstdlib>
 
 // ╦╔╦╗╔═╗╦  ╔═╗╔╦╗╔═╗╔╗╔╔╦╗╔═╗╔╦╗╦╔═╗╔╗╔
@@ -42,15 +43,18 @@ glm::vec3 MirrorDirection(const glm::vec3 &normal,
 }
 
 void circle_points_on_plane( const glm::vec3 c, const glm::vec3 n, 
-    const float r, const int numberPoints, std::vector<glm::vec3> &pts){
+    const float r, const int numberPoints, 
+    std::vector<glm::vec3> &pts, ArgParser * &args){
 
   float theta = 2 * M_PI / numberPoints;
 
   // Solving for a  to be orthagonal // should be random
   // glm::vec3 a; a.x = 0.5; a.y = 0.5;
+
   glm::vec3 a; 
-  a.x = rand() / (float)RAND_MAX;
-  a.y = rand() / (float)RAND_MAX;
+  a.x =  args->randomGen.rand();
+  a.y =  args->randomGen.rand();
+  std::cout << "x: " << a.x << " y: " << a.y << std::endl;
 
   if(n.z != 0){
 

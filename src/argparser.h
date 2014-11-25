@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include "MersenneTwister.h"
 
 // ================================================================================
 // ================================================================================
@@ -105,6 +106,7 @@ public:
   bool wireframe;
   bool render_top;
   float timestep;
+  MTRand randomGen;
 };
 
 
