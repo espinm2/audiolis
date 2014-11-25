@@ -35,6 +35,7 @@
 #define SPLIT_AMOUNT          6     // What sized polygon we split into
 #define MIN_AMP               10    // When particles should die
 
+
 // Used for update
 typedef std::vector<Particle *>::iterator ParticleIter;
 
@@ -246,8 +247,10 @@ void ParticleSystem::particleSplit(Particle * &p,
     // For each calculated pos, make particle
     for(int i = 0; i < newPart.size(); i++){
     
-      Particle * s = new Particle(newPart[i],newPart[i],
-        p->getCenter(),INITAL_AMPLATUDE, p->getSplit() + 1);
+      Particle * s = new Particle(
+          newPart[i], newPart[i], p->getCenter(),
+          p->getAmp() / (double)newPart.size(), 
+          p->getSplit() + 1);
       calcMeshCollision(s);
     
       // put particle there to be "moved" when its their turn
@@ -335,7 +338,7 @@ bool ParticleSystem::shouldSplit(Particle * &p){
   // tag
   glm::vec3 pos = p->getOldPos();
   float nearestDistance = 100000;
-  float threshold = RADIUS_PARTICLE_WAVE * 2;
+  float threshold = RADIUS_PARTICLE_WAVE * 1.5;
 
   // for each particle in the system
   for(int i = 0; i < particles.size(); i++){
