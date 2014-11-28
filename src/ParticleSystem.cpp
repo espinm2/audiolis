@@ -31,7 +31,7 @@
 #define RADIUS_PARTICLE_WAVE  0.01 // Radius of hex shape
 #define RADIUS_INIT_SPHERE    0.01  // Radius of source sphere
 #define NUM_INIT_PARTICLES    1 // Inital Number of Particle
-#define INITAL_AMPLATUDE      10000   // Amp we start off with
+#define INITAL_AMPLATUDE      10000000   // Amp we start off with
 #define SPLIT_AMOUNT          6     // What sized polygon we split into
 #define MIN_AMP               10    // When particles should die
 
@@ -235,10 +235,11 @@ void ParticleSystem::particleSplit(Particle * &p,
 
     // Where I will store new particles
     std::vector< glm::vec3> newPart;
-
+    
     // Get hex shape on plane
     circle_points_on_plane(p->getOldPos(), 
         p->getDir(), RADIUS_PARTICLE_WAVE, SPLIT_AMOUNT, newPart,args);
+
  
     // Project back on sphere
     cirlce_point_on_sphere(p->getCenter(),
@@ -292,11 +293,12 @@ void ParticleSystem::calcMeshCollision(Particle * &p){
     // We don't hit any triangles
     p->setTime(10000000); 
   }
+
+  // p->setTime(10000000);  // <------------------------------REMOVE ME 
 }
 
 
 void ParticleSystem::createInitWave(){
-
   // Testing function to create circle in 3d space
 
   // Phonon Mapping to create particle wave
@@ -328,15 +330,13 @@ void ParticleSystem::createInitWave(){
     particles.push_back(p);
   
   }
-
 }
 
 bool ParticleSystem::shouldSplit(Particle * &p){
-
   // tag
   glm::vec3 pos = p->getOldPos();
   float nearestDistance = 100000;
-  float threshold = RADIUS_PARTICLE_WAVE * 1.5;
+  float threshold = 3 * RADIUS_PARTICLE_WAVE;
 
   // for each particle in the system
   for(int i = 0; i < particles.size(); i++){
@@ -354,7 +354,4 @@ bool ParticleSystem::shouldSplit(Particle * &p){
       nearestDistance > threshold);
 }
 
-void particleMerge(const Particle * &a, const Particle * &b, Particle * &c){
-
-
-}
+void particleMerge(const Particle * &a, const Particle * &b, Particle * &c){ }

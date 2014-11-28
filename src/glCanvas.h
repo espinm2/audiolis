@@ -31,6 +31,7 @@ public:
   static ArgParser *args;
   static Mesh *mesh;
   static ParticleSystem * particleSystem;
+  static unsigned int iteration;
 
   static BoundingBox bbox;
   static Camera* camera;

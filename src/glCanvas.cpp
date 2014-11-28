@@ -16,6 +16,9 @@ Camera* GLCanvas::camera = NULL;
 Mesh* GLCanvas::mesh = NULL;
 ParticleSystem * GLCanvas::particleSystem = NULL;
 
+// Keep track of iterations
+unsigned int GLCanvas::iteration = 0;
+
 BoundingBox GLCanvas::bbox;
 GLFWwindow* GLCanvas::window = NULL;
 
@@ -132,9 +135,21 @@ void GLCanvas::animate(){
   // We will use this to update time & fps
   fpsCounter(args->animate, args->timer);
 
+  
   if(args->animate){
+
     particleSystem->update();
+
     particleSystem->setupVBOs();
+
+    GLCanvas::iteration++;
+
+  }
+
+  // This only for Recording stuff
+  if( GLCanvas::iteration % 150 == 0 && GLCanvas::iteration != 0) {
+    std::cout << "Stopped animation " << GLCanvas::iteration << std::endl;
+    args->animate = false;
   }
   
 }
