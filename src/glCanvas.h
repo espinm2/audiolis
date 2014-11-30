@@ -42,6 +42,7 @@ public:
   static GLuint LightID;
   static GLuint MatrixID;
   static GLuint programID;
+  static GLuint whichshaderID;
   
   // mouse position
   static int mouseX;

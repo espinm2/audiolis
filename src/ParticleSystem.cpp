@@ -354,4 +354,6 @@ bool ParticleSystem::shouldSplit(Particle * &p){
       nearestDistance > threshold);
 }
 
-void particleMerge(const Particle * &a, const Particle * &b, Particle * &c){ }
+void particleMerge(const Particle * &a, const Particle * &b, Particle * &c){ 
+  //TODO implement this function ( Solve this problem )
+}

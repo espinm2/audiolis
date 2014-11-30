@@ -8,7 +8,6 @@ layout(location = 2) in vec3 vertexColor;
 // Output data
 out vec3 vertexPosition_worldspace;
 out vec3 vertexNormal_worldspace;
-out vec3 vertexNormal_cameraspace;
 out vec3 EyeDirection_cameraspace;
 out vec3 myColor;
 

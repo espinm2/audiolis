@@ -42,7 +42,7 @@ GLuint GLCanvas::ModelMatrixID;
 GLuint GLCanvas::LightID;
 GLuint GLCanvas::MatrixID;
 GLuint GLCanvas::programID;
-
+GLuint GLCanvas::whichshaderID;
 
 // ========================================================
 // Initialize all appropriate OpenGL variables, set
@@ -165,6 +165,7 @@ void GLCanvas::initializeVBOs(){
   GLCanvas::LightID = glGetUniformLocation(GLCanvas::programID, "LightPosition_worldspace");
   GLCanvas::ViewMatrixID = glGetUniformLocation(GLCanvas::programID, "V");
   GLCanvas::ModelMatrixID = glGetUniformLocation(GLCanvas::programID, "M");
+  GLCanvas::whichshaderID = glGetUniformLocation(GLCanvas::programID, "whichshader");
   mesh->initializeVBOs();
   particleSystem->initializeVBOs();
   HandleGLError("leaving initilizeVBOs()");
@@ -185,17 +186,30 @@ void GLCanvas::drawVBOs(const glm::mat4 &ProjectionMatrix,const glm::mat4 &ViewM
 
   // prepare data to send to the shaders
   glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
+
   glm::vec3 lightPos = mesh->LightPosition();
   glm::vec4 lightPos2 = glm::vec4(lightPos.x,lightPos.y,lightPos.z,1);
-  lightPos2 = ModelMatrix * lightPos2;
-  glUniform3f(GLCanvas::LightID, lightPos2.x, lightPos2.y, lightPos2.z);
 
+  lightPos2 = ModelMatrix * lightPos2;
+
+  // Sends that data off to the shaders
+  glUniform3f(GLCanvas::LightID, lightPos2.x, lightPos2.y, lightPos2.z);
   glUniformMatrix4fv(GLCanvas::MatrixID, 1, GL_FALSE, &MVP[0][0]);
   glUniformMatrix4fv(GLCanvas::ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
   glUniformMatrix4fv(GLCanvas::ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
 
-  mesh->drawVBOs();
-  particleSystem->drawVBOs();
+
+  // Use default shader
+  glUniform1i(GLCanvas::whichshaderID, 0);
+    mesh->drawVBOs();
+  glUniform1i(GLCanvas::whichshaderID, 0);
+
+  
+  // Use flat shader
+  glUniform1i(GLCanvas::whichshaderID, 1);
+    particleSystem->drawVBOs();
+  glUniform1i(GLCanvas::whichshaderID, 0);
+
   HandleGLError("leaving GlCanvas::drawVBOs()");
 }
 
@@ -315,10 +329,10 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       particleSystem->createInitWave();
       particleSystem->setupVBOs();
       break;
-    case 'w': case 'W':
-      args->wireframe = !args->wireframe;
-      mesh->setupVBOs();
-      break;
+    //  case 'w': case 'W':
+    //    args->wireframe = !args->wireframe;
+    //    mesh->setupVBOs();
+    //    break;
     case 'c': case 'C':
       args->render_top = !args->render_top;
       mesh->setupVBOs();

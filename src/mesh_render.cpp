@@ -132,42 +132,42 @@ void Mesh::SetupMesh() {
 
       // Get the index
       std::string temp  = mtl.substr(5);
-      int colorIndex = atoi(temp.c_str()) % 12;
-      colorIndex = 6;
 
+      int colorIndex = atoi(temp.c_str()) % 8;
+
+      center_color = getColor(100,100,100,1);
+
+      // DEBUG LATER (Colors wont change)
       
-      //  // DEBUG LATER (Colors wont change)
-      //  
-      //  switch (colorIndex) {
-      //    case 0:
-      //      center_color = getColor(228,26,28,1);
-      //      break;
-      //    case 1:
-      //      center_color = getColor(247,129,191,1);
-      //      break;
-      //    case 2:
-      //      center_color = getColor(55,126,184,1);
-      //      break;
-      //    case 3:
-      //      center_color = getColor(77,175,74,1);
-      //      break;
-      //    case 4:
-      //      center_color = getColor(152,78,163,1);
-      //      break;
-      //    case 5:
-      //      center_color = getColor(255,127,0,1);
-      //      break;
-      //    case 6:
-      //      center_color = getColor(255,255,51,1);
-      //      break;
-      //    case 7:
-      //      center_color = getColor(166,86,40,1);
-      //      break;
-      //    default:
-      //      assert(false);
-      //  }
+      switch (colorIndex) {
+        case 0:
+          center_color = getColor(228,26,28,1);
+          break;
+        case 1:
+          center_color = getColor(247,129,191,1);
+          break;
+        case 2:
+          center_color = getColor(55,126,184,1);
+          break;
+        case 3:
+          center_color = getColor(77,175,74,1);
+          break;
+        case 4:
+          center_color = getColor(152,78,163,1);
+          break;
+        case 5:
+          center_color = getColor(255,127,0,1);
+          break;
+        case 6:
+          center_color = getColor(255,255,51,1);
+          break;
+        case 7:
+          center_color = getColor(166,86,40,1);
+          break;
+        default:
+          assert(false);
+      }
 
-      center_color = getColor(228,26,28,1);
       wire_color = center_color;
     
     }else if(mtl.compare(0,5,"GLASS") == 0){ 
