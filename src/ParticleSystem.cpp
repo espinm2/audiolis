@@ -215,19 +215,6 @@ void ParticleSystem::moveCursor( const float & dx,
 
 }
 
-void ParticleSystem::splitAllParticles(){
-  // Dead to me!
-  // for(int i = 0; i < particles.size(); i++){
-  //   particleSplit(particles[i]);
-  // }
-
-  // for(int i = 0; i < newParticles.size(); i++){
-  //   particles.push_back(newParticles[i]);
-  // }
-
-  // newParticles.clear();
-}
-
 void ParticleSystem::particleSplit(Particle * &p,
  std::vector<Particle *> &vec){
   // Side effects: fills vec with new particles
@@ -333,27 +320,176 @@ void ParticleSystem::createInitWave(){
 }
 
 bool ParticleSystem::shouldSplit(Particle * &p){
-  // tag
-  glm::vec3 pos = p->getOldPos();
-  float nearestDistance = 100000;
-  float threshold = 3 * RADIUS_PARTICLE_WAVE;
 
-  // for each particle in the system
-  for(int i = 0; i < particles.size(); i++){
+  // DEBUG //
+  return false;
+  //  // tag
+  //  glm::vec3 pos = p->getOldPos();
+  //  float nearestDistance = 100000;
+  //  float threshold = 3 * RADIUS_PARTICLE_WAVE;
 
-    if(particles[i] == p)
-      continue;
+  //  // for each particle in the system
+  //  for(int i = 0; i < particles.size(); i++){
 
-    float dist = glm::distance(p->getOldPos(), particles[i]->getOldPos());
-    if(nearestDistance > dist)
-      nearestDistance = dist;
-  }
+  //    if(particles[i] == p)
+  //      continue;
 
-  // I now have nearest distance
-  return( fabs( nearestDistance - threshold) <= EPSILON || 
-      nearestDistance > threshold);
+  //    float dist = glm::distance(p->getOldPos(), particles[i]->getOldPos());
+  //    if(nearestDistance > dist)
+  //      nearestDistance = dist;
+  //  }
+
+  //  // I now have nearest distance
+  //  return( fabs( nearestDistance - threshold) <= EPSILON || 
+  //      nearestDistance > threshold);
 }
 
-void particleMerge(const Particle * &a, const Particle * &b, Particle * &c){ 
+void ParticleSystem::particleMerge(const Particle * &a, 
+    const Particle * &b, Particle * &c){ 
   //TODO implement this function ( Solve this problem )
 }
+
+
+double ParticleSystem::absorbFunc(const std::string & materialName, 
+    const double freq){
+
+  // Insurance
+  if( freq < 20 ){
+    std::cout << "Freq too low" << std::endl;
+    assert(false);
+  }
+
+  // This method will have the manually loaded absorb methods taken from
+  // the phonon tracing paper imported into it!
+
+  if( materialName == "concrete_wall"){
+
+    if(4063 <= freq)
+      return 0.21;
+
+    else if( 2031 <= freq )
+      return 0.00009686 * (freq - 2031) + 0.17;
+
+    else if( 1015 <= freq )
+      return 0.00000984 * ( freq - 1015 ) + 0.16;
+
+    else if( 507 <= freq )
+      return -0.00077165 * (freq - 507) +0.25;
+
+    else if( 253 <= freq )
+      return 0.00039708 * (freq - 253 )  + 0.15;
+
+    else if( 126 <= freq )
+      return 0.00070866 * (freq - 126 ) + 0.06;
+
+    else 
+      return 0.06;
+
+  }else if(materialName == "plaster_ceiling"){
+
+    if(1015 <= freq)
+      return 0.05;
+
+    else if(507 <= freq )
+      return -0.00009843 * (freq - 507) + 0.1;
+
+    else if(235 <= freq )
+      return -0.00036765 * (freq - 235) + 0.2;
+
+    else
+      return 0.2;
+
+  }else if(materialName == "ceramic_wall"){
+
+    if(freq <= 2031)
+      return 0.07;
+
+    else if( 507 <= freq )
+      return 0.00001312 * ( freq - 507 ) + 0.05;
+
+    else if( 126 <= freq )
+      return 0.00007874 * (freq - 126) + 0.02;
+
+    else
+      return 0.02;
+
+  }else if(materialName == "bricked_wall"){
+
+    if(4063 <= freq )
+      return 0.03;
+
+    else if(2031 <= freq )
+      return 0.00000492 * (freq - 2031) + 0.02;
+
+    else if(507 <= freq )
+      return 0.02;
+        
+    else if(253 <= freq )
+      return 0.00003937 * (freq - 253) + 0.01;
+
+    else
+      return 0.01;
+
+  }else if(materialName == "double_window"){
+
+    if(1015 <= freq)
+      return 0.02;
+
+    else if( 253 <= freq)
+      return -0.00002625 * (freq - 253) + 0.04;
+
+    else if (126 <= freq)
+      return -0.00047244 * (freq - 126) + 0.1;
+
+    else
+      return 0.1;
+
+  }else if(materialName == "pvc_floor"){
+
+    if( 2031 <= freq )
+      return 0.05;
+
+    else if(507 <= freq )
+      return 0.00002625(freq - 507) + 0.01;
+
+    else
+      return 0.1;
+
+  }else if(materialName == "carpated_floor"){
+    
+    if( 4063 <= freq)
+      return 0.35;
+
+    else if( 2031 <= freq )
+      return 0.00007874 * (freq - 2031 ) + 0.19;
+
+    else if( 507 <= freq )
+      return 0.00009186 * (freq - 507) + 0.05;
+
+    else
+      return 0.00004107 * (freq-20) + 0.03;
+
+  }else if(materialName == "absorber_parete"){
+
+    if( 253 <= freq )
+      return 0.9;
+
+    else if(126 <= freq)
+      return 0.00157480 * (freq - 126) + 0.7;
+
+    else if(63.4 <= freq)
+      return 0.00878594 * (freq - 63.4) + 0.15;
+
+    else if(31.7 <= freq )
+      return 0.00315457 * ( freq - 31.7 ) + 0.05;
+
+    else
+      return 0.05;
+  
+  }else{
+    std::cout<< "Error, no correct material associated with an object\n";
+    assert(false);
+  }
+
+}
+

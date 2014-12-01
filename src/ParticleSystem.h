@@ -51,10 +51,10 @@ class ParticleSystem {
     void createInitWave();
     void particleSplit(Particle * &p, std::vector<Particle *> &vec);
     bool shouldSplit(Particle * &p);
-
     void particleMerge(const Particle * &a, const Particle * &b, Particle * &c);
 
-    void splitAllParticles();
+    // Math function
+    double absorbFunc(const std::string & materialName, const double freq);
     
     
     // located in ParticleSystem_render.cpp
