@@ -361,7 +361,6 @@ double ParticleSystem::absorbFunc(const std::string & materialName,
 
   // This method will have the manually loaded absorb methods taken from
   // the phonon tracing paper imported into it!
-
   if( materialName == "concrete_wall"){
 
     if(4063 <= freq)
@@ -426,7 +425,6 @@ double ParticleSystem::absorbFunc(const std::string & materialName,
         
     else if(253 <= freq )
       return 0.00003937 * (freq - 253) + 0.01;
-
     else
       return 0.01;
 
@@ -450,7 +448,7 @@ double ParticleSystem::absorbFunc(const std::string & materialName,
       return 0.05;
 
     else if(507 <= freq )
-      return 0.00002625(freq - 507) + 0.01;
+      return 0.00002625 * (freq - 507) + 0.01;
 
     else
       return 0.1;
@@ -490,6 +488,5 @@ double ParticleSystem::absorbFunc(const std::string & materialName,
     std::cout<< "Error, no correct material associated with an object\n";
     assert(false);
   }
-
 }
 
