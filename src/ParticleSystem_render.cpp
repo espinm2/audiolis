@@ -196,11 +196,6 @@ void ParticleSystem::setupParticles(){
     
     }
 
-    if(part->getMaterialHit() == "none"){
-
-      color = getColor(0,0,0,0);
-    
-    }
     
     particle_verts.push_back(VBOPosNormalColor(pos,normal,color));
   

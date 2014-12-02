@@ -79,7 +79,8 @@ void ParticleSystem::update(){
     // Particles are beyond a threshold init a split
     if(shouldSplit(curPart)){
 
-        if(curPart->getWatt() < MIN_WATTAGE ){ // <---------------------------------- Changed this for visual
+        if(curPart->getWatt() < MIN_WATTAGE 
+          ){ // <---------------------------------- Changed this for visual
 
           // Kill this partcile and move to next
           deleteMask[maskIndex++] = 1;
@@ -108,10 +109,11 @@ void ParticleSystem::update(){
     }else{
     
       // Update postiton and move to next particle
-      moveParticle(curPart,args->timestep);
+      if(moveParticle(curPart,args->timestep))
+        deleteMask[maskIndex++] = 0;
+      else
+        deleteMask[maskIndex++] = 1;
 
-
-      deleteMask[maskIndex++] = 0;
       iter++;
     
     }
@@ -197,7 +199,7 @@ bool ParticleSystem::moveParticle(Particle * p, double timestep){
     // Move up to line
     p->setCenter(impactPos + mir_dir * radius);
     
-    p->setOldPos(impactPos);
+    // p->setOldPos(impactPos);
     p->setPos(impactPos);
 
     calcMeshCollision(p); // new timeLeft Case a) we move a little up
@@ -206,12 +208,16 @@ bool ParticleSystem::moveParticle(Particle * p, double timestep){
     double absorb_ratio = absorbFunc(p->getMaterialHit(), p->getFreq());
     assert( absorb_ratio < 1); // <----------------------------------------------------------------- Selfcheck
     p->setWatt( (1 - absorb_ratio ) * p->getWatt() ); // <------------------------------------------ Math might not check out, this is a total hack
-    
-    moveParticle(p, time_after_impact); // this dude will move
+
+    p->incIter();
+
+    if(p->getMaterialHit() == "none"){
+      return false;
+    }else{
+      return true;
+    }
+    // moveParticle(p, time_after_impact); // this dude will move
   }
-  // up inter
-  p->incIter();
-  return true;
 }
 
 void ParticleSystem::moveCursor( const float & dx, 
