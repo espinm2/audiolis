@@ -330,13 +330,15 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       particleSystem->setupVBOs();
       break;
     case 'v': case 'V':
-      args->viz_type = (args-> viz_type + 1) % 3;
+      args->viz_type = (args-> viz_type + 1) % 5;
       if(args->viz_type == 0)
         std::cout << "Visualizing: Frequency White:Low Black:High\n";
       if(args->viz_type == 1)
         std::cout << "Visualizing: Intensity Black:Low White:High\n";
       if(args->viz_type == 2)
         std::cout << "Visualizing: Both: From White -> Red Freq Logrithmic \n";
+      if(args->viz_type == 4)
+        std::cout << "Visualizing: Wave Fronts \n";
       break;
     case 's': case 'S':
       args->source_type = (args-> source_type + 1) % 4;

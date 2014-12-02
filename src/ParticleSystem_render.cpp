@@ -184,10 +184,15 @@ void ParticleSystem::setupParticles(){
       // color.a = 1.0; // opacity // TEST
 
     }else{
-    
-      // Should error out
-      std::cout << "Bad Error Type" << std::endl;
-      assert(false);
+
+      // Visualizing wave fronts
+      glm::vec3 dir = part->getDir();
+
+      double rel_x =  (dir.x + 1) / 2.0;
+      double rel_y =  (dir.y + 1) / 2.0;
+      double rel_z =  (dir.z + 1) / 2.0;
+
+      color = glm::vec4(rel_x, rel_y, rel_z,1);
     
     }
 
