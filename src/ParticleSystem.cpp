@@ -31,9 +31,8 @@
 #define RADIUS_PARTICLE_WAVE  0.01 // Radius of hex shape
 #define RADIUS_INIT_SPHERE    0.01  // Radius of source sphere
 #define NUM_INIT_PARTICLES    1 // Inital Number of Particle
-#define INITAL_AMPLATUDE      10000000   // Amp we start off with
 #define SPLIT_AMOUNT          6     // What sized polygon we split into
-#define MIN_AMP               10    // When particles should die
+#define MIN_AMP               0    // When particles should die
 
 
 // Used for update
@@ -80,7 +79,7 @@ void ParticleSystem::update(){
     // Particles are beyond a threshold init a split
     if(shouldSplit(curPart)){
 
-        if(curPart->getAmp() < MIN_AMP){
+        if(curPart->getWatt() < MIN_AMP || false){ // <---------------------------------- Changed this for visual
 
           // Kill this partcile and move to next
           deleteMask[maskIndex++] = 1;
@@ -94,7 +93,7 @@ void ParticleSystem::update(){
         particleSplit(curPart, splitParticles);
 
         // change cur particle amp
-        curPart->setAmp(curPart->getAmp() / (double)(SPLIT_AMOUNT + 1.0));
+        curPart->setWatt(curPart->getWatt() / (double)(SPLIT_AMOUNT + 1.0));
 
         // Move them a timestep + add to new list
         for(int i = 0; i < splitParticles.size(); i++){
@@ -183,7 +182,9 @@ bool ParticleSystem::moveParticle(Particle * p, float timestep){
     p->setPos(newPos);
     p->decTime(timestep);
   
+
   }else{
+    // If we hit an object in this interval of time
 
     // Get  Times
     float time_until_impact = p->getTimeLeft();
@@ -202,10 +203,16 @@ bool ParticleSystem::moveParticle(Particle * p, float timestep){
     p->setOldPos(impactPos);
     calcMeshCollision(p); // new timeLeft Case a) we move a little up
 
+    // Power has to be calculated after the hit
+    double absorb_ratio = absorbFunc(p->getMaterialHit(), p->getFreq());
+    assert( absorb_ratio < 1); // <----------------------------------------------------------------- Selfcheck
+    p->setWatt( (1 - absorb_ratio ) * p->getWatt() ); // <------------------------------------------ Math might not check out, this is a total hack
+    
     moveParticle(p, time_after_impact); // this dude will move
   }
   // up inter
   p->incIter();
+  return true;
 }
 
 void ParticleSystem::moveCursor( const float & dx, 
@@ -236,10 +243,14 @@ void ParticleSystem::particleSplit(Particle * &p,
     for(int i = 0; i < newPart.size(); i++){
     
       Particle * s = new Particle(
-          newPart[i], newPart[i], p->getCenter(),
-          p->getAmp() / (double)(SPLIT_AMOUNT + 1.0), 
-          p->getSplit() + 1);
-      calcMeshCollision(s);
+          newPart[i],                                   // Position
+          newPart[i],                                   // OldPosition
+          p->getCenter(),                               // CenterPos
+          p->getWatt() / (double)(SPLIT_AMOUNT + 1.0),   // Amp
+          p->getFreq(),                                 // Freq
+          p->getSplit() + 1);                           // SplitAmount
+
+      calcMeshCollision(s);                             // Manditory Calc
     
       // put particle there to be "moved" when its their turn
       vec.push_back(s);
@@ -251,6 +262,8 @@ void ParticleSystem::calcMeshCollision(Particle * &p){
   // Output :  None
   // Assumpt:  That direction and center are setup
   // SideEff:  Sets timeLeft until collision
+  // SideEff:  Sets materialHit
+  // SideEff:  Sets hitNormal
   
   // Create a ray
   Ray r(p->getPos(), p->getDir());
@@ -268,17 +281,25 @@ void ParticleSystem::calcMeshCollision(Particle * &p){
     glm::vec3 b = (*t)[1]->getPos();
     glm::vec3 c = (*t)[2]->getPos();    
 
-    if(triangle_intersect(r,h,a,b,c,backface))
+    if(triangle_intersect(r,h,a,b,c,backface)){
       hitTriangle = true;
+      h.setMaterial(t->getMaterial());
+    }
   }
 
   // Get the closest  hit
   if(hitTriangle){
+
     p->setTime(h.getT());
     p->setHitNorm(h.getNormal());
+    p->setMaterial(h.getMaterial());
+
   }else{
+
     // We don't hit any triangles
     p->setTime(10000000); 
+    p->setMaterial("none");
+
   }
 
   // p->setTime(10000000);  // <------------------------------REMOVE ME 
@@ -309,10 +330,59 @@ void ParticleSystem::createInitWave(){
     dir = glm::normalize(dir);
   
     pos = cursor + dir * radius;
+
+    // default constructor
+
+    Particle * p = new Particle(
+        pos,                     // Position     
+        cursor,                  // OldPosition
+        cursor,                  // CenterPos
+        0,                       // Wattage
+        0,                       // Freq
+        0);                      // SplitAmount
   
-    Particle * p = new Particle(pos,cursor,cursor,INITAL_AMPLATUDE,0);
+    // For each given source type we will generate a diffrerent distrubution
+    // of freq to represent
+    
+    if( args-> source_type == 1){
+
+      // Low Freq Noise  AC unit
+      // Not very powerfull
+
+      p->setWatt(0.00001); // 70dBs about vacuum cleaner loudness
+      p->setFreq(args->randomGen.randInt(80) + 20); // Freq [20Hz-100Hz]
+
+
+    } else if (args-> source_type == 2 ){
+
+      // Assume Talking Range
+      // For speach we are using the fundmental, aka lowest freq
+      
+      p->setWatt(0.000001); // 60dBs about people talking loud
+      p->setFreq(args->randomGen.randInt(150) + 100); // Freq [100Hz-250Hz]
+
+
+    } else if( args-> source_type == 3 ){
+      // Assume higher pitched noise
+      // Assume you have a CRT mointor
+
+      p->setWatt(0.0000001); // 40dDbs soft conversation level
+      p->setFreq(16744); // Freq of CRT mointor running
+
+
+    } else {
+
+      // White noise there is total random distrubtion in frequency
+      // Assume power of rock concert at 110 dBs
+
+      p->setWatt(0.1); // Power of loud concert
+      p->setFreq(args->randomGen.randInt(20000-20) + 20); // Freq random
+
+    }
+  
+    // Find out when it hits our mesh
     calcMeshCollision(p);
-  
+
     // put particle there
     particles.push_back(p);
   
@@ -350,15 +420,107 @@ void ParticleSystem::particleMerge(const Particle * &a,
 }
 
 
-double ParticleSystem::absorbFunc(const std::string & materialName, 
+double ParticleSystem::absorbFunc(const std::string & mtlName, 
     const double freq){
 
-  // Insurance
+  std::string materialName = mtlName; // <---- change back to materialName 
+
+  // A few checks
+  assert(materialName != "none");
   if( freq < 20 ){
     std::cout << "Freq too low" << std::endl;
     assert(false);
   }
 
+
+
+  // Name remapper ////////////////////////////////////////////////////////////
+  unsigned int WALL_MATERIAL = 0; // This is a brick wall
+  // unsigned int WALL_MATERIAL = 1; // This is a Concrete wall
+  // unsigned int WALL_MATERIAL = 2; // Ceramnic-Tiled wall
+
+  unsigned int FLOOR_MATERIAL = 0; // pvc floor
+  // unsigned int FLOOR_MATERIAL = 1; // carpeted floor
+
+  if( materialName.compare(0,5,"GLASS") == 0){
+    materialName = "double_window";
+  }
+
+  // We will assume only some walls is made of Parete Absorber
+  else if(materialName.compare(0,4,"wall") == 0){
+
+      // Get the index
+      std::string temp  = materialName.substr(5);
+      int index = atoi(temp.c_str()) % 8;
+
+      if(index == 1) {
+
+        // Make this wall an absorber
+        materialName = "absorber_parete";
+
+      }else{
+
+        // Make these walls bricked walls
+        switch (WALL_MATERIAL) {
+          case 0:
+            materialName = "bricked_wall";
+            break;
+          case 1:
+            materialName = "concrete_wall";
+            break;
+          case 2:
+            materialName =  "ceramic_wall";
+            break;
+          default:
+            assert(false);
+        }
+
+      }
+  } // walls
+
+  else if( materialName.compare(0,6,"FILLIN") == 0) {
+  
+    // Make these walls bricked walls
+    switch (WALL_MATERIAL) {
+      case 0:
+        materialName = "bricked_wall";
+        break;
+      case 1:
+        materialName = "concrete_wall";
+        break;
+      case 2:
+        materialName =  "ceramic_wall";
+        break;
+      default:
+        assert(false);
+    }
+  
+  }
+
+  else if( materialName == "floor"){
+  
+    switch (FLOOR_MATERIAL) {
+      case 0:
+        materialName = "pvc_floor";
+        break;
+      case 1:
+        materialName =  "carpated_floor";
+        break;
+      default:
+        assert(false);
+    }
+  
+  }
+
+  else{
+  
+    // Assume ceiling
+    materialName = "plaster_ceiling";
+  
+  }
+
+  // Name remapper ////////////////////////////////////////////////////////////
+  
   // This method will have the manually loaded absorb methods taken from
   // the phonon tracing paper imported into it!
   if( materialName == "concrete_wall"){

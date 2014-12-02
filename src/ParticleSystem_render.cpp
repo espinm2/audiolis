@@ -59,11 +59,17 @@ void ParticleSystem::setupParticles(){
     // Picking Normal
     glm::vec3 normal = part->getDir(); 
     
-    
-    // float lifespanColor = ( MAX_ITERATIONS - part->getIter()) / (1.0 * MAX_ITERATIONS);
+    // Picking color //////////////////////////////////////////////////////////
+    glm::vec4 color(0,0,0,1);
+    glm::vec4 colorA(0,0,1,1);
+    glm::vec4 colorB(1,0,0,1);
 
-    // Picking color
-    glm::vec4 color(0,0,1,1);
+    color.r = colorA.r +  <----------Contineu here
+    color.g =
+    color.b =
+
+
+    
     
     particle_verts.push_back(VBOPosNormalColor(pos,normal,color));
   
@@ -82,7 +88,7 @@ void ParticleSystem::drawParticles(){
 
 
   HandleGLError("enter drawParticles");
-  glPointSize( 6) ;  // CHANGE ME <------------------------------- back to 2
+  glPointSize(2) ;  // CHANGE ME <------------------------------- back to 2
   glBindBuffer(GL_ARRAY_BUFFER, particle_verts_VBO);
 
   glEnableVertexAttribArray(0);

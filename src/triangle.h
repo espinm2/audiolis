@@ -40,7 +40,7 @@ public:
 
   int getID() { return id; }
   
-  const std::string& getMaterial() const { return mtl; }
+  std::string getMaterial() const { return mtl; }
 
 
   //get center of triangle

@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <float.h>
 #include <ostream>
+#include <string>
 
 #include "ray.h"
 
@@ -23,17 +24,23 @@ public:
   Hit(const Hit &h) { 
     t = h.t; 
     normal = h.normal; 
+    mtlHit = h.mtlHit;
+    
   }
   ~Hit() {}
 
   // ACCESSORS
   float getT() const { return t; }
   glm::vec3 getNormal() const { return normal; }
+  std::string getMaterial() const { return mtlHit; }
 
   // MODIFIER
   void set(float _t, glm::vec3 n) {
     t = _t; normal = n; 
+  }
 
+  void setMaterial(const std::string & mat){
+    mtlHit = mat;
   }
 
 private: 
@@ -41,6 +48,8 @@ private:
   // REPRESENTATION
   float t;
   glm::vec3 normal;
+  std::string mtlHit;
+
 };
 
 inline std::ostream &operator<<(std::ostream &os, const Hit &h) {

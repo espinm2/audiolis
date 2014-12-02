@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <cassert>
 #include <iostream>
+#include <string>
 #include <cmath>
 #include <string>
 
@@ -11,77 +12,103 @@ class Particle {
 
 public:
 
-  // defualt constructor
+  // Constructor //////////////////////////////////////////////////////////////
   Particle(){
-    position     = glm::vec3(0,0,0);
-    oldPosition  = glm::vec3(0,0,0);
-    center       = glm::vec3(0,0,0);
+    position     = (glm::vec3) NULL; 
+    oldPosition  = (glm::vec3) NULL; 
+    center       = (glm::vec3) NULL; 
     hitNorm      = (glm::vec3) NULL;
-    ampage       = 0;
+
+    wattage      = 0;
+    freqency     = 0;
     splits       = 0;
+
     timeLeft     = 0;
     iterations   = 0;
+
+    materialHit =  "";
   }
 
-  // constructor
   Particle(const glm::vec3 & pos, const glm::vec3 & old, 
-      const glm::vec3 c, double a, int s){
+      const glm::vec3 cen, double amp, double freq, int s){
 
       // Remember you should set stepsLeft + iterations
       position    = pos;
       oldPosition = old;
-      center      = c;
-      ampage      = a;
+      center      = cen;
+
+      wattage      = amp;
+      freqency    = freq;
       splits      = s;
+
       timeLeft    = 0;
       iterations  = 0;
 
+      materialHit =  "";
+
   }
 
-  // Accessors
+  // Accessors ////////////////////////////////////////////////////////////////
   const   glm::vec3 & getPos()        const { return position; }
   const   glm::vec3 & getOldPos()     const { return oldPosition;}
   const   glm::vec3 & getCenter()     const { return center; }
   const   glm::vec3 & getHitNorm()    const { return hitNorm; }
 
-  double  getAmp()               const { return ampage; }
-  int     getSplit()             const { return splits; }
-  float   getTimeLeft()          const { return timeLeft; }
-  int     getIter()              const { return iterations; }
+  double  getWatt()     const { return wattage; }
+  double  getFreq()     const { return freqency; }
+  int     getSplit()    const { return splits; }
+  float   getTimeLeft() const { return timeLeft; }
+  int     getIter()     const { return iterations; }
 
   glm::vec3 getDir() const { 
+
+    // Computes the direction
     glm::vec3 res = (position-center); 
     res = glm::normalize(res);
     return res;
+
   }
 
+  std::string     getMaterialHit(){ return materialHit; }
 
-  // Modifiers
+  // Modifiers ////////////////////////////////////////////////////////////////
   void setPos     (const glm::vec3 & pos) { position = pos; }
   void setOldPos  (const glm::vec3 & pos) { oldPosition = pos; }
   void setCenter  (const glm::vec3 & pos) { center = pos; }
   void setHitNorm (const glm::vec3 & pos) { hitNorm = pos; }
-  void setAmp     (const double & a)  { ampage = a; }
+
+  void setWatt    (const double & a)  { wattage = a; }
+  void setFreq    (const double & f)   {freqency = f;}
+
   void setSplit   (const int    & s)  { splits = s; }
-  void setTime    (const float  & c)  { timeLeft = c;   }
-  void decTime    (const double & t)  { timeLeft -= (float)t; }
+
+  void setTime    (const float  & t)  { timeLeft = t ; }
+  void decTime    (const float  & t)  { timeLeft = timeLeft - t; }
   void incIter    () { iterations++; }
 
-  // Debugging Functions
+  void setMaterial (const std::string & name ) { materialHit = name; } 
+
+  // Debugging Functions //////////////////////////////////////////////////////
   friend std::ostream& operator<<(std::ostream &, const Particle &);
 
 private:
 
-  // Rep
+  // Rep Geometery ////////////////////////////////////////////////////////////
   glm::vec3 position;       // Position to use for rendering
   glm::vec3 oldPosition;    // Position before rendering
   glm::vec3 center;         // Where the epi-center is
   glm::vec3 hitNorm;        // Angle in which we hit the mesh
   
-  double    ampage;         // Used to calc Power of wave
+  // Rep Sound ////////////////////////////////////////////////////////////////
+  double    wattage;         // Used to calc Power of wave
+  double    freqency;       // What freqency this particle represents
   int       splits;         // How many times our particle split
+
   float     timeLeft;       // How much time left until you hit wall
   int       iterations;     // How many iterations have I been around for
+
+  std::string materialHit;  // Name of the material I will hit next
+
 };
 
 
@@ -106,7 +133,7 @@ inline std::ostream & operator<<(std::ostream & leftOp,
     leftOp << "hitNorm(" << rightOp.hitNorm.x << 
       ", " << rightOp.hitNorm.y << ", " << rightOp.hitNorm.z << ") ";
 
-    leftOp << "amp " << rightOp.ampage << " ";
+    leftOp << "amp " << rightOp.wattage << " ";
 
     leftOp << "spl " << rightOp.splits << " ";
 

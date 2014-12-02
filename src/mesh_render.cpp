@@ -126,71 +126,154 @@ void Mesh::SetupMesh() {
 
     std::string mtl = t->getMaterial();
     
-    // Finding colors
+    unsigned int WALL_MATERIAL = 0; // This is a brick wall
+    // unsigned int WALL_MATERIAL = 1; // This is a Concrete wall
+    // unsigned int WALL_MATERIAL = 2; // Ceramnic-Tiled wall
 
-    if(mtl.compare(0,4,"wall") == 0){
+    // unsigned int FLOOR_MATERIAL = 0; // pvc floor
+    unsigned int FLOOR_MATERIAL = 1; // carpeted floor
 
-      // Get the index
-      std::string temp  = mtl.substr(5);
+    if( mtl.compare(0,5,"GLASS") == 0){
+      center_color = getColor(141,211,199,1);
+    }
 
-      int colorIndex = atoi(temp.c_str()) % 8;
+    // We will assume only some walls is made of Parete Absorber
+    else if(mtl.compare(0,4,"wall") == 0){
 
-      center_color = getColor(100,100,100,1);
+        // Get the index
+        std::string temp  = mtl.substr(5);
+        int index = atoi(temp.c_str()) % 8;
 
-      // DEBUG LATER (Colors wont change)
-      
-      switch (colorIndex) {
+        if(index == 1) {
+
+          // Make this wall an absorber
+         center_color = getColor(179,222,105,1);
+
+        }else{
+
+          // Make these walls anything
+          switch (WALL_MATERIAL) {
+            case 0:
+              center_color = getColor(251,128,114,1);
+              break;
+            case 1:
+              center_color = getColor(190,186,218,1);
+              break;
+            case 2:
+              center_color = mesh_color;
+              break;
+            default:
+              assert(false);
+          }
+
+        }
+    } // walls
+
+    else if( mtl.compare(0,6,"FILLIN") == 0) {
+
+      switch (WALL_MATERIAL) {
         case 0:
-          center_color = getColor(228,26,28,1);
+          center_color = getColor(251,128,114,1);
           break;
         case 1:
-          center_color = getColor(247,129,191,1);
+          center_color = getColor(190,186,218,1);
           break;
         case 2:
-          center_color = getColor(55,126,184,1);
-          break;
-        case 3:
-          center_color = getColor(77,175,74,1);
-          break;
-        case 4:
-          center_color = getColor(152,78,163,1);
-          break;
-        case 5:
-          center_color = getColor(255,127,0,1);
-          break;
-        case 6:
-          center_color = getColor(255,255,51,1);
-          break;
-        case 7:
-          center_color = getColor(166,86,40,1);
+          center_color = mesh_color;
           break;
         default:
           assert(false);
       }
 
-      wire_color = center_color;
-    
-    }else if(mtl.compare(0,5,"GLASS") == 0){ 
-
-      center_color = glm::vec4(0.00,1.00,0.80,1);
-      wire_color = center_color;
-      
-    }else if(mtl.compare(0,6,"FILLIN") == 0){ 
-
-      center_color = glm::vec4(0.2,0.3,0,1);
-      wire_color = center_color;
-      
-    }else{
-      
-      center_color = mesh_color;
-
-      wire_color = glm::vec4(
-          mesh_color.r * 0.1, 
-          mesh_color.g * 0.1, 
-          mesh_color.b*0.1,
-          1);
-
     }
+
+    else if( mtl == "floor"){
+    
+      switch (FLOOR_MATERIAL) {
+        case 0:
+          center_color = getColor(255,255,179,1);
+          break;
+        case 1:
+          center_color = getColor(128,177,211,1);
+          break;
+        default:
+          assert(false);
+      }
+    
+    }
+
+    else{
+      // Assume ceiling
+      // center_color = getColor(255,255,51,1);
+      center_color = mesh_color;
+    }
+    // Finding colors OLD VERSION
+
+    // if(mtl.compare(0,4,"wall") == 0){
+
+    //   // Get the index
+    //   std::string temp  = mtl.substr(5);
+
+    //   int colorIndex = atoi(temp.c_str()) % 8;
+
+    //   center_color = getColor(100,100,100,1);
+
+    //   // DEBUG LATER (Colors wont change)
+    //   
+    //   switch (colorIndex) {
+    //     case 0:
+    //       center_color = getColor(228,26,28,1);
+    //       break;
+    //     case 1:
+    //       center_color = getColor(247,129,191,1);
+    //       break;
+    //     case 2:
+    //       center_color = getColor(55,126,184,1);
+    //       break;
+    //     case 3:
+    //       center_color = getColor(77,175,74,1);
+    //       break;
+    //     case 4:
+    //       center_color = getColor(152,78,163,1);
+    //       break;
+    //     case 5:
+    //       center_color = getColor(255,127,0,1);
+    //       break;
+    //     case 6:
+    //       center_color = getColor(255,255,51,1);
+    //       break;
+    //     case 7:
+    //       center_color = getColor(166,86,40,1);
+    //       break;
+    //     default:
+    //       assert(false);
+    //   }
+
+    //   wire_color = center_color;
+    // 
+    // }else if(mtl.compare(0,5,"GLASS") == 0){ 
+
+    //   center_color = glm::vec4(0.00,1.00,0.80,1);
+    //   wire_color = center_color;
+    //   
+    // }else if(mtl.compare(0,6,"FILLIN") == 0){ 
+
+    //   center_color = glm::vec4(0.2,0.3,0,1);
+    //   wire_color = center_color;
+    //   
+    // }else{
+    //   
+    //   center_color = mesh_color;
+
+    //   wire_color = glm::vec4(
+    //       mesh_color.r * 0.1, 
+    //       mesh_color.g * 0.1, 
+    //       mesh_color.b*0.1,
+    //       1);
+
+    // }
+
+    wire_color = center_color; // <------------------------------------------------- Recall we killed the wiremesh
 
     // Sending color
     TriVBOHelper(mesh_tri_verts,mesh_tri_indices,

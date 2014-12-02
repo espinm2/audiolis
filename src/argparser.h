@@ -87,6 +87,7 @@ public:
     wireframe = false;
     render_top = false;
     timestep = 0.001;
+    source_type = 0;
   }
 
   // ==============
@@ -96,6 +97,7 @@ public:
   std::string input_file;
   std::string path;
   std::string shader_filename;
+
   int width;
   int height;
   bool geometry;
@@ -106,6 +108,8 @@ public:
   bool wireframe;
   bool render_top;
   float timestep;
+  int source_type;
+
   MTRand randomGen;
 };
 
