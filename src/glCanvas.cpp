@@ -147,10 +147,10 @@ void GLCanvas::animate(){
   }
 
   // This only for Recording stuff
-  if( GLCanvas::iteration % 150 == 0 && GLCanvas::iteration != 0) {
-    std::cout << "Stopped animation " << GLCanvas::iteration << std::endl;
-    args->animate = false;
-  }
+  // if( GLCanvas::iteration % 150 == 0 && GLCanvas::iteration != 0) {
+  //   std::cout << "Stopped animation " << GLCanvas::iteration << std::endl;
+  //  args->animate = false;
+  // }
   
 }
 
@@ -329,10 +329,30 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       particleSystem->createInitWave();
       particleSystem->setupVBOs();
       break;
-    //  case 'w': case 'W':
-    //    args->wireframe = !args->wireframe;
-    //    mesh->setupVBOs();
-    //    break;
+    case 'v': case 'V':
+      args->viz_type = (args-> viz_type + 1) % 3;
+      if(args->viz_type == 0)
+        std::cout << "Visualizing: Frequency White:Low Black:High\n";
+      if(args->viz_type == 1)
+        std::cout << "Visualizing: Intensity Black:Low White:High\n";
+      if(args->viz_type == 2)
+        std::cout << "Visualizing: Both: From White -> Red Freq Logrithmic \n";
+      break;
+    case 's': case 'S':
+      args->source_type = (args-> source_type + 1) % 4;
+      if(args->source_type == 0)
+        std::cout << "Source Type: White Noise at 110 dBs\n";
+      if(args->source_type == 1)
+        std::cout << "Source Type: Low Freq AC Noise at 70dBs\n";
+      if(args->source_type == 2)
+        std::cout << "Source Type: Mid Freq at 60dBs\n";
+      if(args->source_type == 3)
+        std::cout << "Source Type: High pitched CTR at 40 dBs\n";
+      break;
+ //  case 'w': case 'W':
+ //    args->wireframe = !args->wireframe;
+ //    mesh->setupVBOs();
+ //    break;
     case 'c': case 'C':
       args->render_top = !args->render_top;
       mesh->setupVBOs();

@@ -4,10 +4,10 @@
 in vec3 vertexPosition_worldspace;
 in vec3 EyeDirection_cameraspace;
 in vec3 vertexNormal_worldspace;
-in vec3 myColor;
+in vec4 myColor;
 
 // Ouput data
-out vec3 color;
+out vec4 color;
 
 // Values that stay constant for the whole mesh.
 uniform vec3 LightPosition_worldspace;
@@ -32,7 +32,9 @@ void main(){
   if ( whichshader == 0)
   { 
 
-      MaterialDiffuseColor = myColor;
+      MaterialDiffuseColor.r = myColor.r;
+      MaterialDiffuseColor.g = myColor.g;
+      MaterialDiffuseColor.b = myColor.b;
 
       vec3 MaterialAmbientColor = vec3(0.3,0.3,0.3) * MaterialDiffuseColor;
       vec3 MaterialSpecularColor = vec3(0.3,0.3,0.3);
@@ -68,10 +70,15 @@ void main(){
       float cosAlpha = clamp( dot( E,R ), 0,1 );
       
 
-      color = 
+      vec3 no_alpha_color = 
         MaterialAmbientColor +
         MaterialDiffuseColor * LightColor * LightPower * cosTheta / (distanceToLight) +
         MaterialSpecularColor * LightColor * LightPower * pow(cosAlpha,5) / (distanceToLight); 
+
+        color.r = no_alpha_color.r;
+        color.g = no_alpha_color.g;
+        color.b = no_alpha_color.b;
+        color.a = myColor.a;
   }
 
   // SHADER FOR GLPOINTS //////////////////////////////////////////////////////

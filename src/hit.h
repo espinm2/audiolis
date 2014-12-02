@@ -30,12 +30,12 @@ public:
   ~Hit() {}
 
   // ACCESSORS
-  float getT() const { return t; }
+  double getT() const { return t; }
   glm::vec3 getNormal() const { return normal; }
   std::string getMaterial() const { return mtlHit; }
 
   // MODIFIER
-  void set(float _t, glm::vec3 n) {
+  void set(double _t, glm::vec3 n) {
     t = _t; normal = n; 
   }
 
@@ -46,7 +46,7 @@ public:
 private: 
 
   // REPRESENTATION
-  float t;
+  double t;
   glm::vec3 normal;
   std::string mtlHit;
 

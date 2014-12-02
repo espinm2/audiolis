@@ -27,13 +27,13 @@
 // [ ] Change the radius_particle_wave depending how many spits done
 // [ ] ReIntroduce splits
 
-#define MAX_ITERATIONS        600   // When to kill particles
+#define MAX_ITERATIONS        6000   // When to kill particles
 #define RADIUS_PARTICLE_WAVE  0.01 // Radius of hex shape
 #define RADIUS_INIT_SPHERE    0.01  // Radius of source sphere
-#define NUM_INIT_PARTICLES    1 // Inital Number of Particle
+#define NUM_INIT_PARTICLES    10000 // Inital Number of Particle
 #define SPLIT_AMOUNT          6     // What sized polygon we split into
-#define MIN_AMP               0    // When particles should die
-
+#define MIN_WATTAGE 0.000000000002 // When particles should die
+#define EPSILON 0.0001
 
 // Used for update
 typedef std::vector<Particle *>::iterator ParticleIter;
@@ -79,7 +79,7 @@ void ParticleSystem::update(){
     // Particles are beyond a threshold init a split
     if(shouldSplit(curPart)){
 
-        if(curPart->getWatt() < MIN_AMP || false){ // <---------------------------------- Changed this for visual
+        if(curPart->getWatt() < MIN_WATTAGE ){ // <---------------------------------- Changed this for visual
 
           // Kill this partcile and move to next
           deleteMask[maskIndex++] = 1;
@@ -158,7 +158,7 @@ void ParticleSystem::update(){
       particles.push_back(newParticles[i]);
 }
 
-bool ParticleSystem::moveParticle(Particle * p, float timestep){
+bool ParticleSystem::moveParticle(Particle * p, double timestep){
   /*
    * Input : Particle ptr
    * Output: That particle moved a timestep
@@ -169,41 +169,40 @@ bool ParticleSystem::moveParticle(Particle * p, float timestep){
    */
 
   // Stuff for calc
-  float time_until_impact = p->getTimeLeft();
-  float time_after_impact = timestep - p->getTimeLeft();
+  double time_until_impact = p->getTimeLeft();
+  double time_after_impact = timestep - p->getTimeLeft();
 
   glm::vec3 oldPos = p->getOldPos();
   glm::vec3 dir = p->getDir();
 
   // We didn't hit an object in this interval of time
-  if(time_until_impact - timestep > 0){
+  if(time_until_impact - 2.0 * EPSILON >  timestep){
 
-    glm::vec3 newPos( oldPos + dir * timestep );
+    glm::vec3 newPos( oldPos + dir * (float)timestep );
     p->setPos(newPos);
     p->decTime(timestep);
   
 
   }else{
-    // If we hit an object in this interval of time
-
-    // Get  Times
-    float time_until_impact = p->getTimeLeft();
-    float time_after_impact = timestep - p->getTimeLeft();
+    // If we hit an object in this interval of time 
 
     // We where we hit in space
-    glm::vec3 impactPos(oldPos + dir * time_until_impact);
+    glm::vec3 impactPos(oldPos + (dir * (float)time_until_impact));
 
     // Get the new center to change direction
     glm::vec3 mir_dir = MirrorDirection(p->getHitNorm(), p->getDir());
     mir_dir = mir_dir * (float)(-1.0);
     float radius = glm::distance(p->getCenter(), impactPos);
-    
+
     // Move up to line
     p->setCenter(impactPos + mir_dir * radius);
+    
     p->setOldPos(impactPos);
+    p->setPos(impactPos);
+
     calcMeshCollision(p); // new timeLeft Case a) we move a little up
 
-    // Power has to be calculated after the hit
+    // Power has to be calculated after the hi:t
     double absorb_ratio = absorbFunc(p->getMaterialHit(), p->getFreq());
     assert( absorb_ratio < 1); // <----------------------------------------------------------------- Selfcheck
     p->setWatt( (1 - absorb_ratio ) * p->getWatt() ); // <------------------------------------------ Math might not check out, this is a total hack
@@ -235,7 +234,8 @@ void ParticleSystem::particleSplit(Particle * &p,
         p->getDir(), RADIUS_PARTICLE_WAVE, SPLIT_AMOUNT, newPart,args);
 
  
-    // Project back on sphere
+    // Project back on sphere // When particles should die
+
     cirlce_point_on_sphere(p->getCenter(),
         glm::distance( p->getOldPos(), p->getCenter()),newPart);
 
@@ -309,6 +309,10 @@ void ParticleSystem::calcMeshCollision(Particle * &p){
 void ParticleSystem::createInitWave(){
   // Testing function to create circle in 3d space
 
+    //  case 'w': case 'W':
+    //    args->wireframe = !args->wireframe;
+    //    mesh->setupVBOs();
+    //    break;
   // Phonon Mapping to create particle wave
   // Using cursor
   double s = RADIUS_INIT_SPHERE;
@@ -426,7 +430,6 @@ double ParticleSystem::absorbFunc(const std::string & mtlName,
   std::string materialName = mtlName; // <---- change back to materialName 
 
   // A few checks
-  assert(materialName != "none");
   if( freq < 20 ){
     std::cout << "Freq too low" << std::endl;
     assert(false);

@@ -26,6 +26,7 @@ int main(int argc, char *argv[]) {
   ArgParser args(argc, argv);
   GLCanvas::initialize(&args); 
 
+
   // Creates background color behind all objects (SKY)
   glClearColor(0.8,0.9,1.0,0.0);
 

@@ -88,6 +88,7 @@ public:
     render_top = false;
     timestep = 0.001;
     source_type = 0;
+    viz_type = 0;
   }
 
   // ==============
@@ -107,8 +108,9 @@ public:
   bool animate;
   bool wireframe;
   bool render_top;
-  float timestep;
+  double timestep;
   int source_type;
+  int viz_type;
 
   MTRand randomGen;
 };

@@ -57,7 +57,7 @@ public:
   double  getWatt()     const { return wattage; }
   double  getFreq()     const { return freqency; }
   int     getSplit()    const { return splits; }
-  float   getTimeLeft() const { return timeLeft; }
+  double   getTimeLeft() const { return timeLeft; }
   int     getIter()     const { return iterations; }
 
   glm::vec3 getDir() const { 
@@ -82,8 +82,8 @@ public:
 
   void setSplit   (const int    & s)  { splits = s; }
 
-  void setTime    (const float  & t)  { timeLeft = t ; }
-  void decTime    (const float  & t)  { timeLeft = timeLeft - t; }
+  void setTime    (const double  & t)  { timeLeft = t ; }
+  void decTime    (const double  & t)  { timeLeft = timeLeft - t; }
   void incIter    () { iterations++; }
 
   void setMaterial (const std::string & name ) { materialHit = name; } 
@@ -104,7 +104,7 @@ private:
   double    freqency;       // What freqency this particle represents
   int       splits;         // How many times our particle split
 
-  float     timeLeft;       // How much time left until you hit wall
+  double    timeLeft;       // How much time left until you hit wall
   int       iterations;     // How many iterations have I been around for
 
   std::string materialHit;  // Name of the material I will hit next
