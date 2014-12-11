@@ -13,20 +13,20 @@
 
 #define MIN_WATTAGE 0.000000000002
 
-/*
 // This is for rainbow color
 #define BLUE     getColor(1,66,255,1)
 #define LITE_BLU getColor(0,254,252,1)
 #define GREEN    getColor(135,255,119,1)
 #define YELLOW   getColor(255,240,1,1)
 #define RED      getColor(255,30,0,1)
-*/
 
+/*
 #define BLUE     getColor(255,255,178,1)
 #define LITE_BLU getColor(254,204,92,1)
 #define GREEN    getColor(253,141,60,1)
 #define YELLOW   getColor(240,59,31,1)
 #define RED      getColor(189,0,38,1)
+*/
 
 
 void ParticleSystem::initializeVBOs(){

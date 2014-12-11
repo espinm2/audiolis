@@ -28,7 +28,8 @@ int main(int argc, char *argv[]) {
 
 
   // Creates background color behind all objects (SKY)
-  glClearColor(0.8,0.9,1.0,0.0);
+  // glClearColor(0.8,0.9,1.0,0.0);
+  glClearColor(176.0/256,196.0/256,222.0/256,0.0);
 
   // If enabled do depth comparisons and update the depth buffer
   glEnable(GL_DEPTH_TEST);

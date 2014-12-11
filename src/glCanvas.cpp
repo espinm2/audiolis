@@ -147,10 +147,10 @@ void GLCanvas::animate(){
   }
 
   // This only for Recording stuff
-  // if( GLCanvas::iteration % 150 == 0 && GLCanvas::iteration != 0) {
-  //   std::cout << "Stopped animation " << GLCanvas::iteration << std::endl;
-  //  args->animate = false;
-  // }
+  if( GLCanvas::iteration == 10000) {
+     std::cout << "Stopped animation iteration is 3000" << GLCanvas::iteration << std::endl;
+     args->animate = false;
+  }
   
 }
 
