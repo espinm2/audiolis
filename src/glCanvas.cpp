@@ -204,11 +204,12 @@ void GLCanvas::drawVBOs(const glm::mat4 &ProjectionMatrix,const glm::mat4 &ViewM
     mesh->drawVBOs();
   glUniform1i(GLCanvas::whichshaderID, 0);
 
-  
   // Use flat shader
   glUniform1i(GLCanvas::whichshaderID, 1);
     particleSystem->drawVBOs();
   glUniform1i(GLCanvas::whichshaderID, 0);
+
+
 
   HandleGLError("leaving GlCanvas::drawVBOs()");
 }
@@ -316,6 +317,9 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       break;
     case 'a': case 'A':
       args->animate = !args->animate;
+      break;
+    case 'd': case 'D':
+      args->direction = !args->direction;
       break;
     case ' ':
       args->timer += 0.1;

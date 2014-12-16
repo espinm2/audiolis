@@ -22,7 +22,6 @@
 
 // FIXME ////////////////////////////////////////////
 // [ ] Particle waves should happen with distance
-// [ ] Get low resolution of a mesh to use (tri count)
 // [ ] when you split, fix behind timestep issue
 // [ ] Change the radius_particle_wave depending how many spits done
 // [ ] ReIntroduce splits
@@ -75,19 +74,18 @@ void ParticleSystem::update(){
 
 
     // Are we below a threhold just kill and move to another
+    // NOTE: this causes particles to split right before they fade out
+    //       Looks like a firework exploding
+    if(curPart->getWatt() < MIN_WATTAGE ){ 
+      // Kill this partcile and move to next
+      deleteMask[maskIndex++] = 1;
+      iter++;
+      continue;
+    }
 
     // Particles are beyond a threshold init a split
     if(shouldSplit(curPart)){
 
-        if(curPart->getWatt() < MIN_WATTAGE 
-          ){ // <---------------------------------- Changed this for visual
-
-          // Kill this partcile and move to next
-          deleteMask[maskIndex++] = 1;
-          iter++;
-          continue;
-
-        }
 
         // Get new particles to be made
         std::vector<Particle *> splitParticles;
@@ -102,17 +100,16 @@ void ParticleSystem::update(){
           newParticles.push_back(splitParticles[i]);
         }
 
-      deleteMask[maskIndex++] = 0; // kills center
+      deleteMask[maskIndex++] = 0; // 1: kills center, 0: leave it alive
+
       iter++;
 
 
     }else{
     
       // Update postiton and move to next particle
-      if(moveParticle(curPart,args->timestep))
-        deleteMask[maskIndex++] = 0;
-      else
-        deleteMask[maskIndex++] = 1;
+      moveParticle(curPart,args->timestep);
+      deleteMask[maskIndex++] = 0; 
 
       iter++;
     
@@ -206,17 +203,17 @@ bool ParticleSystem::moveParticle(Particle * p, double timestep){
 
     // Power has to be calculated after the hi:t
     double absorb_ratio = absorbFunc(p->getMaterialHit(), p->getFreq());
-    assert( absorb_ratio < 1); // <----------------------------------------------------------------- Selfcheck
+
+    assert( absorb_ratio < 1);  // sanity check
+
     p->setWatt( (1 - absorb_ratio ) * p->getWatt() ); // <------------------------------------------ Math might not check out, this is a total hack
 
     p->incIter();
 
-    if(p->getMaterialHit() == "none"){
-      return false;
-    }else{
-      return true;
-    }
     // moveParticle(p, time_after_impact); // this dude will move
+
+    return true;
+
   }
 }
 
@@ -308,18 +305,12 @@ void ParticleSystem::calcMeshCollision(Particle * &p){
 
   }
 
-  // p->setTime(10000000);  // <------------------------------REMOVE ME 
 }
 
 
 void ParticleSystem::createInitWave(){
   // Testing function to create circle in 3d space
 
-    //  case 'w': case 'W':
-    //    args->wireframe = !args->wireframe;
-    //    mesh->setupVBOs();
-    //    break;
-  // Phonon Mapping to create particle wave
   // Using cursor
   double s = RADIUS_INIT_SPHERE;
   

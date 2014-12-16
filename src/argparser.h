@@ -89,6 +89,7 @@ public:
     timestep = 0.001;
     source_type = 0;
     viz_type = 0;
+    direction = false;
   }
 
   // ==============
@@ -111,6 +112,7 @@ public:
   double timestep;
   int source_type;
   int viz_type;
+  bool direction;
 
   MTRand randomGen;
 };
