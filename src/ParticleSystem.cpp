@@ -444,12 +444,12 @@ double ParticleSystem::absorbFunc(const std::string & mtlName,
 
 
   // Name remapper ////////////////////////////////////////////////////////////
-  unsigned int WALL_MATERIAL = 0; // This is a brick wall
-   //unsigned int WALL_MATERIAL = 1; // This is a Concrete wall
+  //unsigned int WALL_MATERIAL = 0; // This is a brick wall
+   unsigned int WALL_MATERIAL = 1; // This is a Concrete wall
   //unsigned int WALL_MATERIAL = 2; // Ceramnic-Tiled wall
 
-  //unsigned int FLOOR_MATERIAL = 0; // pvc floor
-  unsigned int FLOOR_MATERIAL = 1; // carpeted floor
+  unsigned int FLOOR_MATERIAL = 0; // pvc floor
+  //unsigned int FLOOR_MATERIAL = 1; // carpeted floor
 
   if( materialName.compare(0,5,"GLASS") == 0){
     materialName = "double_window";
@@ -462,7 +462,7 @@ double ParticleSystem::absorbFunc(const std::string & mtlName,
       std::string temp  = materialName.substr(5);
       int index = atoi(temp.c_str()) % 3;
 
-      if(index == 1 &&  false) {
+      if(index == 1) {
 
         // Make this wall an absorber
         materialName = "absorber_parete";
