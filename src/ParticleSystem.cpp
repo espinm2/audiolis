@@ -30,7 +30,7 @@
 #define MAX_ITERATIONS        6000   // When to kill particles
 #define RADIUS_PARTICLE_WAVE  0.01 // Radius of hex shape
 #define RADIUS_INIT_SPHERE    0.01  // Radius of source sphere
-#define NUM_INIT_PARTICLES    10000 // Inital Number of Particle
+#define NUM_INIT_PARTICLES    1 // Inital Number of Particle
 #define SPLIT_AMOUNT          6     // What sized polygon we split into
 #define MIN_WATTAGE 0.000000000002 // When particles should die
 #define EPSILON 0.0001
@@ -75,18 +75,23 @@ void ParticleSystem::update(){
 
 
     // Are we below a threhold just kill and move to another
-
-    // Particles are beyond a threshold init a split
-    if(shouldSplit(curPart)){
-
-        if(curPart->getWatt() < MIN_WATTAGE 
-          ){ // <---------------------------------- Changed this for visual
+        if(curPart->getWatt() < MIN_WATTAGE ){ 
 
           // Kill this partcile and move to next
           deleteMask[maskIndex++] = 1;
           iter++;
           continue;
 
+        }
+
+    // Particles are beyond a threshold init a split
+    if(shouldSplit(curPart)){
+
+        // should we even bother? are they just going to flitter out
+        if(curPart->getWatt()/(SPLIT_AMOUNT+1.0) < MIN_WATTAGE ){
+          deleteMask[maskIndex++] = 1;
+          iter++;
+          continue;
         }
 
         // Get new particles to be made
@@ -207,7 +212,7 @@ bool ParticleSystem::moveParticle(Particle * p, double timestep){
     // Power has to be calculated after the hi:t
     double absorb_ratio = absorbFunc(p->getMaterialHit(), p->getFreq());
     assert( absorb_ratio < 1); // <----------------------------------------------------------------- Selfcheck
-    p->setWatt( (1 - absorb_ratio ) * p->getWatt() ); // <------------------------------------------ Math might not check out, this is a total hack
+    p->setWatt( (1 - absorb_ratio ) * p->getWatt() ); // <------------------------------------------ Math 
 
     p->incIter();
 
@@ -400,28 +405,29 @@ void ParticleSystem::createInitWave(){
 }
 
 bool ParticleSystem::shouldSplit(Particle * &p){
+  // In here we compare all particles against eachother
+  // Very expensive to do, however we also check to see if
+  // we can merge any two particles into one
 
-  // DEBUG //
-  return false;
-  //  // tag
-  //  glm::vec3 pos = p->getOldPos();
-  //  float nearestDistance = 100000;
-  //  float threshold = 3 * RADIUS_PARTICLE_WAVE;
+  // tag
+  glm::vec3 pos = p->getOldPos();
+  float nearestDistance = 100000;
+  float threshold = 3 * RADIUS_PARTICLE_WAVE;
 
-  //  // for each particle in the system
-  //  for(int i = 0; i < particles.size(); i++){
+  // for each particle in the system
+  for(int i = 0; i < particles.size(); i++){
 
-  //    if(particles[i] == p)
-  //      continue;
+    if(particles[i] == p)
+      continue;
 
-  //    float dist = glm::distance(p->getOldPos(), particles[i]->getOldPos());
-  //    if(nearestDistance > dist)
-  //      nearestDistance = dist;
-  //  }
+    float dist = glm::distance(p->getOldPos(), particles[i]->getOldPos());
+    if(nearestDistance > dist)
+      nearestDistance = dist;
+  }
 
-  //  // I now have nearest distance
-  //  return( fabs( nearestDistance - threshold) <= EPSILON || 
-  //      nearestDistance > threshold);
+  // I now have nearest distance
+  return( fabs( nearestDistance - threshold) <= EPSILON || 
+      nearestDistance > threshold);
 }
 
 void ParticleSystem::particleMerge(const Particle * &a, 
