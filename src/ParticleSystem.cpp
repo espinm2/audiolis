@@ -74,38 +74,24 @@ void ParticleSystem::update(){
 
 
     // Are we below a threhold just kill and move to another
-<<<<<<< HEAD
-        if(curPart->getWatt() < MIN_WATTAGE ){ 
-
-          // Kill this partcile and move to next
-          deleteMask[maskIndex++] = 1;
-          iter++;
-          continue;
-
-        }
-=======
-    // NOTE: this causes particles to split right before they fade out
-    //       Looks like a firework exploding
     if(curPart->getWatt() < MIN_WATTAGE ){ 
+
       // Kill this partcile and move to next
       deleteMask[maskIndex++] = 1;
       iter++;
       continue;
+
     }
->>>>>>> c4b6a8c46a6a71d37fe528b66bdf0010700a2957
 
     // Particles are beyond a threshold init a split
     if(shouldSplit(curPart)){
 
-<<<<<<< HEAD
         // should we even bother? are they just going to flitter out
         if(curPart->getWatt()/(SPLIT_AMOUNT+1.0) < MIN_WATTAGE ){
           deleteMask[maskIndex++] = 1;
           iter++;
           continue;
         }
-=======
->>>>>>> c4b6a8c46a6a71d37fe528b66bdf0010700a2957
 
         // Get new particles to be made
         std::vector<Particle *> splitParticles;
