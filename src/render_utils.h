@@ -18,6 +18,7 @@
 // input for most displays and darkened viewing environments.
 
 #define SRGB_ALPHA 0.055
+#define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
 inline float linear_to_srgb(float x) {
   float answer;

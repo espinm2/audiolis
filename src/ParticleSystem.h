@@ -74,6 +74,9 @@ class ParticleSystem {
     void setupCursorPoint();
     void drawCursorPoint();
 
+    void setupVelocityVisual();
+    void drawVelocityVisual();
+
     // Memebers
     ArgParser * args;
     BoundingBox * bbox;
@@ -86,10 +89,14 @@ class ParticleSystem {
     // VBOs Ids
     GLuint particle_verts_VBO;
     GLuint cursor_verts_VBO;
+    GLuint velocity_verts_VBO;
+    GLuint velocity_tri_indices_VBO;
 
     // Vertices for VBOs
     std::vector<VBOPosNormalColor> particle_verts;
     std::vector<VBOPosNormalColor> cursor_verts;
+    std::vector<VBOPosNormalColor> velocity_verts;
+    std::vector<VBOIndexedTri> velocity_tri_indices;
 
 };
 

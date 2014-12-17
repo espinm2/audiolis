@@ -10,7 +10,6 @@
 
 #define MAX_ITERATIONS 6000
 #define MAX_ITERATIONS 6000
-
 #define MIN_WATTAGE 0.000000000002
 
 // This is for rainbow color
@@ -34,27 +33,33 @@ void ParticleSystem::initializeVBOs(){
   // Get uniquie ids from buffers
   glGenBuffers(1,&particle_verts_VBO);
   glGenBuffers(1,&cursor_verts_VBO);
+  glGenBuffers(1,&velocity_verts_VBO);
+  glGenBuffers(1,&velocity_tri_indices_VBO);
 
 }
 
 void ParticleSystem::setupVBOs(){
+  HandleGLError("enter setup vbos");
 
   // Delete old data
   cursor_verts.clear();
   particle_verts.clear();
-
+  velocity_verts.clear();
+  velocity_tri_indices.clear();
 
   // Setup new Data
   setupCursorPoint();
+  setupVelocityVisual();
   setupParticles(); 
 
+  HandleGLError("leave setup vbos");
 }
 
 void ParticleSystem::drawVBOs(){
   HandleGLError("enter draw vbos");
 
-
   drawCursorPoint();
+  drawVelocityVisual();
   drawParticles();
 
   HandleGLError("leaving draw vbos");
@@ -62,9 +67,12 @@ void ParticleSystem::drawVBOs(){
 }
 
 void ParticleSystem::cleanupVBOs(){
+  HandleGLError("enter cleanup vbos");
   glDeleteBuffers(1,&particle_verts_VBO);
   glDeleteBuffers(1,&cursor_verts_VBO);
-
+  glDeleteBuffers(1,&velocity_verts_VBO);
+  glDeleteBuffers(1,&velocity_tri_indices_VBO);
+  HandleGLError("leave clean vbos");
 }
 
 void ParticleSystem::setupParticles(){
@@ -181,7 +189,6 @@ void ParticleSystem::setupParticles(){
       }
       
       color.a = dbs_val; // opacity
-      // color.a = 1.0; // opacity // TEST
 
     }else{
 
@@ -196,6 +203,12 @@ void ParticleSystem::setupParticles(){
     
     }
 
+    // DEBUG///////////////////////////////////////////////////////////////////
+    if(part->getMaterialHit() == "none"){
+      color = glm::vec4(1,0,0,1);
+      args->animate = false;
+    }
+    // DEBUG///////////////////////////////////////////////////////////////////
     
     particle_verts.push_back(VBOPosNormalColor(pos,normal,color));
   
@@ -294,3 +307,82 @@ void ParticleSystem::drawCursorPoint(){
 }
 
 
+void ParticleSystem::setupVelocityVisual(){
+
+  HandleGLError("enter setupVelocityVisual");
+  // Set up the points here
+  float thickness = 0.001 * GLCanvas::bbox.maxDim();
+
+  // For each particle
+  for(int i = 0; i < particles.size(); i++){
+
+    Particle * cur = particles[i];
+    glm::vec3 pos = cur->getPos();
+    glm::vec3 dir = cur->getDir();
+
+    if(args->direction){
+    
+      addEdgeGeometry(velocity_verts,velocity_tri_indices,
+          pos , // Start position
+          pos +  ((float) 0.01) * dir, // Move a little in the dir
+          glm::vec4(dir.x,dir.y,dir.z,1), 
+          glm::vec4(dir.x,dir.y,dir.z,1), 
+          thickness,
+          thickness*0.1);
+    }
+  
+  }
+
+  // Create and setup velocity_tri_indices, velocity_verts
+  // Setup the VBOS here
+  glBindBuffer(GL_ARRAY_BUFFER,velocity_verts_VBO);
+  glBufferData( 
+      GL_ARRAY_BUFFER,
+      sizeof(VBOPosNormalColor)*velocity_verts.size(),
+      &velocity_verts[0],
+      GL_STATIC_DRAW
+      );
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,velocity_tri_indices_VBO);
+  glBufferData(
+      GL_ELEMENT_ARRAY_BUFFER,
+      sizeof(VBOIndexedTri)*velocity_tri_indices.size(),
+      &velocity_tri_indices[0],
+      GL_STATIC_DRAW
+      );
+
+  HandleGLError("leave setupVelocityVisual");
+}
+
+
+void ParticleSystem::drawVelocityVisual(){
+
+  HandleGLError("enter drawVelocityVisual");
+
+  if(args->direction){
+  
+    glBindBuffer(GL_ARRAY_BUFFER, velocity_verts_VBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, velocity_tri_indices_VBO);
+  
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE, 2*sizeof(glm::vec3) + sizeof(glm::vec4), (void*)0);
+
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE, 2*sizeof(glm::vec3) + sizeof(glm::vec4), (void*)sizeof(glm::vec3));
+
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2,3,GL_FLOAT,GL_FALSE, 2*sizeof(glm::vec3) + sizeof(glm::vec4), (void*)(sizeof(glm::vec3)*2));
+
+    glDrawElements(GL_TRIANGLES, velocity_tri_indices.size()*3,
+        GL_UNSIGNED_INT, BUFFER_OFFSET(0));
+
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(2);
+
+  }
+
+  HandleGLError("leave drawVelocityVisual");
+
+
+}
