@@ -312,7 +312,7 @@ void ParticleSystem::calcMeshCollision(Particle * &p){
   // Get the closest  hit
   if(hitTriangle){
 
-    p->setTime(h.getT());
+    p->setTime(h.getT()/ VELOCITY_OF_MEDIUM);
     p->setHitNorm(h.getNormal());
     p->setMaterial(h.getMaterial());
 
@@ -323,6 +323,7 @@ void ParticleSystem::calcMeshCollision(Particle * &p){
     p->setMaterial("none");
 
   }
+
 
 }
 

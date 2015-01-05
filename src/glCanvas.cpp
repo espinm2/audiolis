@@ -114,7 +114,7 @@ void GLCanvas::initialize(ArgParser *_args) {
   // ===========================
   // initial placement of camera 
   // look at an object scaled & positioned to just fit in the box (-1,-1,-1)->(1,1,1)
-  glm::vec3 camera_position = glm::vec3(1,3,8);
+  glm::vec3 camera_position = glm::vec3(10,9,10);
   glm::vec3 point_of_interest = glm::vec3(0,0,0);
   glm::vec3 up = glm::vec3(0,1,0);
   float angle = 20.0;
@@ -139,18 +139,25 @@ void GLCanvas::animate(){
   if(args->animate){
 
     particleSystem->update();
-
     particleSystem->setupVBOs();
+
+
+    // print every millisecond we pass in the 
+    if(GLCanvas::iteration % (int)(.001/ args->timestep) == 0){ 
+    
+      std::cout << "Time: "<<  GLCanvas::iteration / (int)(.001/ args->timestep) <<" ms" << std::endl;
+    
+    }
 
     GLCanvas::iteration++;
 
   }
 
   // This only for Recording stuff
-  if( GLCanvas::iteration == 10000) {
-     std::cout << "Stopped animation iteration is 3000" << GLCanvas::iteration << std::endl;
-     args->animate = false;
-  }
+  // if( GLCanvas::iteration == 10000) {
+  //    std::cout << "Stopped animation iteration is 3000" << GLCanvas::iteration << std::endl;
+  //    args->animate = false;
+  // }
   
 }
 

@@ -102,13 +102,14 @@ void Mesh::SetupMesh() {
     glm::vec3 a = (*t)[0]->getPos();
     glm::vec3 b = (*t)[1]->getPos();
     glm::vec3 c = (*t)[2]->getPos();    
+
+
+
     glm::vec3 na = compute_normal(a,b,c);
     glm::vec3 nb = na;
     glm::vec3 nc = na;
 
 
-    // TODO Make Render Floor Option
-    
     if(args->render_top)
       if( -1 <= na.y && na.y <= -1 + 0.001)
         continue;
