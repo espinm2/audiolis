@@ -357,12 +357,19 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       break;
     case 'w': case 'W':
       args->wall_material = (args->wall_material + 1) % 3;
+      if(args->wall_material == 0) std::cout << "Wall Type: Brick Wall \n";
+      if(args->wall_material == 1) std::cout << "Wall Type: Concrete Wall\n";
+      if(args->wall_material == 2) std::cout << "Wall Type: Cermaic Wall\n";
       break;
     case 'f': case 'F':
       args->floor_material = (args->floor_material + 1) % 2;
+      if(args->source_type == 0) std::cout << "Floor Type: PVC Floor\n";
+      if(args->source_type == 1) std::cout << "Floor Type: Carpated Floor\n";
       break;
     case 'r': case 'R':
       args->absorber = !args->absorber;
+      if(args->absorber == true) std::cout << "Absorber Toggled On \n";
+      if(args->absorber == false) std::cout << "Absorber Toggled Off \n";
       break;
     case 'c': case 'C':
       args->render_top = !args->render_top;

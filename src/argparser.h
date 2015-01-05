@@ -154,6 +154,7 @@ public:
   //                1 => carpated_floor;
   //
   // ceiling set to plaster_ceiling
+  // glass is set to double plated glass
 
   // Random number generator
   MTRand randomGen;
