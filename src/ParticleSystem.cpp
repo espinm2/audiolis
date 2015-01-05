@@ -25,13 +25,7 @@
 // [ ] when you split, fix behind timestep issue
 // [ ] Change the radius_particle_wave depending how many spits done
 // [ ] ReIntroduce splits
-
-#define MAX_ITERATIONS        6000   // When to kill particles
-#define RADIUS_PARTICLE_WAVE  0.01 // Radius of hex shape
-#define RADIUS_INIT_SPHERE    0.01  // Radius of source sphere
-#define NUM_INIT_PARTICLES    10000 // Inital Number of Particle
-#define SPLIT_AMOUNT          6     // What sized polygon we split into
-#define MIN_WATTAGE 0.000000000002 // When particles should die
+//
 #define EPSILON 0.0001
 
 // Used for update
@@ -47,8 +41,26 @@ void ParticleSystem::load(){
   // Initaite the cursor 
   glm::vec3 centerScene;
 
+  // Initiate bounding box
   bbox->getCenter(centerScene);
+
+  // put  cursor in center of scene
   cursor = glm::vec3(centerScene.x, centerScene.y, centerScene.z);
+
+  // Initalize simulation variables
+  TIME_STEP             = args->timestep; // imported from args file
+  VELOCITY_OF_MEDIUM    = 9999999; // TODO implement to sound speed in m/s
+
+  // simuation var init
+  RADIUS_INIT_SPHERE    = 0.01; // Doesnt get changed to often
+  NUM_INIT_PARTICLES    = args->num_init_particles; // imported from args
+  MIN_WATTAGE           = 0.000000000002; // Doesnt change often
+  MAX_ITERATIONS        = 6000; // Doesnt change often
+
+  // split var init
+  RADIUS_PARTICLE_WAVE  = 0.01; // Will be later removed for better split
+  SPLIT_AMOUNT          = 6; // Will be later removed for better split
+
 }
 
 void ParticleSystem::update(){
@@ -96,7 +108,7 @@ void ParticleSystem::update(){
 
         // Move them a timestep + add to new list
         for(int i = 0; i < splitParticles.size(); i++){
-          moveParticle(splitParticles[i], args->timestep);
+          moveParticle(splitParticles[i], TIME_STEP);
           newParticles.push_back(splitParticles[i]);
         }
 
@@ -108,7 +120,7 @@ void ParticleSystem::update(){
     }else{
     
       // Update postiton and move to next particle
-      moveParticle(curPart,args->timestep);
+      moveParticle(curPart,TIME_STEP);
       deleteMask[maskIndex++] = 0; 
 
       iter++;

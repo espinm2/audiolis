@@ -42,6 +42,8 @@ class ParticleSystem {
     void moveCursor(const float & dx, 
         const float & dy, const float & dz );
 
+    // Setter
+    void setTimeStep( const double ts){ TIME_STEP = ts; }
 
     // Simulation functions
     void load(); 
@@ -81,10 +83,25 @@ class ParticleSystem {
     ArgParser * args;
     BoundingBox * bbox;
     Mesh * mesh;
+
+
+    // Simuation Important Varibles
+    double                 TIME_STEP;  // how much time is passed in seconds
+    double                 VELOCITY_OF_MEDIUM; // velocity of air in m/s
+
+    double            RADIUS_INIT_SPHERE; // radius of source sphere
+    unsigned int      NUM_INIT_PARTICLES; // number of initial particles
+    double            MIN_WATTAGE; // when a particle falls below power threshold
+    unsigned int      MAX_ITERATIONS; // how many iterations before you kill particles
+
+    // For splits, could be removed
+    double            RADIUS_PARTICLE_WAVE; // radius of cluster created upon splits
+    unsigned int      SPLIT_AMOUNT; // how many created upon splits, excluding center
     
-    std::vector<Particle *> particles;
-    std::vector<Particle *> newParticles;
-    glm::vec3 cursor;
+    std::vector<Particle *> particles; // Where we store partilces in current iterations
+    std::vector<Particle *> newParticles; // Where we put split particles 
+
+    glm::vec3 cursor; // Where the cursor is in world space
 
     // VBOs Ids
     GLuint particle_verts_VBO;

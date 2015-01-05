@@ -61,11 +61,18 @@ public:
           std::string(argv[i]) == std::string("-i")) {
         i++; assert (i < argc); 
         separatePathAndFile(argv[i],path,input_file);
+
       } else if (!strcmp(argv[i],"-shader")) {
         shader_filename = std::string(argv[i]);
+
       } else if (!strcmp(argv[i],"-size")) {
         i++; assert (i < argc); 
         width = height = atoi(argv[i]);
+
+      } else if (!strcmp(argv[i],"-init_particles")) {
+        i++; assert (i < argc); 
+        num_init_particles = atoi(argv[i]);
+
       } else {
         printf ("whoops error with command line argument %d: '%s'\n",i,argv[i]);
         assert(0);
@@ -77,16 +84,22 @@ public:
     input_file = "";
     path = "";
     shader_filename = "../src/shader";
+
     width = 800;
     height = 600;
+
     geometry = true;
     bounding_box = false;
     gouraud_normals = false;
+
     timer = 0.0;
+    timestep = 0.001;
+    num_init_particles = 10000;
+
+    
     animate = false;
     wireframe = false;
     render_top = false;
-    timestep = 0.001;
     source_type = 0;
     viz_type = 0;
     direction = false;
@@ -102,18 +115,25 @@ public:
 
   int width;
   int height;
-  bool geometry;
+
+  bool geometry;        
   bool bounding_box;
   bool gouraud_normals;
-  float timer;
-  bool animate;
+
+  float timer; // acts like global var for FPS counter
+  double timestep; // passed to ParticleSystem.cpp
+  unsigned int num_init_particles; // passed to ParticleSystem.cpp
+
+
+  // Toggles visualizations
+  bool animate;       
   bool wireframe;
   bool render_top;
-  double timestep;
   int source_type;
   int viz_type;
   bool direction;
 
+  // Random number generator
   MTRand randomGen;
 };
 
