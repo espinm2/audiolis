@@ -193,10 +193,11 @@ bool ParticleSystem::moveParticle(Particle * p, double timestep){
   double time_after_impact = timestep - p->getTimeLeft();
 
   glm::vec3 oldPos = p->getOldPos();
+  glm::vec3 oldCen = p->getCenter();
   glm::vec3 dir = p->getDir();
 
   // We didn't hit an object in this interval of time
-  if(time_until_impact - 2.0 * EPSILON >  timestep){
+  if(time_until_impact >  timestep){
 
     glm::vec3 newPos( oldPos + dir * (float)timestep * VELOCITY_OF_MEDIUM );
     p->setPos(newPos);
@@ -222,6 +223,14 @@ bool ParticleSystem::moveParticle(Particle * p, double timestep){
 
     calcMeshCollision(p); // new timeLeft Case a) we move a little up
 
+    if(p->getMaterialHit() == "none"){
+
+      // set center back to old center
+      p->setCenter(impactPos + dir * radius);
+      calcMeshCollision(p); // new timeLeft Case a) we move a little up
+    
+    }
+ 
     // Power has to be calculated after the hi:t
     double absorb_ratio = absorbFunc(p->getMaterialHit(), p->getFreq());
     assert( absorb_ratio < 1); // <----------------------------------------------------------------- Selfcheck
@@ -229,7 +238,7 @@ bool ParticleSystem::moveParticle(Particle * p, double timestep){
 
     p->incIter();
 
-    // moveParticle(p, time_after_impact); // this dude will move
+    //moveParticle(p, time_after_impact); // this dude will move
 
     return true;
 
@@ -318,7 +327,7 @@ void ParticleSystem::calcMeshCollision(Particle * &p){
 
   }else{
 
-    // We don't hit any triangles
+    // We don't hit any triangles, we most likey are a corner
     p->setTime(10000000); 
     p->setMaterial("none");
 
