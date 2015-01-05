@@ -355,10 +355,15 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       if(args->source_type == 3)
         std::cout << "Source Type: High pitched CTR at 40 dBs\n";
       break;
- //  case 'w': case 'W':
- //    args->wireframe = !args->wireframe;
- //    mesh->setupVBOs();
- //    break;
+    case 'w': case 'W':
+      args->wall_material = (args->wall_material + 1) % 3;
+      break;
+    case 'f': case 'F':
+      args->floor_material = (args->floor_material + 1) % 2;
+      break;
+    case 'r': case 'R':
+      args->absorber = !args->absorber;
+      break;
     case 'c': case 'C':
       args->render_top = !args->render_top;
       mesh->setupVBOs();

@@ -103,6 +103,13 @@ public:
     source_type = 0;
     viz_type = 0;
     direction = false;
+
+
+    wall_material = 0;
+    floor_material = 0;
+    ceiling_material = 0;
+    absorber = false;
+
   }
 
   // ==============
@@ -125,13 +132,28 @@ public:
   unsigned int num_init_particles; // passed to ParticleSystem.cpp
 
 
-  // Toggles visualizations
+  // Toggles visualizations also acts like global varibles
   bool animate;       
   bool wireframe;
   bool render_top;
   int source_type;
   int viz_type;
   bool direction;
+
+  int wall_material; // toggle what the walls are made of
+  int floor_material; //  Toggle what the floor is made of
+  int ceiling_material; // Toggle what the ceilings are made of
+  bool absorber;  // Toggle if there is an absorber in the room
+
+  // Material Key
+  // wall_material 0 => bricked_wall; 
+  //               1 => concrete_wall; 
+  //               2 => ceramic_wall;
+  //
+  // floor_material 0 =>  pvc_floor;
+  //                1 => carpated_floor;
+  //
+  // ceiling set to plaster_ceiling
 
   // Random number generator
   MTRand randomGen;
