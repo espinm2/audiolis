@@ -87,7 +87,7 @@ class ParticleSystem {
 
     // Simuation Important Varibles
     double           TIME_STEP;  // how much time is passed in seconds
-    double           VELOCITY_OF_MEDIUM; // velocity of air in m/s
+    float VELOCITY_OF_MEDIUM; // velocity of air in m/s
 
     double            RADIUS_INIT_SPHERE; // radius of source sphere
     unsigned int      NUM_INIT_PARTICLES; // number of initial particles

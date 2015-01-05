@@ -180,7 +180,7 @@ void Mesh::Load() {
     } else if (!strcmp(token,"v")) {
       vert_count++;
       sscanf (line, "%s %f %f %f\n",token,&x,&y,&z);
-      addVertex(glm::vec3(x,y,z));
+      addVertex(glm::vec3(12*x,12*y,12*z));
 
     // If we see a face
     } else if (!strcmp(token,"f")) {

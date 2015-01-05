@@ -18,6 +18,7 @@
 #include "hash.h"
 #include "mesh.h"
 #include "render_utils.h"
+#include <float.h>
 
 
 // FIXME ////////////////////////////////////////////
@@ -48,10 +49,10 @@ void ParticleSystem::load(){
 
   // Initalize simulation variables
   TIME_STEP             = args->timestep; // imported from args file
-  VELOCITY_OF_MEDIUM    = 9999999; // TODO implement to sound speed in m/s
+  VELOCITY_OF_MEDIUM    = 340; //implement to sound speed in m/s
 
   // simuation var init
-  RADIUS_INIT_SPHERE    = 0.01; // Doesnt get changed to often
+  RADIUS_INIT_SPHERE    = 0.1; // Doesnt get changed to often
   NUM_INIT_PARTICLES    = args->num_init_particles; // imported from args
   MIN_WATTAGE           = 0.000000000002; // Doesnt change often
   MAX_ITERATIONS        = 6000; // Doesnt change often
@@ -69,6 +70,9 @@ void ParticleSystem::update(){
    * Asumpt: There are particles to move
    * SideEf: Updates postition of particles/ removes particles
    */
+
+
+  
 
   // Hold new particles from split
   std::vector<Particle *> newParticles;
@@ -194,7 +198,7 @@ bool ParticleSystem::moveParticle(Particle * p, double timestep){
   // We didn't hit an object in this interval of time
   if(time_until_impact - 2.0 * EPSILON >  timestep){
 
-    glm::vec3 newPos( oldPos + dir * (float)timestep );
+    glm::vec3 newPos( oldPos + dir * (float)timestep * VELOCITY_OF_MEDIUM );
     p->setPos(newPos);
     p->decTime(timestep);
   
@@ -203,7 +207,7 @@ bool ParticleSystem::moveParticle(Particle * p, double timestep){
     // If we hit an object in this interval of time 
 
     // We where we hit in space
-    glm::vec3 impactPos(oldPos + (dir * (float)time_until_impact));
+    glm::vec3 impactPos(oldPos + (dir * (float)time_until_impact) * VELOCITY_OF_MEDIUM);
 
     // Get the new center to change direction
     glm::vec3 mir_dir = MirrorDirection(p->getHitNorm(), p->getDir());
@@ -409,6 +413,7 @@ bool ParticleSystem::shouldSplit(Particle * &p){
   // In here we compare all particles against eachother
   // Very expensive to do, however we also check to see if
   // we can merge any two particles into one
+  return false; //<-------------------------------------------------------------DEBUG
 
   // tag
   glm::vec3 pos = p->getOldPos();

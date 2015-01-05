@@ -73,6 +73,10 @@ public:
         i++; assert (i < argc); 
         num_init_particles = atoi(argv[i]);
 
+      } else if (!strcmp(argv[i],"-timestep")) {
+        i++; assert (i < argc); 
+        timestep = atof(argv[i]);
+
       } else {
         printf ("whoops error with command line argument %d: '%s'\n",i,argv[i]);
         assert(0);
@@ -93,8 +97,8 @@ public:
     gouraud_normals = false;
 
     timer = 0.0;
-    timestep = 0.001;
-    num_init_particles = 10000;
+    timestep = 0.000001;
+    num_init_particles = 1000;
 
     
     animate = false;
