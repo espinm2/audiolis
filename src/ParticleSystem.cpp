@@ -25,7 +25,6 @@
 // [ ] when you split, fix behind timestep issue
 // [ ] Change the radius_particle_wave depending how many spits done
 // [ ] ReIntroduce splits
-//
 #define EPSILON 0.0001
 
 // Used for update
@@ -86,18 +85,24 @@ void ParticleSystem::update(){
 
 
     // Are we below a threhold just kill and move to another
-    // NOTE: this causes particles to split right before they fade out
-    //       Looks like a firework exploding
     if(curPart->getWatt() < MIN_WATTAGE ){ 
+
       // Kill this partcile and move to next
       deleteMask[maskIndex++] = 1;
       iter++;
       continue;
+
     }
 
     // Particles are beyond a threshold init a split
     if(shouldSplit(curPart)){
 
+        // should we even bother? are they just going to flitter out
+        if(curPart->getWatt()/(SPLIT_AMOUNT+1.0) < MIN_WATTAGE ){
+          deleteMask[maskIndex++] = 1;
+          iter++;
+          continue;
+        }
 
         // Get new particles to be made
         std::vector<Particle *> splitParticles;
@@ -215,10 +220,8 @@ bool ParticleSystem::moveParticle(Particle * p, double timestep){
 
     // Power has to be calculated after the hi:t
     double absorb_ratio = absorbFunc(p->getMaterialHit(), p->getFreq());
-
-    assert( absorb_ratio < 1);  // sanity check
-
-    p->setWatt( (1 - absorb_ratio ) * p->getWatt() ); // <------------------------------------------ Math might not check out, this is a total hack
+    assert( absorb_ratio < 1); // <----------------------------------------------------------------- Selfcheck
+    p->setWatt( (1 - absorb_ratio ) * p->getWatt() ); // <------------------------------------------ Math 
 
     p->incIter();
 
@@ -403,28 +406,29 @@ void ParticleSystem::createInitWave(){
 }
 
 bool ParticleSystem::shouldSplit(Particle * &p){
+  // In here we compare all particles against eachother
+  // Very expensive to do, however we also check to see if
+  // we can merge any two particles into one
 
-  // DEBUG //
-  return false;
-  //  // tag
-  //  glm::vec3 pos = p->getOldPos();
-  //  float nearestDistance = 100000;
-  //  float threshold = 3 * RADIUS_PARTICLE_WAVE;
+  // tag
+  glm::vec3 pos = p->getOldPos();
+  float nearestDistance = 100000;
+  float threshold = 3 * RADIUS_PARTICLE_WAVE;
 
-  //  // for each particle in the system
-  //  for(int i = 0; i < particles.size(); i++){
+  // for each particle in the system
+  for(int i = 0; i < particles.size(); i++){
 
-  //    if(particles[i] == p)
-  //      continue;
+    if(particles[i] == p)
+      continue;
 
-  //    float dist = glm::distance(p->getOldPos(), particles[i]->getOldPos());
-  //    if(nearestDistance > dist)
-  //      nearestDistance = dist;
-  //  }
+    float dist = glm::distance(p->getOldPos(), particles[i]->getOldPos());
+    if(nearestDistance > dist)
+      nearestDistance = dist;
+  }
 
-  //  // I now have nearest distance
-  //  return( fabs( nearestDistance - threshold) <= EPSILON || 
-  //      nearestDistance > threshold);
+  // I now have nearest distance
+  return( fabs( nearestDistance - threshold) <= EPSILON || 
+      nearestDistance > threshold);
 }
 
 void ParticleSystem::particleMerge(const Particle * &a, 
