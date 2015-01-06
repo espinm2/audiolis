@@ -47,13 +47,17 @@ class ParticleSystem {
 
     // Simulation functions
     void load(); 
+    void debug();
     void update();
     bool moveParticle(Particle * p, double timestep);
     void calcMeshCollision(Particle * &p);
     void createInitWave();
     void particleSplit(Particle * &p, std::vector<Particle *> &vec);
     bool shouldSplit(Particle * &p);
-    void particleMerge(const Particle * &a, const Particle * &b, Particle * &c);
+
+    // Two merge particles
+    Particle * particlePairMerge(Particle * &a, Particle * &b);
+    Particle * particleVectorMerge(std::vector<Particle *> &vec);
 
     // Math function
     double absorbFunc(const std::string & materialName, const double freq);
@@ -86,8 +90,8 @@ class ParticleSystem {
 
 
     // Simuation Important Varibles
-    double           TIME_STEP;  // how much time is passed in seconds
-    float VELOCITY_OF_MEDIUM; // velocity of air in m/s
+    double            TIME_STEP;  // how much time is passed in seconds
+    float             VELOCITY_OF_MEDIUM; // velocity of air in m/s
 
     double            RADIUS_INIT_SPHERE; // radius of source sphere
     unsigned int      NUM_INIT_PARTICLES; // number of initial particles

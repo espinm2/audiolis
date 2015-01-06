@@ -21,11 +21,6 @@
 #include <float.h>
 
 
-// FIXME ////////////////////////////////////////////
-// [ ] Particle waves should happen with distance
-// [ ] when you split, fix behind timestep issue
-// [ ] Change the radius_particle_wave depending how many spits done
-// [ ] ReIntroduce splits
 #define EPSILON 0.0001
 
 // Used for update
@@ -61,6 +56,52 @@ void ParticleSystem::load(){
   RADIUS_PARTICLE_WAVE  = 0.01; // Will be later removed for better split
   SPLIT_AMOUNT          = 6; // Will be later removed for better split
 
+
+
+
+  // Debug function used to test things upon creations
+  // debug();
+
+}
+
+void ParticleSystem::debug(){
+
+  // Currently just testing if our merge function works as expected
+
+  /*
+  // Create particle template
+  Particle * a = new Particle(glm::vec3(0,0,0), // NewPos
+                              glm::vec3(0,0,0), // OldPos
+                              glm::vec3(0,0,0), // Cen
+                              0, // Watts
+                              0, // Freq
+                              0); // spits
+                              a->setIter(0); // iterations
+  */
+
+
+  // Testing oldPos
+  Particle * a = new Particle(glm::vec3(0,0,0), // NewPos
+                              glm::vec3(0,0,0), // OldPos
+                              glm::vec3(0,0,0), // Cen
+                              0, // Watts
+                              0, // Freq
+                              0); // spits
+                              a->setIter(0); // iterations
+
+  Particle * b = new Particle(glm::vec3(0,0,0), // NewPos
+                              glm::vec3(1,1,1), // OldPos
+                              glm::vec3(0,0,0), // Cen
+                              0, // Watts
+                              0, // Freq
+                              0); // spits
+                              b->setIter(0); // iterations
+
+  Particle * c = particlePairMerge(a,b);
+
+  std::cout << &c << std::endl;
+
+
 }
 
 void ParticleSystem::update(){
@@ -70,9 +111,6 @@ void ParticleSystem::update(){
    * Asumpt: There are particles to move
    * SideEf: Updates postition of particles/ removes particles
    */
-
-
-  
 
   // Hold new particles from split
   std::vector<Particle *> newParticles;
@@ -425,7 +463,6 @@ bool ParticleSystem::shouldSplit(Particle * &p){
   // we can merge any two particles into one
   return false; //<-------------------------------------------------------------DEBUG
 
-  // tag
   glm::vec3 pos = p->getOldPos();
   float nearestDistance = 100000;
   float threshold = 3 * RADIUS_PARTICLE_WAVE;
@@ -446,11 +483,84 @@ bool ParticleSystem::shouldSplit(Particle * &p){
       nearestDistance > threshold);
 }
 
-void ParticleSystem::particleMerge(const Particle * &a, 
-    const Particle * &b, Particle * &c){ 
-  //TODO implement this function ( Solve this problem )
+Particle * ParticleSystem::particlePairMerge(Particle * &a, Particle * &b){ 
+
+  // Input: A pair of particles and an empty pointer that will be result in a new particle
+  // Output: None, handled through pass by reference
+  // Assumptions: non null pointers
+  // Side Effects: Calls directly particleVectorMerge
+
+
+  std::vector<Particle *> vec;
+  vec.push_back(a); vec.push_back(b);
+
+  return particleVectorMerge(vec);
+
 }
 
+
+Particle * ParticleSystem::particleVectorMerge(std::vector<Particle *> &vec){
+
+  // Input: A vector of particles and an empty pointer that will be result in a new particle
+  // Output: None, handled through pass by reference
+  // Assumptions: vec is populated with at least 1 particle 
+  // Side Effects: None
+  // Bugs: What should I do with the freq of merged particles & splits (split not as much)
+
+  // Values will accumlate to find the average
+  double pos_x = 0; double cen_x = 0;
+  double pos_y = 0; double cen_y = 0;
+  double pos_z = 0; double cen_z = 0;
+
+
+  double mergeFreq = 0; double mergeWatt = 0;
+  double mergeSplit = 0;
+  int    mergeIter = 0;
+
+  for( int i = 0;  i <  vec.size();  i++ ){
+
+    const glm::vec3 oldPos = vec[i]->getOldPos();
+    const glm::vec3 cen = vec[i]->getCenter();
+
+    pos_x += oldPos.x; cen_x += cen.x; 
+    pos_y += oldPos.y; cen_y += cen.y;
+    pos_z += oldPos.z; cen_z += cen.z;
+
+
+    mergeFreq  += vec[i]->getFreq();
+    mergeWatt  += vec[i]->getWatt();
+    mergeSplit += vec[i]->getSplit();
+
+
+    // Find max iterations among particles in vec
+    if( vec[i]->getIter() > mergeIter )
+      mergeIter = vec[i]->getIter();
+
+  }
+
+  glm::vec3 mergedPos(
+      pos_x / vec.size(), 
+      pos_y / vec.size(), 
+      pos_z / vec.size());
+
+  glm::vec3 mergedCen(
+      cen_x / vec.size(), 
+      cen_y / vec.size(), 
+      cen_z / vec.size());
+
+  mergeFreq  = mergeFreq  / vec.size(); //FIXME What should be done regarding freq ?
+  mergeSplit = mergeSplit / vec.size();
+
+  Particle * newPart = new Particle(mergedPos,mergedPos,mergedCen, mergeWatt, mergeFreq, mergeSplit);
+  newPart->setIter(mergeIter);
+
+  // Calc where I will hit next
+  calcMeshCollision(newPart);
+
+
+  return newPart;
+
+}
 
 double ParticleSystem::absorbFunc(const std::string & mtlName, 
     const double freq){

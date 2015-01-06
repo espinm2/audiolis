@@ -30,14 +30,14 @@ public:
   }
 
   Particle(const glm::vec3 & pos, const glm::vec3 & old, 
-      const glm::vec3 cen, double amp, double freq, int s){
+      const glm::vec3 cen, double watts, double freq, int s){
 
       // Remember you should set stepsLeft + iterations
       position    = pos;
       oldPosition = old;
       center      = cen;
 
-      wattage      = amp;
+      wattage      = watts;
       freqency    = freq;
       splits      = s;
 
@@ -57,7 +57,7 @@ public:
   double  getWatt()     const { return wattage; }
   double  getFreq()     const { return freqency; }
   int     getSplit()    const { return splits; }
-  double   getTimeLeft() const { return timeLeft; }
+  double  getTimeLeft() const { return timeLeft; }
   int     getIter()     const { return iterations; }
 
   glm::vec3 getDir() const { 
@@ -84,6 +84,7 @@ public:
 
   void setTime    (const double  & t)  { timeLeft = t ; }
   void decTime    (const double  & t)  { timeLeft = timeLeft - t; }
+  void setIter    (const int & i)      { iterations = i; }
   void incIter    () { iterations++; }
 
   void setMaterial (const std::string & name ) { materialHit = name; } 
