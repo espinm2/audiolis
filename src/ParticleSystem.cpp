@@ -4,6 +4,8 @@
 #include <iostream>
 #include <cmath>
 #include <limits>
+#include <float.h>
+#include <cstdlib>
 
 #include "boundingbox.h"
 #include "geometry_utils.h"
@@ -18,7 +20,6 @@
 #include "hash.h"
 #include "mesh.h"
 #include "render_utils.h"
-#include <float.h>
 
 
 #define EPSILON 0.0001
@@ -65,7 +66,6 @@ void ParticleSystem::load(){
 }
 
 void ParticleSystem::debug(){
-
   // Currently just testing if our merge function works as expected
 
   /*
@@ -112,11 +112,13 @@ void ParticleSystem::update(){
    * SideEf: Updates postition of particles/ removes particles
    */
 
+
   // Hold new particles from split
   std::vector<Particle *> newParticles;
 
   // Marked for removal mask, 1 == delete, 0 == keep
   std::vector<int>deleteMask (particles.size(), 0);
+
   unsigned int maskIndex = 0;
 
   for(ParticleIter iter = particles.begin(); iter != particles.end();){
@@ -137,7 +139,7 @@ void ParticleSystem::update(){
     }
 
     // Particles are beyond a threshold init a split
-    if(shouldSplit(curPart)){
+    if(particleSplitCheckAndMerger(curPart, deleteMask)){
 
         // should we even bother? are they just going to flitter out
         if(curPart->getWatt()/(SPLIT_AMOUNT+1.0) < MIN_WATTAGE ){
@@ -455,6 +457,87 @@ void ParticleSystem::createInitWave(){
     particles.push_back(p);
   
   }
+}
+
+bool ParticleSystem::particleSplitCheckAndMerger(Particle * &p, std::vector<int> &deleteMask ){
+  // Input:  A single particle, empty array filled by mask where 0 = keep 1 = merged and delete
+  // Output: True if we should split on this particle, False otherwise.
+  // Output: deleteMask will overwrite 1 at the index of particle that was merged
+  // Assumptions: Particles concidered should exisit and not be merged
+  // Assumptions: deleteMask the size of particle vector
+  // Side Effects: Will replace the current particle with a new particle merges were required
+  
+  // FIXME: Using default split behavior 
+  // ( split if there are not at least n particles some threhshold away from you )
+
+  glm::vec3 pos = p->getOldPos();
+
+
+  unsigned int particlesWithinTheshRequired = 6; // TODO should be global
+
+  unsigned int particlesWithinThesh = 0;
+  std::vector<Particle *> particleToMerge;
+
+  float splitDistanceThresh = 3 * RADIUS_PARTICLE_WAVE;   // Play with these values
+  float mergeDistanceThresh = 1 * RADIUS_PARTICLE_WAVE;
+  float mergeAngleThesh = (2*M_PI) / 8.0;
+
+
+
+  // for each particle in the system
+  for(int i = 0; i < particles.size(); i++){
+
+    // Do not count myself in this check and merger or particles already merged
+    if(particles[i] == p || deleteMask[i] == 1)
+      continue;
+
+    // my distance to currently concidered particle
+    float dist = glm::distance(p->getOldPos(), particles[i]->getOldPos());
+
+    if(mergeDistanceThresh > dist ){
+      // If we are close enough to concider merging these particles
+      
+
+      // Is the difference in direction similar
+      float angle = acos( 
+          glm::dot( particles[i]->getDir(), p->getDir() ) / 
+          (glm::length(particles[i]->getDir()) * glm::length(p->getDir()))
+      );
+          
+      if(mergeAngleThesh > angle){
+      
+        // Mark particle for deletion so we no longer concider it
+        deleteMask[i] = 1;
+
+        // Store for later merging
+        particleToMerge.push_back(particles[i]);
+      
+      }
+          
+            
+
+    }else if( splitDistanceThresh > dist) {
+      // Still check if they fall within distance threshold for split check
+      particlesWithinThesh++;
+    
+    }
+
+  }//for
+
+
+  // Handle Merges and overwrite this particle with a merged one
+  if( particleToMerge.size() > 0){
+  
+    // Change that particle to new merged particle
+    Particle * mergedPart =  particleVectorMerge(particleToMerge);
+    *p = *mergedPart;
+    return particleSplitCheckAndMerger(p, deleteMask);
+
+  }
+  
+  return false;
+  // return particlesWithinThesh >= particlesWithinTheshRequired;
+
 }
 
 bool ParticleSystem::shouldSplit(Particle * &p){

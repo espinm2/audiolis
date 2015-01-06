@@ -45,18 +45,24 @@ class ParticleSystem {
     // Setter
     void setTimeStep( const double ts){ TIME_STEP = ts; }
 
+    // Getter
+    unsigned int numParticles(){ return particles.size();}
+
     // Simulation functions
-    void load(); 
-    void debug();
-    void update();
-    bool moveParticle(Particle * p, double timestep);
-    void calcMeshCollision(Particle * &p);
-    void createInitWave();
-    void particleSplit(Particle * &p, std::vector<Particle *> &vec);
-    bool shouldSplit(Particle * &p);
+    void load();  // load inital values from args file and meshes
+    void debug(); // just used to test stuff out
+    void update(); // moves, splits, and merges particle in a timestep
+    bool moveParticle(Particle * p, double timestep); // moves a particle
+    void calcMeshCollision(Particle * &p); // finds when a particle hits the mesh
+    void createInitWave(); // Creates a sphere of particles
+    void particleSplit(Particle * &p, std::vector<Particle *> &vec); // splits 
+    bool shouldSplit(Particle * &p); // do conditions mean to split particles
+
+    // Experimental
+    bool particleSplitCheckAndMerger(Particle *&p, std::vector<int> &deleteMask);
 
     // Two merge particles
-    Particle * particlePairMerge(Particle * &a, Particle * &b);
+    Particle * particlePairMerge(Particle * &a, Particle * &b); 
     Particle * particleVectorMerge(std::vector<Particle *> &vec);
 
     // Math function

@@ -146,6 +146,7 @@ void GLCanvas::animate(){
     if(GLCanvas::iteration % (int)(.001/ args->timestep) == 0){ 
     
       std::cout << "Time: "<<  GLCanvas::iteration / (int)(.001/ args->timestep) <<" ms" << std::endl;
+      std::cout << "Particles: " << particleSystem->numParticles() << std::endl;
     
     }
 
