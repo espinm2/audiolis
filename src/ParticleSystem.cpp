@@ -473,12 +473,12 @@ bool ParticleSystem::particleSplitCheckAndMerger(Particle * &p, std::vector<int>
   glm::vec3 pos = p->getOldPos();
 
 
-  unsigned int particlesWithinTheshRequired = 6; // TODO should be global
+  unsigned int particlesWithinTheshRequired = 3; // TODO should be global
 
   unsigned int particlesWithinThesh = 0;
   std::vector<Particle *> particleToMerge;
 
-  float splitDistanceThresh = 3 * RADIUS_PARTICLE_WAVE;   // Play with these values
+  float splitDistanceThresh = 5 * RADIUS_PARTICLE_WAVE;   // Play with these values
   float mergeDistanceThresh = 1 * RADIUS_PARTICLE_WAVE;
   float mergeAngleThesh = (2*M_PI) / 8.0;
 
@@ -535,8 +535,8 @@ bool ParticleSystem::particleSplitCheckAndMerger(Particle * &p, std::vector<int>
 
   }
   
-  return false;
-  // return particlesWithinThesh >= particlesWithinTheshRequired;
+  // return false;
+  return particlesWithinThesh < particlesWithinTheshRequired;
 
 }
 
