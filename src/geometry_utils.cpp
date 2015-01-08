@@ -2,6 +2,8 @@
 #include "argparser.h" // This if only for the MTRand obj
 #include <cstdlib>
 
+typedef std::vector<std::vector<double>> doubleMatrix;
+
 // ╦╔╦╗╔═╗╦  ╔═╗╔╦╗╔═╗╔╗╔╔╦╗╔═╗╔╦╗╦╔═╗╔╗╔
 // ║║║║╠═╝║  ║╣ ║║║║╣ ║║║ ║ ╠═╣ ║ ║║ ║║║║
 // ╩╩ ╩╩  ╩═╝╚═╝╩ ╩╚═╝╝╚╝ ╩ ╩ ╩ ╩ ╩╚═╝╝╚╝
@@ -220,3 +222,32 @@ bool triangle_intersect(
 
   return 0;
 }
+
+
+doubleMatrix munkres_matching( const doubleMatrix & inputMatrix){
+
+  // Because we do not want to alter the input passed by ref, we make a copy
+  doubleMatrix matrix = inputMatrix;
+
+
+  bool done = false;
+  while(!done){
+    // Showing step by step matrix
+    // Insert print out functions
+  
+    switch( step ){
+    
+      case 1:
+        munkres_step_one
+    
+    
+    
+    
+    
+    }
+  
+  
+  
+  }
+}
+

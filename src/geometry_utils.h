@@ -10,6 +10,8 @@
 #include "hit.h"
 
 class ArgParser; // only for circle_points_on_plane
+
+typedef std::vector<std::vector<double>> doubleMatrix;
 /*
  * Notice:
  *   In this header you put all geometry related math that doesn't
@@ -71,5 +73,19 @@ inline float AreaOfTriangle(const glm::vec3 &a,
 
 glm::vec3 MirrorDirection(const glm::vec3 &normal, 
     const glm::vec3 &incoming);
+
+
+// Main method behind our mask matching algorithm, we will use the hungarian
+// method.
+doubleMatrix munkres_matching( const doubleMatrix & inputMatrix);
+
+// There function are aux functions for munkres, they return an int
+// that is the next step to trigger in the calculations
+unsigned int munkres_step_one(  doubleMatrix & inputMatrix );
+unsigned int munkres_step_two(  doubleMatrix & inputMatrix );
+unsigned int munkres_step_three(doubleMatrix & inputMatrix );
+unsigned int munkres_step_four( doubleMatrix & inputMatrix );
+unsigned int munkres_step_five( doubleMatrix & inputMatrix );
+unsigned int munkres_step_six(  doubleMatrix & inputMatrix );
 
 #endif

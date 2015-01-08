@@ -11,6 +11,7 @@ add_executable(audiolis
   mesh_render.cpp
   boundingbox.cpp
   geometry_utils.cpp
+  hungarian.cpp
   render_utils.cpp
   render_utils.h
   ParticleSystem.cpp
