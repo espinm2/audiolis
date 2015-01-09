@@ -20,6 +20,8 @@
 #include "hash.h"
 #include "mesh.h"
 #include "render_utils.h"
+#include "munkers.h"
+#include <algorithm>
 
 
 #define EPSILON 0.0001
@@ -539,6 +541,131 @@ bool ParticleSystem::particleSplitCheckAndMerger(Particle * &p, std::vector<int>
   return particlesWithinThesh < particlesWithinTheshRequired;
 
 }
+
+
+std::vector<std::vector<int>> ParticleSystem::createMunkresMatrix
+  (const std::vector<Particle*> & partVec , const double angle){
+  // Input: This function will take in a vector of particles to concider for
+  //        the fitting a s hexagonal submask Also an angle for the 
+  //        rotation of this submask
+  //
+  // Output: A square matrix where 1 represents a matching and 0 doesn't.
+  //         
+  //         
+  //
+  // Assumptions: The first element in the vector is the particle being
+  //              concidered the center of the submask.
+  //
+  // Assumptions: There is at least a single element in the vector
+  // Side Effects: None, works functionally
+  //
+  //
+  // Output Example:
+  //    
+  //        MaskCenter MaskP1 MaskP2 MaskP3 MaskP4 MaskP5 MaskP6
+  //  _______________________________________________
+  //  partA   9         29     23      92     23    9
+  //  partB   8         3      4       23      1    3 
+  //  partC   9         1      3       1       90   3
+  //  partD    .. .. ..
+  //  .
+  //  .
+  //
+  //
+  //  Assumptions Example:
+  //  [ a, b, c, d, e, f ...]
+  //    ^
+  //  This 'a' is concidered the center of my hexongal submask because it
+  //  is first.
+  //
+  //
+  //
+  //  TODO: For reach rotation of the object, find the min cost and choose rotation
+  //        of the best fit.
+  //  NOTE: this version has no rotations applied
+
+
+    // Checking we  have a valid input
+    assert(partVec.size() != 0 );
+
+
+    // ========================================================================
+    // Create wrapper so that we can use the munkres.cpp
+    // Remember to delete
+    
+
+    // Getting the center of our submask which we will base distance off of
+    Particle * center = partVec[0];
+
+    int sizeMatrix = 0; // 7 because 6 points + 1 center for hexagon
+    partVec.size() > 7 ? sizeMatrix = partVec.size() : sizeMatrix = 7;
+
+    // Create a square matrix and initiate all of it with infinate values
+    int ** matrix = new int*[sizeMatrix];
+
+    for(int i = 0; i < sizeMatrix; i++){
+
+       // create a new row
+       matrix[i] = new int[sizeMatrix];
+
+       // fill in with super large value
+       for( int j = 0; j < sizeMatrix; j++){
+         matrix[i][j] = std::numeric_limits<int>::max();
+       
+       }
+    }
+    
+
+    // Getting the points that represent the hyprotheical mask
+    std::vector<glm::vec3> maskPositions; // = getMask(center, radius); <----------------------- TODO
+
+
+    // Comparing the distance between each point in partVec and each point in
+    // point in the submask and tossing it into the matrix. 
+    // Note: there will be partVec.size() * (6 + 1) comparisons
+
+    // For every point
+    for(int i = 0; i < partVec.size(); i++){
+
+      // For every possible mask postion
+      for(int j = 0; j < maskPositions.size(); j++){
+
+        glm::vec3 partPos = partVec[i]->getOldPos();
+
+        // distance calculation to get cost
+        double dist = glm::distance(partPos, maskPositions[j]);
+
+        // This will put in the scale of milimeters everything inside my matrix
+        // Of which is small enough scale that it cover high freq wave lengths
+        matrix[i][j] = (int) (dist * 1000);
+      
+      }
+    }
+
+  // Call to munkers.cpp hungarian algorithm
+  matrix = runMunkers(matrix,sizeMatrix,false);
+
+  // Conversion  back into vector
+  std::vector<std::vector<int>> matching;
+  for(int i = 0; i < partVec.size(); i++){
+    
+    std::vector<int> temp;
+    for(int j = 0; j < maskPositions.size(); j++){
+      temp.push_back(matrix[i][j]);
+    }
+    matching.push_back(temp);
+  }
+    
+  // deallocation of created array in matrix **
+  for(int i = 0; i < sizeMatrix; i++)
+    delete [] matrix[i];
+  delete [] matrix;
+  
+  // Return the matching for use
+  return matching;
+
+}
+
 
 bool ParticleSystem::shouldSplit(Particle * &p){
   // In here we compare all particles against eachother

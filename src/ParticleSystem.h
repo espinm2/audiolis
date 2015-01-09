@@ -60,6 +60,8 @@ class ParticleSystem {
 
     // Experimental
     bool particleSplitCheckAndMerger(Particle *&p, std::vector<int> &deleteMask);
+    std::vector<std::vector <int> > createMunkresMatrix
+      (const std::vector<Particle*> & partVec, double angle);
 
     // Two merge particles
     Particle * particlePairMerge(Particle * &a, Particle * &b); 
