@@ -60,8 +60,6 @@ void ParticleSystem::load(){
   SPLIT_AMOUNT          = 6; // Will be later removed for better split
 
 
-
-
   // Debug function used to test things upon creations
   // debug();
 
@@ -617,7 +615,8 @@ std::vector<std::vector<int>> ParticleSystem::createMunkresMatrix
     
 
     // Getting the points that represent the hyprotheical mask
-    std::vector<glm::vec3> maskPositions; // = getMask(center, radius); <----------------------- TODO
+    std::vector<glm::vec3> maskPositions; 
+    circle_points_on_plane(center->getOldPos(), center->getDir(), RADIUS_PARTICLE_WAVE,6,maskPositions,args);
 
 
     // Comparing the distance between each point in partVec and each point in
