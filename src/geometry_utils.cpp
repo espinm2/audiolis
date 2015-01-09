@@ -224,30 +224,4 @@ bool triangle_intersect(
 }
 
 
-doubleMatrix munkres_matching( const doubleMatrix & inputMatrix){
-
-  // Because we do not want to alter the input passed by ref, we make a copy
-  doubleMatrix matrix = inputMatrix;
-
-
-  bool done = false;
-  while(!done){
-    // Showing step by step matrix
-    // Insert print out functions
-  
-    switch( step ){
-    
-      case 1:
-        munkres_step_one
-    
-    
-    
-    
-    
-    }
-  
-  
-  
-  }
-}
 
