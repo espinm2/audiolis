@@ -27,6 +27,7 @@
 #define RED      getColor(189,0,38,1)
 */
 
+typedef std::vector<std::vector<int>> vMat;
 
 void ParticleSystem::initializeVBOs(){
 
@@ -191,18 +192,67 @@ void ParticleSystem::setupParticles(){
         dbs_val = 0;
       }
       
-      color.a = dbs_val; // opacity
+      color.a = dbs_val; // opacit
 
     }else{
 
-      // Visualizing wave fronts
-      glm::vec3 dir = part->getDir();
+      // DEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUG 
 
-      double rel_x =  (dir.x + 1) / 2.0;
-      double rel_y =  (dir.y + 1) / 2.0;
-      double rel_z =  (dir.z + 1) / 2.0;
+      // We want to to color based on how happy a particle is
+      // We can do this by finding the munkres and using cost
+      // Higher the cost, the sadder the particle is
+      
+      std::vector<Particle *> conciderForMask;
+      conciderForMask.push_back(part);
+      for(Particle* other: particles){
+      
+        if(part == other)
+          continue;
 
-      color = glm::vec4(rel_x, rel_y, rel_z,1);
+        if( glm::distance(part->getPos(),other->getPos()) <= 2*RADIUS_PARTICLE_WAVE)
+          conciderForMask.push_back(other);
+      
+      }
+    
+      vMat cost;
+      vMat matching;
+
+      // Calculate munkres
+      munkresMatching(conciderForMask,matching,cost);
+
+      // Faster way to do this is matrix multiplication maybe?
+      int sum = 0;
+      if(matching.size() < 7) sum+= (10000*(7-matching.size()));
+      for(int i = 0; i < matching.size(); i++){
+      
+      
+        for(int j = 0; j < matching[i].size(); j++){
+        
+          if(matching[i][j] == 1){
+            sum += cost[i][j];
+          }
+      
+        
+        }
+      
+      }
+
+      std::cout << sum << std::endl;
+
+     int percentHappy = sum / 6 * 10000;
+     color = glm::vec4(sum, sum, sum, 1);
+      
+
+
+
+     //  // Visualizing wave fronts
+     //  glm::vec3 dir = part->getDir();
+
+     //  double rel_x =  (dir.x + 1) / 2.0;
+     //  double rel_y =  (dir.y + 1) / 2.0;
+     //  double rel_z =  (dir.z + 1) / 2.0;
+
+     //  color = glm::vec4(rel_x, rel_y, rel_z,1);
     
     }
 

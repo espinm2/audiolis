@@ -142,6 +142,8 @@ void ParticleSystem::update(){
     // Particles are beyond a threshold init a split
     if(particleSplitCheckAndMerger(curPart, deleteMask)){
 
+        args->animate = false;
+
         // should we even bother? are they just going to flitter out
         if(curPart->getWatt()/(SPLIT_AMOUNT+1.0) < MIN_WATTAGE ){
           deleteMask[maskIndex++] = 1;
@@ -153,8 +155,11 @@ void ParticleSystem::update(){
         std::vector<Particle *> splitParticles;
         particleSplit(curPart, splitParticles);
 
-        // change cur particle amp
+        // change cur particle watts
         curPart->setWatt(curPart->getWatt() / (double)(SPLIT_AMOUNT + 1.0));
+
+        // Update postiton and move to next particle
+        moveParticle(curPart,TIME_STEP);
 
         // Move them a timestep + add to new list
         for(int i = 0; i < splitParticles.size(); i++){
@@ -289,7 +294,7 @@ bool ParticleSystem::moveParticle(Particle * p, double timestep){
 void ParticleSystem::moveCursor( const float & dx, 
     const float & dy, const float & dz ){
 
-  cursor+= glm::vec3(dx,dy,dz);
+  cursor+= glm::vec3(10*dx,10*dy,10*dz);
 
 }
 
@@ -373,10 +378,7 @@ void ParticleSystem::calcMeshCollision(Particle * &p){
     p->setMaterial("none");
 
   }
-
-
 }
-
 
 void ParticleSystem::createInitWave(){
   // Testing function to create circle in 3d space
@@ -473,17 +475,14 @@ bool ParticleSystem::particleSplitCheckAndMerger(Particle * &p, std::vector<int>
 
   glm::vec3 pos = p->getOldPos();
 
-
-  unsigned int particlesWithinTheshRequired = 3; // TODO should be global
+  unsigned int particlesWithinTheshRequired = 6; // TODO should be global
 
   unsigned int particlesWithinThesh = 0;
   std::vector<Particle *> particleToMerge;
 
-  float splitDistanceThresh = 5 * RADIUS_PARTICLE_WAVE;   // Play with these values
-  float mergeDistanceThresh = 1 * RADIUS_PARTICLE_WAVE;
+  float splitDistanceThresh = 2 * RADIUS_PARTICLE_WAVE;   // Play with these values
+  float mergeDistanceThresh = 0.01 * RADIUS_PARTICLE_WAVE;
   float mergeAngleThesh = (2*M_PI) / 8.0;
-
-
 
   // for each particle in the system
   for(int i = 0; i < particles.size(); i++){
@@ -507,16 +506,14 @@ bool ParticleSystem::particleSplitCheckAndMerger(Particle * &p, std::vector<int>
           
       if(mergeAngleThesh > angle){
       
-        // Mark particle for deletion so we no longer concider it
-        deleteMask[i] = 1;
+        // // Mark particle for deletion so we no longer concider it
+        // deleteMask[i] = 1;
 
-        // Store for later merging
-        particleToMerge.push_back(particles[i]);
+        // // Store for later merging
+        // particleToMerge.push_back(particles[i]);
       
       }
           
-            
-
     }else if( splitDistanceThresh > dist) {
       // Still check if they fall within distance threshold for split check
       particlesWithinThesh++;
