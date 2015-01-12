@@ -195,7 +195,6 @@ void ParticleSystem::setupParticles(){
 
     }else{
 
-      /*
       // Visualizing wave fronts
       glm::vec3 dir = part->getDir();
 
@@ -204,9 +203,6 @@ void ParticleSystem::setupParticles(){
       double rel_z =  (dir.z + 1) / 2.0;
 
       color = glm::vec4(rel_x, rel_y, rel_z,1);
-      */
-
-      // Happyiness index
     
     }
 

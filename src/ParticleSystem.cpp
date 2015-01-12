@@ -28,6 +28,7 @@
 
 // Used for update
 typedef std::vector<Particle *>::iterator ParticleIter;
+typedef std::vector<std::vector<int>> vMat;
 
 ParticleSystem::~ParticleSystem(){
   // Just delete all the particles we made
@@ -539,32 +540,33 @@ bool ParticleSystem::particleSplitCheckAndMerger(Particle * &p, std::vector<int>
   return particlesWithinThesh < particlesWithinTheshRequired;
 
 }
+void ParticleSystem::munkresMatching 
+  (const std::vector<Particle*> & partVec, vMat & matchingMat, vMat & costMat){
 
-
-std::vector<std::vector<int>> ParticleSystem::createMunkresMatrix
-  (const std::vector<Particle*> & partVec , const double angle){
-  // Input: This function will take in a vector of particles to concider for
-  //        the fitting a s hexagonal submask Also an angle for the 
-  //        rotation of this submask
+  // Function: Creates a matching to a hexonagal mask on particles given
   //
-  // Output: A square matrix where 1 represents a matching and 0 doesn't.
-  //         
-  //         
+  // Input: partVec is a function of particles, partVec[0] will be the center
+  //        of this mask.
   //
+  // Output: A 2D vector where 1 == matching and 0 == not matched.
+  //         Column = specific mask postion we are matching against
+  //         Row    = Row i, means particle i in our partVec
+  //         
   // Assumptions: The first element in the vector is the particle being
   //              concidered the center of the submask.
   //
   // Assumptions: There is at least a single element in the vector
-  // Side Effects: None, works functionally
+  //
+  // Side Effects: None.
   //
   //
   // Output Example:
   //    
   //        MaskCenter MaskP1 MaskP2 MaskP3 MaskP4 MaskP5 MaskP6
   //  _______________________________________________
-  //  partA   9         29     23      92     23    9
-  //  partB   8         3      4       23      1    3 
-  //  partC   9         1      3       1       90   3
+  //  partA   1         0      0       0       0     0      0
+  //  partB   0         1      0       0       0     0      0
+  //  partC   0         0      0       1       0     0      0
   //  partD    .. .. ..
   //  .
   //  .
@@ -577,21 +579,18 @@ std::vector<std::vector<int>> ParticleSystem::createMunkresMatrix
   //  is first.
   //
   //
-  //
-  //  TODO: For reach rotation of the object, find the min cost and choose rotation
-  //        of the best fit.
-  //  NOTE: this version has no rotations applied
-
+  //  TODO: Create a version that test against rotations
+  
 
     // Checking we  have a valid input
     assert(partVec.size() != 0 );
 
 
     // ========================================================================
-    // Create wrapper so that we can use the munkres.cpp
-    // Remember to delete
+    // Create wrapper so that we can use the munkres.cpp, because munkers.cpp
+    // can only use 2D arrays.
+    // CREATION OF COST FUNCTION
     
-
     // Getting the center of our submask which we will base distance off of
     Particle * center = partVec[0];
 
@@ -600,27 +599,28 @@ std::vector<std::vector<int>> ParticleSystem::createMunkresMatrix
 
     // Create a square matrix and initiate all of it with infinate values
     int ** matrix = new int*[sizeMatrix];
-
     for(int i = 0; i < sizeMatrix; i++){
-
        // create a new row
        matrix[i] = new int[sizeMatrix];
-
        // fill in with super large value
        for( int j = 0; j < sizeMatrix; j++){
-         matrix[i][j] = std::numeric_limits<int>::max();
-       
+         matrix[i][j] = 10000; // This is an entire 10,000 mm == 10 meters
        }
     }
     
 
-    // Getting the points that represent the hyprotheical mask
+    // Getting the points that represent the hyprotheical mask <------------------------------------------DOUBLE CHECK
     std::vector<glm::vec3> maskPositions; 
-    circle_points_on_plane(center->getOldPos(), center->getDir(), RADIUS_PARTICLE_WAVE,6,maskPositions,args);
+    circle_points_on_plane(
+        center->getOldPos(), 
+        center->getDir(), 
+        RADIUS_PARTICLE_WAVE,
+        6,
+        maskPositions,args);
 
 
     // Comparing the distance between each point in partVec and each point in
-    // point in the submask and tossing it into the matrix. 
+    // point in the mask and tossing it into the matrix. 
     // Note: there will be partVec.size() * (6 + 1) comparisons
 
     // For every point
@@ -641,27 +641,32 @@ std::vector<std::vector<int>> ParticleSystem::createMunkresMatrix
       }
     }
 
-  // Call to munkers.cpp hungarian algorithm
-  matrix = runMunkers(matrix,sizeMatrix,false);
-
-  // Conversion  back into vector
-  std::vector<std::vector<int>> matching;
-  for(int i = 0; i < partVec.size(); i++){
-    
+  // SAVING THIS COST MATRIX IN MM
+  for(int i = 0; i < sizeMatrix; i++){
     std::vector<int> temp;
     for(int j = 0; j < maskPositions.size(); j++){
       temp.push_back(matrix[i][j]);
     }
-    matching.push_back(temp);
+    costMat.push_back(temp);
   }
+
+  // SOLVING FOR THE MATCHING 
+  matrix = runMunkers(matrix,sizeMatrix,false);
+
+  // CREATE OUTPUT matchingMat 
+  for(int i = 0; i < partVec.size(); i++){
+    std::vector<int> temp;
+    for(int j = 0; j < maskPositions.size(); j++){
+      temp.push_back(matrix[i][j]);
+    }
+    matchingMat.push_back(temp);
+  }
+  
     
   // deallocation of created array in matrix **
   for(int i = 0; i < sizeMatrix; i++)
     delete [] matrix[i];
   delete [] matrix;
-  
-  // Return the matching for use
-  return matching;
 
 }
 

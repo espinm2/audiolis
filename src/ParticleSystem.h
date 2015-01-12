@@ -17,6 +17,7 @@
 #include "boundingbox.h"
 #include "vbo_structs.h"
 
+typedef std::vector<std::vector<int>> vMat;
 
 // Forward declaration
 class ArgParser;
@@ -60,8 +61,8 @@ class ParticleSystem {
 
     // Experimental
     bool particleSplitCheckAndMerger(Particle *&p, std::vector<int> &deleteMask);
-    std::vector<std::vector <int> > createMunkresMatrix
-      (const std::vector<Particle*> & partVec, double angle);
+
+    void munkresMatching (const std::vector<Particle*> & partVec, vMat & matchingMat, vMat & costMat);
 
     // Two merge particles
     Particle * particlePairMerge(Particle * &a, Particle * &b); 
