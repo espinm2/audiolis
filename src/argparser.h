@@ -114,6 +114,8 @@ public:
     ceiling_material = 0;
     absorber = false;
 
+    printcusorpos = true;
+
   }
 
   // ==============
@@ -143,6 +145,7 @@ public:
   int source_type;
   int viz_type;
   bool direction;
+  bool printcusorpos;
 
   int wall_material; // toggle what the walls are made of
   int floor_material; //  Toggle what the floor is made of

@@ -61,7 +61,7 @@ class ParticleSystem {
 
     // Experimental
     bool particleSplitCheckAndMerger(Particle *&p, std::vector<int> &deleteMask);
-
+    void createDebugParticle(); // used for debugging in testing_chamber_1.obj
     void munkresMatching (const std::vector<Particle*> & partVec, vMat & matchingMat, vMat & costMat);
 
     // Two merge particles
@@ -92,6 +92,10 @@ class ParticleSystem {
     void setupVelocityVisual();
     void drawVelocityVisual();
 
+
+    void setupOutlineVisual();
+    void drawOutlineVisual();
+
     // Memebers
     ArgParser * args;
     BoundingBox * bbox;
@@ -121,12 +125,18 @@ class ParticleSystem {
     GLuint cursor_verts_VBO;
     GLuint velocity_verts_VBO;
     GLuint velocity_tri_indices_VBO;
+    GLuint outline_verts_VBO; // <--------------------------------------------- New
+
+    // GLuint happyness_verts_VBO; // VBO used for vectors that point out from the center
+    // GLuint happyness_tri_indices_VBO;
+
 
     // Vertices for VBOs
     std::vector<VBOPosNormalColor> particle_verts;
     std::vector<VBOPosNormalColor> cursor_verts;
     std::vector<VBOPosNormalColor> velocity_verts;
     std::vector<VBOIndexedTri> velocity_tri_indices;
+    std::vector<VBOPosNormalColor> outline_verts;
 
 };
 

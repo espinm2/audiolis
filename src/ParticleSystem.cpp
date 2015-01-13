@@ -57,7 +57,7 @@ void ParticleSystem::load(){
   MAX_ITERATIONS        = 6000; // Doesnt change often
 
   // split var init
-  RADIUS_PARTICLE_WAVE  = 0.01; // Will be later removed for better split
+  RADIUS_PARTICLE_WAVE  = 0.1; // Will be later removed for better split
   SPLIT_AMOUNT          = 6; // Will be later removed for better split
 
 
@@ -296,6 +296,9 @@ void ParticleSystem::moveCursor( const float & dx,
 
   cursor+= glm::vec3(10*dx,10*dy,10*dz);
 
+  if(args->printcusorpos)
+    std::cout << "Cursor Pos" << cursor.x << ", " << cursor.y << ", " << cursor.z << std::endl;
+
 }
 
 void ParticleSystem::particleSplit(Particle * &p,
@@ -378,6 +381,81 @@ void ParticleSystem::calcMeshCollision(Particle * &p){
     p->setMaterial("none");
 
   }
+}
+
+void ParticleSystem::createDebugParticle(){
+
+  // HARDCODED targetPosition
+  glm::vec3 targetPosition(2.7, 0.324, -2.1);
+
+  // Direction 
+  glm::vec3 directionToTarget = targetPosition - cursor;
+  directionToTarget  = glm::normalize(directionToTarget);
+
+  // Create a ray to move up a little
+  glm::vec3 newPos = cursor + ( (float) RADIUS_INIT_SPHERE) * directionToTarget;
+
+
+
+  // default constructor
+
+  Particle * p = new Particle(
+      newPos,                     // Position     
+      cursor,                  // OldPosition
+      cursor,                  // CenterPos
+      0,                       // Wattage
+      0,                       // Freq
+      0);                      // SplitAmount
+
+  // For each given source type we will generate a diffrerent distrubution
+  // of freq to represent
+  
+  if( args-> source_type == 1){
+
+    // Low Freq Noise  AC unit
+    // Not very powerfull
+
+    p->setWatt(0.00001); // 70dBs about vacuum cleaner loudness
+    p->setFreq(args->randomGen.randInt(80) + 20); // Freq [20Hz-100Hz]
+
+
+  } else if (args-> source_type == 2 ){
+
+    // Assume Talking Range
+    // For speach we are using the fundmental, aka lowest freq
+    
+    p->setWatt(0.000001); // 60dBs about people talking loud
+    p->setFreq(args->randomGen.randInt(150) + 100); // Freq [100Hz-250Hz]
+
+
+  } else if( args-> source_type == 3 ){
+    // Assume higher pitched noise
+    // Assume you have a CRT mointor
+
+    p->setWatt(0.0000001); // 40dDbs soft conversation level
+    p->setFreq(16744); // Freq of CRT mointor running
+
+
+  } else {
+
+    // White noise there is total random distrubtion in frequency
+    // Assume power of rock concert at 110 dBs
+
+    p->setWatt(0.1); // Power of loud concert
+    p->setFreq(args->randomGen.randInt(20000-20) + 20); // Freq random
+
+  }
+
+  // Find out when it hits our mesh
+  calcMeshCollision(p);
+
+  // put particle there
+  particles.push_back(p);
+
+
+
+
+
 }
 
 void ParticleSystem::createInitWave(){

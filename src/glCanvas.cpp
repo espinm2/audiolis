@@ -114,7 +114,7 @@ void GLCanvas::initialize(ArgParser *_args) {
   // ===========================
   // initial placement of camera 
   // look at an object scaled & positioned to just fit in the box (-1,-1,-1)->(1,1,1)
-  glm::vec3 camera_position = glm::vec3(10,9,10);
+  glm::vec3 camera_position = glm::vec3(0,10,0.1);
   glm::vec3 point_of_interest = glm::vec3(0,0,0);
   glm::vec3 up = glm::vec3(0,1,0);
   float angle = 20.0;
@@ -127,8 +127,6 @@ void GLCanvas::initialize(ArgParser *_args) {
 
   HandleGLError("finished glcanvas initialize");
 }
-
-
 
 
 void GLCanvas::animate(){
@@ -341,16 +339,22 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       particleSystem->createInitWave();
       particleSystem->setupVBOs();
       break;
+    case 'z': case 'Z':
+      particleSystem->createDebugParticle();
+      particleSystem->setupVBOs();
+      break;
     case 'v': case 'V':
-      args->viz_type = (args-> viz_type + 1) % 5;
+      args->viz_type = (args-> viz_type + 1) % 4;
       if(args->viz_type == 0)
         std::cout << "Visualizing: Frequency White:Low Black:High\n";
       if(args->viz_type == 1)
         std::cout << "Visualizing: Intensity Black:Low White:High\n";
       if(args->viz_type == 2)
         std::cout << "Visualizing: Both: From White -> Red Freq Logrithmic \n";
-      if(args->viz_type == 4)
+      if(args->viz_type == 3)
         std::cout << "Visualizing: Wave Fronts \n";
+      if(args->viz_type == 4)
+        std::cout << "Visualizing: Mask Happyness \n";
       break;
     case 's': case 'S':
       args->source_type = (args-> source_type + 1) % 4;

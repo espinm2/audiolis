@@ -36,6 +36,7 @@ void ParticleSystem::initializeVBOs(){
   glGenBuffers(1,&cursor_verts_VBO);
   glGenBuffers(1,&velocity_verts_VBO);
   glGenBuffers(1,&velocity_tri_indices_VBO);
+  glGenBuffers(1,&outline_verts_VBO);
 
 }
 
@@ -47,11 +48,13 @@ void ParticleSystem::setupVBOs(){
   particle_verts.clear();
   velocity_verts.clear();
   velocity_tri_indices.clear();
+  outline_verts.clear();
 
   // Setup new Data
   setupCursorPoint();
   setupVelocityVisual();
   setupParticles(); 
+  setupOutlineVisual();
 
   HandleGLError("leave setup vbos");
 }
@@ -62,6 +65,7 @@ void ParticleSystem::drawVBOs(){
   drawCursorPoint();
   drawVelocityVisual();
   drawParticles();
+  drawOutlineVisual();
 
   HandleGLError("leaving draw vbos");
 
@@ -73,6 +77,7 @@ void ParticleSystem::cleanupVBOs(){
   glDeleteBuffers(1,&cursor_verts_VBO);
   glDeleteBuffers(1,&velocity_verts_VBO);
   glDeleteBuffers(1,&velocity_tri_indices_VBO);
+  glDeleteBuffers(1,&outline_verts_VBO);
   HandleGLError("leave clean vbos");
 }
 
@@ -90,11 +95,8 @@ void ParticleSystem::setupParticles(){
     // Picking Normal
     glm::vec3 normal =part->getDir(); 
 
-
-
     
     glm::vec4 color(0,0,0,1);  // Our final color
-
 
 
     if( args->viz_type == 0 ) {
@@ -194,6 +196,17 @@ void ParticleSystem::setupParticles(){
       
       color.a = dbs_val; // opacit
 
+    }else if (args->viz_type == 3){
+
+     // Visualizing wave fronts
+     glm::vec3 dir = part->getDir();
+
+     double rel_x =  (dir.x + 1) / 2.0;
+     double rel_y =  (dir.y + 1) / 2.0;
+     double rel_z =  (dir.z + 1) / 2.0;
+
+     color = glm::vec4(rel_x, rel_y, rel_z,1);
+
     }else{
 
       // DEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUG 
@@ -242,22 +255,13 @@ void ParticleSystem::setupParticles(){
      int percentHappy = sum / 6 * 10000;
      color = glm::vec4(sum, sum, sum, 1);
       
-
-
-
-     //  // Visualizing wave fronts
-     //  glm::vec3 dir = part->getDir();
-
-     //  double rel_x =  (dir.x + 1) / 2.0;
-     //  double rel_y =  (dir.y + 1) / 2.0;
-     //  double rel_z =  (dir.z + 1) / 2.0;
-
-     //  color = glm::vec4(rel_x, rel_y, rel_z,1);
     
     }
 
 
     // DEBUG///////////////////////////////////////////////////////////////////
+    // This code causes the animation to stop if we encounter a "free-particle"
+    // a particle without having to hit any surface in the open.
     if(part->getMaterialHit() == "none"){
       color = glm::vec4(1,0,0,1);
       args->animate = false;
@@ -335,7 +339,7 @@ void ParticleSystem::setupCursorPoint(){
 void ParticleSystem::drawCursorPoint(){
 
   HandleGLError("enter drawCursorPoint");
-  glPointSize( 10 ); // <------------------- Added
+  glPointSize( 5 ); // <------------------- Added
   glBindBuffer(GL_ARRAY_BUFFER, cursor_verts_VBO);
 
   glEnableVertexAttribArray(0);
@@ -378,13 +382,12 @@ void ParticleSystem::setupVelocityVisual(){
     
       addEdgeGeometry(velocity_verts,velocity_tri_indices,
           pos , // Start position
-          pos +  ((float) 0.01) * dir, // Move a little in the dir
+          pos +  ((float) 0.2) * dir, // Move a little in the dir
           glm::vec4(dir.x,dir.y,dir.z,1), 
           glm::vec4(dir.x,dir.y,dir.z,1), 
           thickness,
           thickness*0.1);
     }
-  
   }
 
   // Create and setup velocity_tri_indices, velocity_verts
@@ -440,3 +443,124 @@ void ParticleSystem::drawVelocityVisual(){
 
 
 }
+
+void ParticleSystem::setupOutlineVisual(){
+
+  // Push the line segments into outline_verts
+  for(int i = 0 ; i < particles.size(); i++){
+    Particle * part = particles[i];
+
+    // Setup ==================================================================
+    std::vector<Particle *> conciderForMask;
+    conciderForMask.push_back(part);
+
+    for(Particle* other: particles){
+    
+      if(part == other)
+        continue;
+
+      if(glm::distance(part->getPos(),
+            other->getPos()) <= 2*RADIUS_PARTICLE_WAVE){
+        conciderForMask.push_back(other);
+      }
+    }
+  
+    vMat cost;
+    vMat matching;
+
+    // Calculate munkres
+    munkresMatching(conciderForMask,matching,cost);
+
+
+    // Visualization Setup ====================================================
+
+    int firstMaskPoint = -1;
+    bool savedFirstMaskPoint = false;
+    glm::vec4 color = glm::vec4(0, 0, 0, 1); 
+
+    for(int j = 1; j < matching[0].size(); j++){
+      
+      int particle_index = -1; // index in matching of particle i
+
+      // Go and find what particle matches this
+      for(int i = 0; i < matching.size(); i++){
+        if(matching[i][j] == 1){
+          particle_index =  i;
+          break;
+        }
+      }
+
+      if(particle_index == -1) { // We didn't find a particle to match  this j
+        continue;
+      }
+
+      if (!savedFirstMaskPoint){ // first of the 6 vert that make up a hex 
+      
+        outline_verts.push_back(
+            VBOPosNormalColor(
+              conciderForMask[i]->getPos(),
+              conciderForMask[i]->getDir(),
+              color));
+
+        firstMaskPoint = particle_index;
+        savedFirstMaskPoint = true;
+
+      }else{ // Other cases
+
+        outline_verts.push_back(
+            VBOPosNormalColor(
+              conciderForMask[i]->getPos(),
+              conciderForMask[i]->getDir(),
+              color));
+
+        outline_verts.push_back(
+            VBOPosNormalColor(
+              conciderForMask[i]->getPos(),
+              conciderForMask[i]->getDir(),
+              color));
+      }
+        
+    }
+
+    if(firstMaskPoint != -1){
+    
+      outline_verts.push_back(
+          VBOPosNormalColor(
+            conciderForMask[firstMaskPoint]->getPos(),
+            conciderForMask[firstMaskPoint]->getDir(),
+            color));
+    }
+
+  }//for each particle in the system
+
+
+}
+
+void ParticleSystem::drawOutlineVisual(){
+
+  HandleGLError("enter drawOutlineVisual");
+  glBindBuffer(GL_ARRAY_BUFFER, outline_verts_VBO);
+
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,
+      sizeof(VBOPosNormalColor),(void*)0);
+
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,
+      sizeof(VBOPosNormalColor),(void*)sizeof(glm::vec3) );
+
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(2, 4, GL_FLOAT,GL_FALSE,
+      sizeof(VBOPosNormalColor), (void*)(sizeof(glm::vec3)*2));
+
+  glDrawArrays(GL_POINTS, 0, outline_verts.size());
+
+  glDisableVertexAttribArray(0);
+  glDisableVertexAttribArray(1);
+  glDisableVertexAttribArray(2);
+
+  HandleGLError("leaving drawOutlineVisual");
+
+}
+
+
