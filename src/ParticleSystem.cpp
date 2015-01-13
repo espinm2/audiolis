@@ -506,11 +506,13 @@ bool ParticleSystem::particleSplitCheckAndMerger(Particle * &p, std::vector<int>
           
       if(mergeAngleThesh > angle){
       
+        // DEBUG ==============================================================
         // // Mark particle for deletion so we no longer concider it
         // deleteMask[i] = 1;
 
         // // Store for later merging
         // particleToMerge.push_back(particles[i]);
+        // ====================================================================
       
       }
           
