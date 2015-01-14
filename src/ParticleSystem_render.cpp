@@ -19,6 +19,7 @@
 #define YELLOW   getColor(255,240,1,1)
 #define RED      getColor(255,30,0,1)
 
+#define OUTLINE_VIZ true
 /*
 #define BLUE     getColor(255,255,178,1)
 #define LITE_BLU getColor(254,204,92,1)
@@ -37,6 +38,7 @@ void ParticleSystem::initializeVBOs(){
   glGenBuffers(1,&velocity_verts_VBO);
   glGenBuffers(1,&velocity_tri_indices_VBO);
   glGenBuffers(1,&outline_verts_VBO);
+  glGenBuffers(1,&happyness_verts_VBO);
 
 }
 
@@ -49,12 +51,13 @@ void ParticleSystem::setupVBOs(){
   velocity_verts.clear();
   velocity_tri_indices.clear();
   outline_verts.clear();
+  happyness_verts.clear();
 
   // Setup new Data
   setupCursorPoint();
   setupVelocityVisual();
   setupParticles(); 
-  setupOutlineVisual();
+  setupOutlineAndHappinessVisual();
 
   HandleGLError("leave setup vbos");
 }
@@ -66,6 +69,7 @@ void ParticleSystem::drawVBOs(){
   drawVelocityVisual();
   drawParticles();
   drawOutlineVisual();
+  drawHappinessVisual();
 
   HandleGLError("leaving draw vbos");
 
@@ -78,6 +82,7 @@ void ParticleSystem::cleanupVBOs(){
   glDeleteBuffers(1,&velocity_verts_VBO);
   glDeleteBuffers(1,&velocity_tri_indices_VBO);
   glDeleteBuffers(1,&outline_verts_VBO);
+  glDeleteBuffers(1,&happyness_verts_VBO);
   HandleGLError("leave clean vbos");
 }
 
@@ -444,7 +449,12 @@ void ParticleSystem::drawVelocityVisual(){
 
 }
 
-void ParticleSystem::setupOutlineVisual(){
+void ParticleSystem::setupOutlineAndHappinessVisual(){
+  // This function will setup the outline_vert vector of points
+  // As well as the other VBO
+
+  HandleGLError("entering setupOutlineVisual");
+
 
   // Push the line segments into outline_verts
   for(int i = 0 ; i < particles.size(); i++){
@@ -473,11 +483,31 @@ void ParticleSystem::setupOutlineVisual(){
 
 
     // Visualization Setup ====================================================
+    
+    // DEBUG DEBUG DEBUG
+    if(particles.size() == 7){
+      std::cout << "Dealing with bug here" << std::endl;
+    }
 
     int firstMaskPoint = -1;
     bool savedFirstMaskPoint = false;
-    glm::vec4 color = glm::vec4(0, 0, 0, 1); 
+    // Picking random color
+    glm::vec4 color;
+    if(OUTLINE_VIZ)
+      color = glm::vec4(args->randomGen.rand(), args->randomGen.rand(), args->randomGen.rand(), 1); 
+    else
+      color = glm::vec4(args->randomGen.rand(), args->randomGen.rand(), args->randomGen.rand(), 0.5); 
 
+
+    if(!OUTLINE_VIZ){
+      outline_verts.push_back(
+          VBOPosNormalColor(
+            part->getPos(),
+            part->getDir(),
+            color));
+    }
+
+    int number_of_vertex = 0;
     for(int j = 1; j < matching[0].size(); j++){
       
       int particle_index = -1; // index in matching of particle i
@@ -486,6 +516,7 @@ void ParticleSystem::setupOutlineVisual(){
       for(int i = 0; i < matching.size(); i++){
         if(matching[i][j] == 1){
           particle_index =  i;
+          number_of_vertex++;
           break;
         }
       }
@@ -494,13 +525,32 @@ void ParticleSystem::setupOutlineVisual(){
         continue;
       }
 
+      glm::vec4 happyColor(   
+        cost[particle_index][j] / (RADIUS_PARTICLE_WAVE*1.0),
+        cost[particle_index][j] / (RADIUS_PARTICLE_WAVE*1.0),
+        cost[particle_index][j] / (RADIUS_PARTICLE_WAVE*1.0), 1);
+
+      // Pushing a line segement from this point to center for happyness ////
+       happyness_verts.push_back(
+           VBOPosNormalColor(
+             part->getPos(),
+             part->getDir(),
+             color));
+       happyness_verts.push_back(
+          VBOPosNormalColor(
+            conciderForMask[particle_index]->getPos(),
+            conciderForMask[particle_index]->getDir(),
+            happyColor));
+      // Done with linesegment ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^
+
       if (!savedFirstMaskPoint){ // first of the 6 vert that make up a hex 
       
         outline_verts.push_back(
             VBOPosNormalColor(
-              conciderForMask[i]->getPos(),
-              conciderForMask[i]->getDir(),
+              conciderForMask[particle_index]->getPos(),
+              conciderForMask[particle_index]->getDir(),
               color));
+
 
         firstMaskPoint = particle_index;
         savedFirstMaskPoint = true;
@@ -509,16 +559,18 @@ void ParticleSystem::setupOutlineVisual(){
 
         outline_verts.push_back(
             VBOPosNormalColor(
-              conciderForMask[i]->getPos(),
-              conciderForMask[i]->getDir(),
+              conciderForMask[particle_index]->getPos(),
+              conciderForMask[particle_index]->getDir(),
               color));
 
-        outline_verts.push_back(
-            VBOPosNormalColor(
-              conciderForMask[i]->getPos(),
-              conciderForMask[i]->getDir(),
-              color));
-      }
+        if(OUTLINE_VIZ){
+         outline_verts.push_back(
+             VBOPosNormalColor(
+               conciderForMask[particle_index]->getPos(),
+               conciderForMask[particle_index]->getDir(),
+               color));
+        }
+      } 
         
     }
 
@@ -531,14 +583,61 @@ void ParticleSystem::setupOutlineVisual(){
             color));
     }
 
+  // This part of the code makes only full hex visable
+  if(number_of_vertex != 6){
+      
+    std::cout << "Purging results" << std::endl;
+    if(OUTLINE_VIZ){
+
+      for(int k = 0; k < 2 + (2 * number_of_vertex); k++)
+        outline_verts.pop_back();
+    
+    }else{
+
+      for(int k = 0; k < 3 + (2 * number_of_vertex); k++)
+        outline_verts.pop_back();
+    
+    
+    }
+
+
+    for(int k = 0; k < 2 * number_of_vertex; k++)
+      happyness_verts.pop_back();
+  
+  }
+
   }//for each particle in the system
 
+
+
+  // Bind the outline
+  glBindBuffer(GL_ARRAY_BUFFER,outline_verts_VBO); 
+
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        sizeof(VBOPosNormalColor)*outline_verts.size(),
+        &outline_verts[0],
+        GL_DYNAMIC_DRAW); 
+
+  // Bind the happyness
+  glBindBuffer(GL_ARRAY_BUFFER,happyness_verts_VBO); 
+
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        sizeof(VBOPosNormalColor)*happyness_verts.size(),
+        &happyness_verts[0],
+        GL_DYNAMIC_DRAW); 
+  HandleGLError("leaving setupOutlineVisual");
 
 }
 
 void ParticleSystem::drawOutlineVisual(){
 
   HandleGLError("enter drawOutlineVisual");
+
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
   glBindBuffer(GL_ARRAY_BUFFER, outline_verts_VBO);
 
   glEnableVertexAttribArray(0);
@@ -553,13 +652,59 @@ void ParticleSystem::drawOutlineVisual(){
   glVertexAttribPointer(2, 4, GL_FLOAT,GL_FALSE,
       sizeof(VBOPosNormalColor), (void*)(sizeof(glm::vec3)*2));
 
-  glDrawArrays(GL_POINTS, 0, outline_verts.size());
+  if(OUTLINE_VIZ){
+
+    HandleGLError("enter debugDrawCall");
+    glDrawArrays(GL_LINES, 0, outline_verts.size());
+    HandleGLError("leaving debugDrawCall");
+  
+  
+  }else{
+
+    HandleGLError("enter debugDrawCall");
+    glDrawArrays(GL_TRIANGLE_FAN, 0, outline_verts.size());
+    HandleGLError("leaving debugDrawCall");
+  
+  }
 
   glDisableVertexAttribArray(0);
   glDisableVertexAttribArray(1);
   glDisableVertexAttribArray(2);
 
+  glDisable(GL_BLEND);
   HandleGLError("leaving drawOutlineVisual");
+
+}
+
+void ParticleSystem::drawHappinessVisual(){
+
+  HandleGLError("enter drawHappyVisual");
+  glBindBuffer(GL_ARRAY_BUFFER, happyness_verts_VBO);
+
+
+  // glLineWidth(3);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,
+      sizeof(VBOPosNormalColor),(void*)0);
+
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,
+      sizeof(VBOPosNormalColor),(void*)sizeof(glm::vec3) );
+
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(2, 4, GL_FLOAT,GL_FALSE,
+      sizeof(VBOPosNormalColor), (void*)(sizeof(glm::vec3)*2));
+
+  HandleGLError("enter debugDrawCall");
+  glDrawArrays(GL_LINES, 0, happyness_verts.size());
+  HandleGLError("leaving debugDrawCall");
+
+  glDisableVertexAttribArray(0);
+  glDisableVertexAttribArray(1);
+  glDisableVertexAttribArray(2);
+
+  // glLineWidth(3);
+  HandleGLError("leaving drawHappyVisual");
 
 }
 

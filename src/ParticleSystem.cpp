@@ -681,15 +681,16 @@ void ParticleSystem::munkresMatching
        matrix[i] = new int[sizeMatrix];
        // fill in with super large value
        for( int j = 0; j < sizeMatrix; j++){
-         matrix[i][j] = 10000; // This is an entire 10,000 mm == 10 meters
+         matrix[i][j] = 1000; // This is an entire 10,000 mm == 10 meters
        }
     }
     
 
     // Getting the points that represent the hyprotheical mask <------------------------------------------DOUBLE CHECK
     std::vector<glm::vec3> maskPositions; 
+    maskPositions.push_back(center->getPos()); // center  mask for submask
     circle_points_on_plane(
-        center->getOldPos(), 
+        center->getPos(), 
         center->getDir(), 
         RADIUS_PARTICLE_WAVE,
         6,

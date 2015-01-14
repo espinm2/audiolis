@@ -93,8 +93,9 @@ class ParticleSystem {
     void drawVelocityVisual();
 
 
-    void setupOutlineVisual();
+    void setupOutlineAndHappinessVisual();
     void drawOutlineVisual();
+    void drawHappinessVisual();
 
     // Memebers
     ArgParser * args;
@@ -125,10 +126,9 @@ class ParticleSystem {
     GLuint cursor_verts_VBO;
     GLuint velocity_verts_VBO;
     GLuint velocity_tri_indices_VBO;
-    GLuint outline_verts_VBO; // <--------------------------------------------- New
+    GLuint outline_verts_VBO; // <--------------------------------------------- New 
+    GLuint happyness_verts_VBO; // <------------------------------------------- extra new!
 
-    // GLuint happyness_verts_VBO; // VBO used for vectors that point out from the center
-    // GLuint happyness_tri_indices_VBO;
 
 
     // Vertices for VBOs
@@ -137,6 +137,7 @@ class ParticleSystem {
     std::vector<VBOPosNormalColor> velocity_verts;
     std::vector<VBOIndexedTri> velocity_tri_indices;
     std::vector<VBOPosNormalColor> outline_verts;
+    std::vector<VBOPosNormalColor> happyness_verts;
 
 };
 
