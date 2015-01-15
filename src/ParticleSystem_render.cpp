@@ -227,7 +227,7 @@ void ParticleSystem::setupParticles(){
         if(part == other)
           continue;
 
-        if( glm::distance(part->getPos(),other->getPos()) <= 2*RADIUS_PARTICLE_WAVE)
+        if( glm::distance(part->getPos(),other->getPos()) <= 1.5*RADIUS_PARTICLE_WAVE)
           conciderForMask.push_back(other);
       
       }
@@ -470,7 +470,7 @@ void ParticleSystem::setupOutlineAndHappinessVisual(){
         continue;
 
       if(glm::distance(part->getPos(),
-            other->getPos()) <= 2*RADIUS_PARTICLE_WAVE){
+            other->getPos()) <= 1.5*RADIUS_PARTICLE_WAVE){
         conciderForMask.push_back(other);
       }
     }
@@ -499,15 +499,17 @@ void ParticleSystem::setupOutlineAndHappinessVisual(){
       color = glm::vec4(args->randomGen.rand(), args->randomGen.rand(), args->randomGen.rand(), 0.5); 
 
 
+    int number_of_vertex = 0;
+
     if(!OUTLINE_VIZ){
       outline_verts.push_back(
           VBOPosNormalColor(
             part->getPos(),
             part->getDir(),
             color));
+      number_of_vertex++;
     }
 
-    int number_of_vertex = 0;
     for(int j = 1; j < matching[0].size(); j++){
       
       int particle_index = -1; // index in matching of particle i
@@ -516,7 +518,6 @@ void ParticleSystem::setupOutlineAndHappinessVisual(){
       for(int i = 0; i < matching.size(); i++){
         if(matching[i][j] == 1){
           particle_index =  i;
-          number_of_vertex++;
           break;
         }
       }
@@ -526,9 +527,9 @@ void ParticleSystem::setupOutlineAndHappinessVisual(){
       }
 
       glm::vec4 happyColor(   
-        cost[particle_index][j] / (RADIUS_PARTICLE_WAVE*1.0),
-        cost[particle_index][j] / (RADIUS_PARTICLE_WAVE*1.0),
-        cost[particle_index][j] / (RADIUS_PARTICLE_WAVE*1.0), 1);
+        cost[particle_index][j] / (RADIUS_PARTICLE_WAVE*1.6*1000),
+        cost[particle_index][j] / (RADIUS_PARTICLE_WAVE*1.6*1000),
+        cost[particle_index][j] / (RADIUS_PARTICLE_WAVE*1.6*1000), 1);
 
       // Pushing a line segement from this point to center for happyness ////
        happyness_verts.push_back(
@@ -550,7 +551,7 @@ void ParticleSystem::setupOutlineAndHappinessVisual(){
               conciderForMask[particle_index]->getPos(),
               conciderForMask[particle_index]->getDir(),
               color));
-
+          number_of_vertex++;
 
         firstMaskPoint = particle_index;
         savedFirstMaskPoint = true;
@@ -563,16 +564,19 @@ void ParticleSystem::setupOutlineAndHappinessVisual(){
               conciderForMask[particle_index]->getDir(),
               color));
 
+        number_of_vertex++;
+
+
         if(OUTLINE_VIZ){
          outline_verts.push_back(
              VBOPosNormalColor(
                conciderForMask[particle_index]->getPos(),
                conciderForMask[particle_index]->getDir(),
                color));
+         number_of_vertex++;
         }
       } 
-        
-    }
+    } // For every  row
 
     if(firstMaskPoint != -1){
     
@@ -581,28 +585,23 @@ void ParticleSystem::setupOutlineAndHappinessVisual(){
             conciderForMask[firstMaskPoint]->getPos(),
             conciderForMask[firstMaskPoint]->getDir(),
             color));
+     number_of_vertex++;
     }
 
-  // This part of the code makes only full hex visable
-  if(number_of_vertex != 6){
+    // This part of the code makes only full hex visable
+    if(number_of_vertex < 6){
+        
+        for(int k = 0; number_of_vertex; k++){
+          std::cout << "Purging results" << std::endl;
+          outline_verts.pop_back();
+        }
+
+        // for(int k = 0; number_of_vertex; k++){
+        //  std::cout << "Purging results" << std::endl;
+        //  outline_verts.pop_back();
+        // }
       
-    std::cout << "Purging results" << std::endl;
-    if(OUTLINE_VIZ){
-
-      for(int k = 0; k < 2 + (2 * number_of_vertex); k++)
-        outline_verts.pop_back();
     
-    }else{
-
-      for(int k = 0; k < 3 + (2 * number_of_vertex); k++)
-        outline_verts.pop_back();
-    
-    
-    }
-
-
-    for(int k = 0; k < 2 * number_of_vertex; k++)
-      happyness_verts.pop_back();
   
   }
 

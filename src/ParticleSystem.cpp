@@ -681,7 +681,7 @@ void ParticleSystem::munkresMatching
        matrix[i] = new int[sizeMatrix];
        // fill in with super large value
        for( int j = 0; j < sizeMatrix; j++){
-         matrix[i][j] = 1000; // This is an entire 10,000 mm == 10 meters
+         matrix[i][j] = (int) (RADIUS_PARTICLE_WAVE*1.6*1000); // This is an entire 10,000 mm == 10 meters
        }
     }
     
