@@ -696,6 +696,8 @@ void ParticleSystem::munkresMatching
         6,
         maskPositions,args);
 
+    cirlce_point_on_sphere(center->getCenter(),
+        glm::distance( center->getPos(), center->getCenter()),maskPositions);
 
     // Comparing the distance between each point in partVec and each point in
     // point in the mask and tossing it into the matrix. 

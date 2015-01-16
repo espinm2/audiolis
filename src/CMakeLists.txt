@@ -13,6 +13,7 @@ add_executable(audiolis
   geometry_utils.cpp
   render_utils.cpp
   render_utils.h
+  mask.cpp
   ParticleSystem.cpp
   ParticleSystem_render.cpp
   munkers.cpp
