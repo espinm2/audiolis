@@ -78,4 +78,5 @@ inline std::istream& operator>>(std::istream& istr, glm::vec3 &v) {
   return istr;
 }
 
+void GiveRainbowColor(double position, unsigned char c[]);
 #endif

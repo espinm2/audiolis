@@ -494,12 +494,14 @@ void ParticleSystem::setupOutlineAndHappinessVisual(){
     // Picking random color
     glm::vec4 color;
     if(OUTLINE_VIZ)
-      color = glm::vec4(args->randomGen.rand(), args->randomGen.rand(), args->randomGen.rand(), 1); 
+      color = glm::vec4(0,0,0, 1); 
     else
       color = glm::vec4(args->randomGen.rand(), args->randomGen.rand(), args->randomGen.rand(), 0.5); 
 
 
-    int number_of_vertex = 0;
+    unsigned int number_of_vertex = 0;
+    unsigned int number_pushed_outline = 0;
+    unsigned int number_pushed_happiness= 0;
 
     if(!OUTLINE_VIZ){
       outline_verts.push_back(
@@ -507,7 +509,7 @@ void ParticleSystem::setupOutlineAndHappinessVisual(){
             part->getPos(),
             part->getDir(),
             color));
-      number_of_vertex++;
+      number_pushed_outline++;
     }
 
     for(int j = 1; j < matching[0].size(); j++){
@@ -518,6 +520,7 @@ void ParticleSystem::setupOutlineAndHappinessVisual(){
       for(int i = 0; i < matching.size(); i++){
         if(matching[i][j] == 1){
           particle_index =  i;
+          number_of_vertex++;
           break;
         }
       }
@@ -526,22 +529,31 @@ void ParticleSystem::setupOutlineAndHappinessVisual(){
         continue;
       }
 
-      glm::vec4 happyColor(   
-        cost[particle_index][j] / (RADIUS_PARTICLE_WAVE*1.6*1000),
-        cost[particle_index][j] / (RADIUS_PARTICLE_WAVE*1.6*1000),
-        cost[particle_index][j] / (RADIUS_PARTICLE_WAVE*1.6*1000), 1);
+      unsigned char hColor[3] = {0,0,0};
+
+      double val= cost[particle_index][j] / (1.6*1000*RADIUS_PARTICLE_WAVE);
+      std::cout << val << std::endl;
+
+      GiveRainbowColor(val, hColor);
+
+      glm::vec4 happyColor;
+      happyColor.r = hColor[0];
+      happyColor.g = hColor[1];
+      happyColor.b = hColor[2];
+
 
       // Pushing a line segement from this point to center for happyness ////
        happyness_verts.push_back(
            VBOPosNormalColor(
              part->getPos(),
              part->getDir(),
-             color));
+             happyColor));
        happyness_verts.push_back(
           VBOPosNormalColor(
             conciderForMask[particle_index]->getPos(),
             conciderForMask[particle_index]->getDir(),
             happyColor));
+       number_pushed_happiness += 2;
       // Done with linesegment ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^
 
       if (!savedFirstMaskPoint){ // first of the 6 vert that make up a hex 
@@ -551,7 +563,7 @@ void ParticleSystem::setupOutlineAndHappinessVisual(){
               conciderForMask[particle_index]->getPos(),
               conciderForMask[particle_index]->getDir(),
               color));
-          number_of_vertex++;
+        number_pushed_outline++;
 
         firstMaskPoint = particle_index;
         savedFirstMaskPoint = true;
@@ -563,8 +575,8 @@ void ParticleSystem::setupOutlineAndHappinessVisual(){
               conciderForMask[particle_index]->getPos(),
               conciderForMask[particle_index]->getDir(),
               color));
+        number_pushed_outline++;
 
-        number_of_vertex++;
 
 
         if(OUTLINE_VIZ){
@@ -573,7 +585,8 @@ void ParticleSystem::setupOutlineAndHappinessVisual(){
                conciderForMask[particle_index]->getPos(),
                conciderForMask[particle_index]->getDir(),
                color));
-         number_of_vertex++;
+          number_pushed_outline++;
+
         }
       } 
     } // For every  row
@@ -585,21 +598,22 @@ void ParticleSystem::setupOutlineAndHappinessVisual(){
             conciderForMask[firstMaskPoint]->getPos(),
             conciderForMask[firstMaskPoint]->getDir(),
             color));
-     number_of_vertex++;
+      number_pushed_outline++;
+
     }
 
     // This part of the code makes only full hex visable
-    if(number_of_vertex < 6){
+    if(number_of_vertex != 6){
         
-        for(int k = 0; number_of_vertex; k++){
-          std::cout << "Purging results" << std::endl;
+         for(int k = 0; k < number_pushed_outline; k++){
+          std::cout << "Purging results outline" << std::endl;
           outline_verts.pop_back();
         }
 
-        // for(int k = 0; number_of_vertex; k++){
-        //  std::cout << "Purging results" << std::endl;
-        //  outline_verts.pop_back();
-        // }
+         for(int k = 0; k  < number_pushed_happiness; k++){
+          std::cout << "Purging results happyness" << std::endl;
+          happyness_verts.pop_back();
+         }
       
     
   
