@@ -751,6 +751,73 @@ void ParticleSystem::munkresMatching
 }
 
 
+
+void ParticleSystem::generateMask( Particle * &p, Mask &m ){
+  // Input: p is a particle that it not null, it will be the center of the mask
+  // Input: Mask &m is a mask that will be populated by a mask object
+  // Output: None, see input (2)
+  
+  // Assumptions: p != null
+  // Side effects: None.
+  // Preformance: O(p) where p is the size of particles vector
+
+
+  // Particle in range
+  std::vector<Particle *> conciderForMask;  
+
+  
+  // Gather particles nearby ( including self )
+  conciderForMask.push_back(p);  
+
+  for(Particle* other: particles){
+  
+    if(p == other)
+      continue;
+
+    if(glm::distance(p->getPos(),
+          other->getPos()) <= 1.5*RADIUS_PARTICLE_WAVE){ // <-------------------------REFACTOR THIS THRESHOLD FOR TUNING
+      conciderForMask.push_back(other);
+    }
+  }
+
+  vMat cost;
+  vMat matching;
+
+  // Calculate the cost and matching matries
+  munkresMatching(conciderForMask,matching,cost);
+
+  // Inners of the mask class
+  std::vector<Particle*> maskPart;
+  std::vector<int> maskCost;
+
+
+  // For each column in the matching matrix push back the matching particle 
+  for(int j = 1; j < matching[0].size(); j++){
+    
+    // Go and find what particle matches this
+    for(int i = 0; i < matching.size(); i++){
+      if(matching[i][j] == 1){
+        maskPart.push_back(conciderForMask[i]);
+        maskCost.push_back(cost[i][j]);
+        continue;
+      }
+    }
+
+    // If we can't find a match push back null
+    maskPart.push_back(NULL);
+    maskCost.push_back(-1);
+
+  }// for each column
+
+
+
+  // Setting the memebers of the mask object
+  m.setCenter(conciderForMask[0]);
+  m.setMaskParticles(maskPart);
+  m.setCostVector(maskCost);
+
+}
+
 bool ParticleSystem::shouldSplit(Particle * &p){
   // In here we compare all particles against eachother
   // Very expensive to do, however we also check to see if

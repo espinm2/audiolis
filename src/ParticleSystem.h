@@ -16,6 +16,7 @@
 #include "glCanvas.h"
 #include "boundingbox.h"
 #include "vbo_structs.h"
+#include "mask.h"
 
 typedef std::vector<std::vector<int>> vMat;
 
@@ -63,6 +64,7 @@ class ParticleSystem {
     bool particleSplitCheckAndMerger(Particle *&p, std::vector<int> &deleteMask);
     void createDebugParticle(); // used for debugging in testing_chamber_1.obj
     void munkresMatching (const std::vector<Particle*> & partVec, vMat & matchingMat, vMat & costMat);
+    void generateMask( Particle * &p, Mask &m ); // given a particle, returns a mask
 
     // Two merge particles
     Particle * particlePairMerge(Particle * &a, Particle * &b); 
@@ -91,7 +93,6 @@ class ParticleSystem {
 
     void setupVelocityVisual();
     void drawVelocityVisual();
-
 
     void setupOutlineAndHappinessVisual();
     void drawOutlineVisual();

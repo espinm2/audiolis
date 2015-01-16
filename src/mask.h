@@ -17,17 +17,34 @@ class Mask{
       maskParticles = maskP;
     }
     
-    // Accessors
+    // Standard Accessors
     const std::vector<Particle *> & getMaskParticles() { return maskParticles;}
     const Particle * getCenter() { return maskCenter;}
+    const std::vector<int> & getCostVector(){ return costVector;}
 
+    // Easier to use Accessors
+    const Particle * getMaskParticle(int i){ return maskParticles[i];}
+    const int getCost(int i){ return costVector[i];}
+
+    // Standard setters
+    void setCenter( Particle * p){ maskCenter = p; }
+    void setMaskParticles( const std::vector<Particle *> pVec ){ maskParticles = pVec;}
+    void setCostVector( const std::vector<int> costVec){ costVector = costVec;}
+
+    // Used to help render this data structure
     void renderOutline( std::vector<VBOPosNormalColor> & outline_verts);
     void renderCost( std::vector<VBOPosNormalColor> & cost_verts);
 
-
   private:
+
+    // Center of the mask
     Particle * maskCenter;
+
+    // Standard convention to use NULL pointer if there is no particle there
     std::vector< Particle *> maskParticles;
+
+    // Standard convention to -1 if there is no cost associated
+    std::vector< int > costVector;
 
 };
 
