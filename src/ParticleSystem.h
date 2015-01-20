@@ -55,18 +55,21 @@ class ParticleSystem {
     void debug(); // just used to test stuff out
     void update(); // moves, splits, and merges particle in a timestep
     bool moveParticle(Particle * p, double timestep); // moves a particle
-    void calcMeshCollision(Particle * &p); // finds when a particle hits the mesh
+    void calcMeshCollision(Particle * &p); //finds when a particle hits mesh
     void createInitWave(); // Creates a sphere of particles
     void particleSplit(Particle * &p, std::vector<Particle *> &vec); // splits 
     bool shouldSplit(Particle * &p); // do conditions mean to split particles
 
+    
+
     // Experimental
-    bool particleSplitCheckAndMerger(Particle *&p, std::vector<int> &deleteMask);
+    void particleSplitCheckAndMerger(Particle *&p, std::vector<int> &deleteMask);
     void createDebugParticle(); // used for debugging in testing_chamber_1.obj
     void munkresMatching (const std::vector<Particle*> & partVec, vMat & matchingMat, vMat & costMat);
     void generateMask( Particle * &p, Mask &m ); // given a particle, returns a mask
 
-    // Two merge particles
+
+    // Two merge particles functions //////////////////////////////////////////
     Particle * particlePairMerge(Particle * &a, Particle * &b); 
     Particle * particleVectorMerge(std::vector<Particle *> &vec);
 

@@ -105,6 +105,27 @@ void ParticleSystem::debug(){
 
 }
 
+
+
+bool ParticleSystem::isDead(Particle * &p, 
+    std::vector<int> deadMask, unsigned int maskIndex){
+
+  /*
+   * Input : a particle we are concidering, a deadMask where 0 == alive 1 == dead,
+   *         maskIndex, where in the death mask we are.
+   *         
+   * Output: true == we are dead, false == we are alive
+   *
+   * Asumpt: none
+   *
+   * SideEf: None
+   */
+  
+
+
+}
+
+
 void ParticleSystem::update(){
   /*
    * Input : None
@@ -113,116 +134,197 @@ void ParticleSystem::update(){
    * SideEf: Updates postition of particles/ removes particles
    */
 
-
+  // SETUP ////////////////////////////////////////////////////////////////////
+  
   // Hold new particles from split
-  std::vector<Particle *> newParticles;
+  std::vector<Particle *> newSplitParticles;
+  
+  std::vector<int> deleteMask (particles.size(), 0); //1 == delete, 0 == keep
+  
+  for(int index = 0; index < particles; index++){
 
-  // Marked for removal mask, 1 == delete, 0 == keep
-  std::vector<int>deleteMask (particles.size(), 0);
+    Particle * cur = particles[index];
+    curPart->setOldPos(curPart->getPos());
+  
+    // Check if we are not to be deleted
+    if(deleteMask[index] == 0){
+    
+      // GATHER STEP //////////////////////////////////////////////////////////
+      std::vector<Particle *> gatheredParticles;
 
-  unsigned int maskIndex = 0;
-
-  for(ParticleIter iter = particles.begin(); iter != particles.end();){
-
-     // This current Particle
-     Particle * curPart = (*iter);
-     curPart->setOldPos(curPart->getPos());
-
-
-    // Are we below a threhold just kill and move to another
-    if(curPart->getWatt() < MIN_WATTAGE ){ 
-
-      // Kill this partcile and move to next
-      deleteMask[maskIndex++] = 1;
-      iter++;
-      continue;
-
-    }
-
-    // Particles are beyond a threshold init a split
-    if(particleSplitCheckAndMerger(curPart, deleteMask)){
-
-        args->animate = false;
-
-        // should we even bother? are they just going to flitter out
-        if(curPart->getWatt()/(SPLIT_AMOUNT+1.0) < MIN_WATTAGE ){
-          deleteMask[maskIndex++] = 1;
-          iter++;
+      for(Particle * other : particles){
+      
+        if( other == cur )
           continue;
-        }
 
-        // Get new particles to be made
-        std::vector<Particle *> splitParticles;
-        particleSplit(curPart, splitParticles);
+        float dist = glm::distance(cur->getOldPos(), other->getOldPos());
+        float gather_distance = RADIUS_PARTICLE_WAVE * 1.6;
+        
+        if( dist < gather_distance) 
+          gatheredParticles.push_back(other);
 
-        // change cur particle watts
-        curPart->setWatt(curPart->getWatt() / (double)(SPLIT_AMOUNT + 1.0));
-
-        // Update postiton and move to next particle
-        moveParticle(curPart,TIME_STEP);
-
-        // Move them a timestep + add to new list
-        for(int i = 0; i < splitParticles.size(); i++){
-          moveParticle(splitParticles[i], TIME_STEP);
-          newParticles.push_back(splitParticles[i]);
-        }
-
-      deleteMask[maskIndex++] = 0; // 1: kills center, 0: leave it alive
-
-      iter++;
+      } // gatherloop
 
 
-    }else{
+      // MERGE STEP ///////////////////////////////////////////////////////////
     
-      // Update postiton and move to next particle
-      moveParticle(curPart,TIME_STEP);
-      deleteMask[maskIndex++] = 0; 
+      for(Particle * m_cur : gatheredParticles){
+      
+        float dist = glm::distance(cur->getOldPos(), m_cur->getOldPos());
+        float gather_distance = RADIUS_PARTICLE_WAVE * ;
 
-      iter++;
+      
+      
+      
+      
+      
+      
+      
+      
+      } // merge step
     
-    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    } // Alive check
+  } // for each particle
+} // end func
 
 
-  } //forloop
+
+
+
+
+
+
+
+
+
+
+  // OLD UPDATE FUNCTION
+  
+  //   // Hold new particles from split
+  //   std::vector<Particle *> newParticles;
+  // 
+  //   // Marked for removal mask, 1 == delete, 0 == keep
+  //   std::vector<int>deleteMask (particles.size(), 0);
+  // 
+  //   unsigned int maskIndex = 0;
+  // 
+  //   for(ParticleIter iter = particles.begin(); iter != particles.end();){
+  // 
+  //      // This particles outdated "new" postion is our oldPosition
+  //      Particle * curPart = (*iter);
+  //      curPart->setOldPos(curPart->getPos());
+  //      curPart->setPos(glm::vec3(0,0,0)); // <-------------------------------------- Reveals an incidious bug 
+  // 
+  // 
+  //      if()
+  // 
+  // 
+  //     // Are we below a threhold just kill and move to another
+  //     if(curPart->getWatt() < MIN_WATTAGE ){ 
+  // 
+  //       // Kill this partcile and move to next
+  //       deleteMask[maskIndex++] = 1;
+  //       iter++;
+  //       continue;
+  // 
+  //     }
+  // 
+  //     // Particles are beyond a threshold init a split
+  //     if(particleSplitCheckAndMerger(curPart, deleteMask)){
+  // 
+  //         args->animate = false;
+  // 
+  //         // should we even bother? are they just going to flitter out
+  //         if(curPart->getWatt()/(SPLIT_AMOUNT+1.0) < MIN_WATTAGE ){
+  //           deleteMask[maskIndex++] = 1;
+  //           iter++;
+  //           continue;
+  //         }
+  // 
+  //         // Get new particles to be made
+  //         std::vector<Particle *> splitParticles;
+  //         particleSplit(curPart, splitParticles);
+  // 
+  //         // change cur particle watts
+  //         curPart->setWatt(curPart->getWatt() / (double)(SPLIT_AMOUNT + 1.0));
+  // 
+  //         // Update postiton and move to next particle
+  //         moveParticle(curPart,TIME_STEP);
+  // 
+  //         // Move them a timestep + add to new list
+  //         for(int i = 0; i < splitParticles.size(); i++){
+  //           moveParticle(splitParticles[i], TIME_STEP);
+  //           newParticles.push_back(splitParticles[i]);
+  //         }
+  // 
+  //       deleteMask[maskIndex++] = 0; // 1: kills center, 0: leave it alive
+  // 
+  //       iter++;
+  // 
+  // 
+  //     }else{
+  //     
+  //       // Update postiton and move to next particle
+  //       moveParticle(curPart,TIME_STEP);
+  //       deleteMask[maskIndex++] = 0; 
+  // 
+  //       iter++;
+  //     
+  //     }
+  // 
+  // 
+  //   } //forloop
 
 
   // Deletetion step
-  for( unsigned int i = 0 ; i < particles.size(); i++){
-      // Keep if 0, else delete
-      if(deleteMask[i] == 1){
+  // for( unsigned int i = 0 ; i < particles.size(); i++){
+  //     // Keep if 0, else delete
+  //     if(deleteMask[i] == 1){
 
-          if(!newParticles.empty()){
+  //         if(!newParticles.empty()){
 
-              // Put in new particle to fill gap
-              delete particles[i];
-              particles[i] = newParticles.back();
-              newParticles.pop_back();
+  //             // Put in new particle to fill gap
+  //             delete particles[i];
+  //             particles[i] = newParticles.back();
+  //             newParticles.pop_back();
 
-          }else{
+  //         }else{
 
-              // there is stuff to push off
-              if(i != particles.size()-1){
+  //             // there is stuff to push off
+  //             if(i != particles.size()-1){
 
-                // Pop off back of vector to fill the gap
-                delete particles[i];
-                particles[i] = particles.back();
-                particles.pop_back();
+  //               // Pop off back of vector to fill the gap
+  //               delete particles[i];
+  //               particles[i] = particles.back();
+  //               particles.pop_back();
 
-              }else{
+  //             }else{
 
-                // Just delete the last element, nothing need be poped
-                delete particles[i];
-                particles.pop_back();
+  //               // Just delete the last element, nothing need be poped
+  //               delete particles[i];
+  //               particles.pop_back();
 
-              }
-          }
-      }
-  }
+  //             }
+  //         }
+  //     }
+  // }
 
   // Add into the main vector those new particles yet added
-  for( unsigned int i = 0; i < newParticles.size(); i++)
-      particles.push_back(newParticles[i]);
-}
+  // for( unsigned int i = 0; i < newParticles.size(); i++)
+  //    particles.push_back(newParticles[i]);
 
 bool ParticleSystem::moveParticle(Particle * p, double timestep){
   /*
@@ -452,10 +554,6 @@ void ParticleSystem::createDebugParticle(){
   // put particle there
   particles.push_back(p);
 
-
-
-
-
 }
 
 void ParticleSystem::createInitWave(){
@@ -540,7 +638,8 @@ void ParticleSystem::createInitWave(){
   }
 }
 
-bool ParticleSystem::particleSplitCheckAndMerger(Particle * &p, std::vector<int> &deleteMask ){
+void ParticleSystem::particlMerger(Particle * &p, 
+    std::vector<Particle *> & gatheredParticles, std::vector<int> & deleteMask ){
   // Input:  A single particle, empty array filled by mask where 0 = keep 1 = merged and delete
   // Output: True if we should split on this particle, False otherwise.
   // Output: deleteMask will overwrite 1 at the index of particle that was merged
@@ -548,25 +647,17 @@ bool ParticleSystem::particleSplitCheckAndMerger(Particle * &p, std::vector<int>
   // Assumptions: deleteMask the size of particle vector
   // Side Effects: Will replace the current particle with a new particle merges were required
   
-  // FIXME: Using default split behavior 
-  // ( split if there are not at least n particles some threhshold away from you )
-
   glm::vec3 pos = p->getOldPos();
 
-  unsigned int particlesWithinTheshRequired = 6; // TODO should be global
-
-  unsigned int particlesWithinThesh = 0;
   std::vector<Particle *> particleToMerge;
-
-  float splitDistanceThresh = 2 * RADIUS_PARTICLE_WAVE;   // Play with these values
   float mergeDistanceThresh = 0.01 * RADIUS_PARTICLE_WAVE;
   float mergeAngleThesh = (2*M_PI) / 8.0;
 
   // for each particle in the system
-  for(int i = 0; i < particles.size(); i++){
+  for(int i = 0; i < gatheredParticles.size(); i++){
 
     // Do not count myself in this check and merger or particles already merged
-    if(particles[i] == p || deleteMask[i] == 1)
+    if( gatheredParticles[i] == p || deleteMask[i] == 1 )
       continue;
 
     // my distance to currently concidered particle
@@ -575,12 +666,10 @@ bool ParticleSystem::particleSplitCheckAndMerger(Particle * &p, std::vector<int>
     if(mergeDistanceThresh > dist ){
       // If we are close enough to concider merging these particles
       
-
       // Is the difference in direction similar
       float angle = acos( 
           glm::dot( particles[i]->getDir(), p->getDir() ) / 
-          (glm::length(particles[i]->getDir()) * glm::length(p->getDir()))
-      );
+          (glm::length(particles[i]->getDir()) * glm::length(p->getDir())));
           
       if(mergeAngleThesh > angle){
       
