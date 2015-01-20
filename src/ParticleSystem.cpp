@@ -662,96 +662,152 @@ void ParticleSystem::munkresMatching
     // Checking we  have a valid input
     assert(partVec.size() != 0 );
 
+    std::vector< vMat > costMatries;
+    std::vector< vMat > matchingMatries;
+    std::vector< int >  costSum;
 
-    // ========================================================================
-    // Create wrapper so that we can use the munkres.cpp, because munkers.cpp
-    // can only use 2D arrays.
-    // CREATION OF COST FUNCTION
+
+
+    for(int offset_i = 0; offset_i < 2; offset_i++){
     
-    // Getting the center of our submask which we will base distance off of
-    Particle * center = partVec[0];
+      // ========================================================================
+      // Create wrapper so that we can use the munkres.cpp, because munkers.cpp
+      // can only use 2D arrays.
+      // CREATION OF COST FUNCTION
+      
+      // Getting the center of our submask which we will base distance off of
+      Particle * center = partVec[0];
 
-    int sizeMatrix = 0; // 7 because 6 points + 1 center for hexagon
-    partVec.size() > 7 ? sizeMatrix = partVec.size() : sizeMatrix = 7;
+      int sizeMatrix = 0; // 7 because 6 points + 1 center for hexagon
+      partVec.size() > 7 ? sizeMatrix = partVec.size() : sizeMatrix = 7;
 
-    // Create a square matrix and initiate all of it with infinate values
-    int ** matrix = new int*[sizeMatrix];
-    for(int i = 0; i < sizeMatrix; i++){
-       // create a new row
-       matrix[i] = new int[sizeMatrix];
-       // fill in with super large value
-       for( int j = 0; j < sizeMatrix; j++){
-         matrix[i][j] = (int) (RADIUS_PARTICLE_WAVE*1.6*1000); // This is an entire 10,000 mm == 10 meters
-       }
-    }
-    
+      // Create a square matrix and initiate all of it with infinate values
+      int ** matrix = new int*[sizeMatrix];
+      for(int i = 0; i < sizeMatrix; i++){
+         // create a new row
+         matrix[i] = new int[sizeMatrix];
+         // fill in with super large value
+         for( int j = 0; j < sizeMatrix; j++){
+           matrix[i][j] = (int) (RADIUS_PARTICLE_WAVE*1.6*1000); // This is an entire 10,000 mm == 10 meters
+         }
+      }
+      
 
-    // Getting the points that represent the hyprotheical mask <------------------------------------------DOUBLE CHECK
-    std::vector<glm::vec3> maskPositions; 
-    maskPositions.push_back(center->getPos()); // center  mask for submask
-    circle_points_on_plane(
-        center->getPos(), 
-        center->getDir(), 
-        RADIUS_PARTICLE_WAVE,
-        6,
-        maskPositions,args);
+      // Getting the points that represent the hyprotheical mask
+      std::vector<glm::vec3> maskPositions; 
+      maskPositions.push_back(center->getPos()); // center  mask for submask
 
-    cirlce_point_on_sphere(center->getCenter(),
-        glm::distance( center->getPos(), center->getCenter()),maskPositions);
 
-    // Comparing the distance between each point in partVec and each point in
-    // point in the mask and tossing it into the matrix. 
-    // Note: there will be partVec.size() * (6 + 1) comparisons
 
-    // For every point
-    for(int i = 0; i < partVec.size(); i++){
+      if(offset_i == 0){
+      
+      circle_points_on_plane(
+          center->getPos(), 
+          center->getDir(), 
+          RADIUS_PARTICLE_WAVE,
+          6,
+          maskPositions,args);
+      
+      }else{
+      
+      circle_points_on_plane(
+          center->getPos(), 
+          center->getDir(), 
+          RADIUS_PARTICLE_WAVE,
+          6,
+          maskPositions,args);
+      
+      }
 
-      // For every possible mask postion
-      for(int j = 0; j < maskPositions.size(); j++){
+      cirlce_point_on_sphere(center->getCenter(),
+          glm::distance( center->getPos(), center->getCenter()),maskPositions); 
 
-        glm::vec3 partPos = partVec[i]->getOldPos();
 
-        // distance calculation to get cost
-        double dist = glm::distance(partPos, maskPositions[j]);
+      // Comparing the distance between each point in partVec and each point in
+      // point in the mask and tossing it into the matrix. 
+      // Note: there will be partVec.size() * (6 + 1) comparisons
 
-        // Prevent concave shapes
-        if(dist <  0.5 * RADIUS_PARTICLE_WAVE){
-        
-          // This will put in the scale of milimeters everything inside my matrix
-          // Of which is small enough scale that it cover high freq wave lengths
-          matrix[i][j] = (int) (dist * 1000);
-        
+      // For every point
+      for(int i = 0; i < partVec.size(); i++){
+
+        // For every possible mask postion
+        for(int j = 0; j < maskPositions.size(); j++){
+
+          glm::vec3 partPos = partVec[i]->getOldPos();
+
+          // distance calculation to get cost
+          double dist = glm::distance(partPos, maskPositions[j]);
+
+          // Prevent concave shapes
+          if(dist <  0.5 * RADIUS_PARTICLE_WAVE){
+          
+            // This will put in the scale of milimeters everything inside my matrix
+            // Of which is small enough scale that it cover high freq wave lengths
+            matrix[i][j] = (int) (dist * 1000);
+          
+          }
         }
       }
-    }
 
-  // SAVING THIS COST MATRIX IN MM
-  for(int i = 0; i < sizeMatrix; i++){
-    std::vector<int> temp;
-    for(int j = 0; j < maskPositions.size(); j++){
-      temp.push_back(matrix[i][j]);
-    }
-    costMat.push_back(temp);
-  }
+    // SAVING THIS COST MATRIX IN MM
 
-  // SOLVING FOR THE MATCHING 
-  matrix = runMunkers(matrix,sizeMatrix,false);
-
-  // CREATE OUTPUT matchingMat 
-  for(int i = 0; i < partVec.size(); i++){
-    std::vector<int> temp;
-    for(int j = 0; j < maskPositions.size(); j++){
-      temp.push_back(matrix[i][j]);
+    vMat costTemp;
+    for(int i = 0; i < sizeMatrix; i++){
+      std::vector<int> temp;
+      for(int j = 0; j < maskPositions.size(); j++){
+        temp.push_back(matrix[i][j]);
+      }
+      costTemp.push_back(temp);
     }
-    matchingMat.push_back(temp);
-  }
+    costMatries.push_back(costTemp);
+
+    // SOLVING FOR THE MATCHING 
+    matrix = runMunkers(matrix,sizeMatrix,false);
+
+    // CREATE OUTPUT matchingMat 
+    vMat matchingTemp;
+    int totalCost;
+    for(int i = 0; i < partVec.size(); i++){
+      std::vector<int> temp;
+      for(int j = 0; j < maskPositions.size(); j++){
+
+        if(matrix[i][j] == 1)
+          totalCost += costTemp[i][j];
+        
+        temp.push_back(matrix[i][j]);
+      }
+      matchingTemp.push_back(temp);
+    }
+    matchingMatries.push_back(matchingTemp);
+    costSum.push_back(totalCost);
+
+      
+    // deallocation of created array in matrix **
+    for(int i = 0; i < sizeMatrix; i++)
+      delete [] matrix[i];
+    delete [] matrix;
+      
+  }// rationalFor
+
+  std::cout << costSum[0] << " == " << costSum[1] << std::endl;
+
+  if(costSum[0] > costSum[1]){
+
+   matchingMat = matchingMatries[1];
+   costMat = costMatries[1];
+
   
-    
-  // deallocation of created array in matrix **
-  for(int i = 0; i < sizeMatrix; i++)
-    delete [] matrix[i];
-  delete [] matrix;
+  }else{
+  
+   matchingMat = matchingMatries[0];
+   costMat = costMatries[0];
 
+  
+  }
+
+   // DELTE AND REMOVE ME PLEASE BEFORE COMPLING FOREVER <---------------------------------------- DEKETE ME
+   matchingMat = matchingMatries[0];
+   costMat = costMatries[0];
 }
 
 
