@@ -715,7 +715,7 @@ void ParticleSystem::munkresMatching
           center->getDir(), 
           RADIUS_PARTICLE_WAVE,
           6,
-          maskPositions,args);
+          maskPositions,args, M_PI/8.0);
       
       }
 
@@ -804,10 +804,6 @@ void ParticleSystem::munkresMatching
 
   
   }
-
-   // DELTE AND REMOVE ME PLEASE BEFORE COMPLING FOREVER <---------------------------------------- DEKETE ME
-   matchingMat = matchingMatries[0];
-   costMat = costMatries[0];
 }
 
 

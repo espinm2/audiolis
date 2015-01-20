@@ -70,10 +70,10 @@ void ParticleSystem::drawVBOs(){
   drawVelocityVisual();
   drawParticles();
 
-  if(args->render_outline)
-    drawOutlineVisual();
   if(args->render_edges)
     drawHappinessVisual();
+  if(args->render_outline)
+    drawOutlineVisual();
 
   HandleGLError("leaving draw vbos");
 

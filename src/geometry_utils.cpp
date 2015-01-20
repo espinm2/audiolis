@@ -46,7 +46,7 @@ glm::vec3 MirrorDirection(const glm::vec3 &normal,
 
 void circle_points_on_plane( const glm::vec3 c, const glm::vec3 n, 
     const float r, const int numberPoints, 
-    std::vector<glm::vec3> &pts, ArgParser * &args){
+    std::vector<glm::vec3> &pts, ArgParser * &args, double offset){
 
   float theta = 2 * M_PI / numberPoints;
 
@@ -75,9 +75,11 @@ void circle_points_on_plane( const glm::vec3 c, const glm::vec3 n,
 
 
   for(int i = 0; i < numberPoints; i++){
+    int th = ((int)((theta * i + offset) *  1000)) % (int)(2 * M_PI * 1000); // thousand percision
+    double t = th / 1000.00;
 
     // Get point
-    glm::vec3 pos = parametric_circle_3d(a,b,c,r,theta*i);
+    glm::vec3 pos = parametric_circle_3d(a,b,c,r,t);
 
     pts.push_back(pos);
 

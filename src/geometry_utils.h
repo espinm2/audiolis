@@ -40,7 +40,7 @@ glm::vec3 parametric_circle_3d(glm::vec3 a, glm::vec3 b,
 // pts we fill with points
 void circle_points_on_plane( const glm::vec3 c, const glm::vec3 n, 
     const float r, const int numberPoints, std::vector<glm::vec3> &pts, 
-    ArgParser * &args);
+    ArgParser * &args, double offset = 0.0);
 
 // Given points, we project them on a sphere 
 // Modified pts
