@@ -714,10 +714,14 @@ void ParticleSystem::munkresMatching
         // distance calculation to get cost
         double dist = glm::distance(partPos, maskPositions[j]);
 
-        // This will put in the scale of milimeters everything inside my matrix
-        // Of which is small enough scale that it cover high freq wave lengths
-        matrix[i][j] = (int) (dist * 1000);
-      
+        // Prevent concave shapes
+        if(dist <  0.5 * RADIUS_PARTICLE_WAVE){
+        
+          // This will put in the scale of milimeters everything inside my matrix
+          // Of which is small enough scale that it cover high freq wave lengths
+          matrix[i][j] = (int) (dist * 1000);
+        
+        }
       }
     }
 

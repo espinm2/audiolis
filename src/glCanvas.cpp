@@ -335,6 +335,14 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       args->gouraud_normals = !args->gouraud_normals;
       mesh->setupVBOs();
       break;
+    case 'o': case 'O':
+      args->render_outline = !args->render_outline;
+      particleSystem->setupVBOs();
+      break;
+    case 'e': case 'E':
+      args->render_edges = !args->render_edges;
+      particleSystem->setupVBOs();
+      break;
     case 'p': case 'P':
       particleSystem->createInitWave();
       particleSystem->setupVBOs();

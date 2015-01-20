@@ -116,6 +116,10 @@ public:
 
     printcusorpos = true;
 
+    render_outline = true;
+    render_edges = true;
+
+
   }
 
   // ==============
@@ -151,6 +155,9 @@ public:
   int floor_material; //  Toggle what the floor is made of
   int ceiling_material; // Toggle what the ceilings are made of
   bool absorber;  // Toggle if there is an absorber in the room
+
+  bool render_outline;
+  bool render_edges;
 
   // Material Key
   // wall_material 0 => bricked_wall; 

@@ -57,7 +57,8 @@ void ParticleSystem::setupVBOs(){
   setupCursorPoint();
   setupVelocityVisual();
   setupParticles(); 
-  setupOutlineAndHappinessVisual();
+  if(args->render_outline || args-> render_edges)
+    setupOutlineAndHappinessVisual();
 
   HandleGLError("leave setup vbos");
 }
@@ -68,8 +69,11 @@ void ParticleSystem::drawVBOs(){
   drawCursorPoint();
   drawVelocityVisual();
   drawParticles();
-  drawOutlineVisual();
-  drawHappinessVisual();
+
+  if(args->render_outline)
+    drawOutlineVisual();
+  if(args->render_edges)
+    drawHappinessVisual();
 
   HandleGLError("leaving draw vbos");
 
@@ -255,7 +259,7 @@ void ParticleSystem::setupParticles(){
       
       }
 
-      std::cout << sum << std::endl;
+      std::cout <<"Overall Sum" << sum << std::endl;
 
      int percentHappy = sum / 6 * 10000;
      color = glm::vec4(sum, sum, sum, 1);
@@ -486,7 +490,6 @@ void ParticleSystem::setupOutlineAndHappinessVisual(){
     
     // DEBUG DEBUG DEBUG
     if(particles.size() == 7){
-      std::cout << "Dealing with bug here" << std::endl;
     }
 
     int firstMaskPoint = -1;
@@ -531,6 +534,7 @@ void ParticleSystem::setupOutlineAndHappinessVisual(){
 
 
       double val= cost[particle_index][j] / (1.6*1000*RADIUS_PARTICLE_WAVE);
+      std::cout << " Happyness of particle " << cost[particle_index][j]  << std::endl;
 
       glm::vec4 happyColor =  GiveHeapMapping(val);
 
@@ -600,12 +604,10 @@ void ParticleSystem::setupOutlineAndHappinessVisual(){
     if(number_of_vertex != 6){
         
          for(int k = 0; k < number_pushed_outline; k++){
-          std::cout << "Purging results outline" << std::endl;
           outline_verts.pop_back();
         }
 
          for(int k = 0; k  < number_pushed_happiness; k++){
-          std::cout << "Purging results happyness" << std::endl;
           happyness_verts.pop_back();
          }
       
