@@ -74,9 +74,65 @@ void addEdgeGeometry(std::vector<VBOPosNormalColor> &verts,
 }
 
 
+#define HEAT_RED getColor(255,51,51,1)
+#define HEAT_YELLOW getColor(255,255,51,1)
+#define HEAT_GREEN getColor(51,255,51,1)
+#define HEAT_BLUE getColor(51,51,255,1)
+#define HEAT_BLACK getColor(0,0,0,1)
+
+glm::vec4 GiveHeapMapping(double position){
+  // assume it is [0,1]
+
+  glm::vec4 colorA;
+  glm::vec4 colorB;
+
+
+  if(position > 0.80){
+    // yellow -> red
+    colorA = HEAT_YELLOW;
+    colorB = HEAT_RED;
+      
+    
+
+  }else if( position > 0.50){
+    // green - > yellow
+    colorA = HEAT_GREEN;
+    colorB = HEAT_YELLOW;
+  
+  }else if (position > 0.1){
+    // blue to green 
+    colorA = HEAT_BLUE;
+    colorB = HEAT_GREEN;
+  
+  
+  }else{
+    // black to blue
+    colorA = HEAT_BLACK;
+    colorB = HEAT_GREEN;
+  
+  }
+
+
+
+  glm::vec4 color;
+  color.r = colorA.r + position * (colorB.r - colorA.r);
+  color.g = colorA.g + position * (colorB.g - colorA.g);
+  color.b = colorA.b + position * (colorB.b - colorA.b);
+
+
+  return color;
+
+}
+
+
+
 /* based on Delphi function by Witold J.Janik */
-void GiveRainbowColor(double position,unsigned char c[])
+glm::vec4 GiveRainbowColor(double position)
 {
+
+
+  unsigned char c[] = {0,0,0};
+
   /* if position > 1 then we have repetition of colors it maybe useful    */
   if (position>1.0){if (position-(int)position==0.0)position=1.0; else position=position-(int)position;}
  
@@ -133,5 +189,9 @@ void GiveRainbowColor(double position,unsigned char c[])
          break;
       };
   }; // case
+
+
+
+  return glm::vec4(c[0]/256.0 , c[1] / 256.0, c[2] /256.0, 1);
 }
 

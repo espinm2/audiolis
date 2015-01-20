@@ -78,5 +78,6 @@ inline std::istream& operator>>(std::istream& istr, glm::vec3 &v) {
   return istr;
 }
 
-void GiveRainbowColor(double position, unsigned char c[]);
+glm::vec4 GiveRainbowColor(double position);
+glm::vec4 GiveHeapMapping(double position);
 #endif

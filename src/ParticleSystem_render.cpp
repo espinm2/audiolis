@@ -529,17 +529,11 @@ void ParticleSystem::setupOutlineAndHappinessVisual(){
         continue;
       }
 
-      unsigned char hColor[3] = {0,0,0};
 
       double val= cost[particle_index][j] / (1.6*1000*RADIUS_PARTICLE_WAVE);
-      std::cout << val << std::endl;
 
-      GiveRainbowColor(val, hColor);
+      glm::vec4 happyColor =  GiveHeapMapping(val);
 
-      glm::vec4 happyColor;
-      happyColor.r = hColor[0];
-      happyColor.g = hColor[1];
-      happyColor.b = hColor[2];
 
 
       // Pushing a line segement from this point to center for happyness ////
