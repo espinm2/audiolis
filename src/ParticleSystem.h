@@ -124,7 +124,6 @@ class ParticleSystem {
     
     std::vector<Particle *> particles; // Where we store partilces in current iterations
     std::vector<Particle *> newParticles; // Where we put split particles 
-    std::vector<VBOPosNormalColor>  maskEdges; // Where we keep track of edges
 
     glm::vec3 cursor; // Where the cursor is in world space
 

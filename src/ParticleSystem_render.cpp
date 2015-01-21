@@ -454,10 +454,58 @@ void ParticleSystem::drawVelocityVisual(){
 void ParticleSystem::setupEdges(){
   // This function will setup the outline_vert vector of points
   
-  // As well as the other VBO
+  for(int index = 0; index < particles.size(); index++){
+
+    Particle * cur = particles[index];
+ 
+    // GATHER STEP //////////////////////////////////////////////////////////
+
+    float gather_distance = RADIUS_PARTICLE_WAVE * 1.6;
+    float gather_angle    = M_PI / 4.0;
+
+    std::vector<unsigned int> gathered_particles_indices;
+
+    for(int i = 0; i < particles.size(); i++){
+    
+      Particle * other = particles[i];
+
+      if( other == cur ) // dont count self
+        continue;
+
+      float dist = glm::distance(cur->getOldPos(), other->getOldPos());
+
+      // Are we close enough
+      if( dist < gather_distance){
+      
+        float angle = acos( glm::dot( cur->getDir(), other->getDir() ) / 
+            (glm::length(cur->getDir()) * glm::length(other->getDir())));
+        
+        // Are we traveling together
+        if( angle < gather_angle )
+          gathered_particles_indices.push_back(i);
+      
+      }
+    
+    }
+
+   // Find Mask Step ///////////////////////////////////////////////////////
+   
+   // Get particles that are alive for mask concideration
+   std::vector < Particle * > particle_for_mask_calc;
+   particle_for_mask_calc.push_back(cur);
+
+   for( int i = 0; i < gathered_particles_indices.size(); i++)
+     particle_for_mask_calc.push_back(particles[gathered_particles_indices[i]]);
+   
+   Mask mask;
+   generateMask(particle_for_mask_calc, mask);
+   mask.renderCost(happyness_verts);
+
+  }
+
+ // As well as the other VBO
 
   HandleGLError("entering setupOutlineVisual");
-  happyness_verts = maskEdges;
 
   // Bind the happyness
   glBindBuffer(GL_ARRAY_BUFFER,happyness_verts_VBO); 

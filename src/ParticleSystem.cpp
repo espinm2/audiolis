@@ -119,7 +119,6 @@ void ParticleSystem::update(){
   
   // Hold new particles from split
   std::vector<Particle *> newSplitParticles;
-  maskEdges.clear(); // Clear previous
   
   std::vector<int> deleteMask (particles.size(), 0); //1 == delete, 0 == keep
   
@@ -222,7 +221,6 @@ void ParticleSystem::update(){
       // Find Mask Step ///////////////////////////////////////////////////////
       Mask mask;
       generateMask(particle_for_mask_calc, mask);
-      mask.renderCost(maskEdges);
 
       // Split Step ///////////////////////////////////////////////////////////
     
@@ -274,9 +272,7 @@ void ParticleSystem::update(){
     moveParticle(cur,TIME_STEP);
    }//moveloop
 
-
   args->animate = false;
-  std::cout << "Edges to be drawn" <<  maskEdges.size() << std::endl;
 } // end func
 
 
