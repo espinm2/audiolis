@@ -21,6 +21,7 @@
 #include "mesh.h"
 #include "render_utils.h"
 #include "munkers.h"
+#include "mask.h"
 #include <algorithm>
 
 
@@ -106,26 +107,6 @@ void ParticleSystem::debug(){
 }
 
 
-
-bool ParticleSystem::isDead(Particle * &p, 
-    std::vector<int> deadMask, unsigned int maskIndex){
-
-  /*
-   * Input : a particle we are concidering, a deadMask where 0 == alive 1 == dead,
-   *         maskIndex, where in the death mask we are.
-   *         
-   * Output: true == we are dead, false == we are alive
-   *
-   * Asumpt: none
-   *
-   * SideEf: None
-   */
-  
-
-
-}
-
-
 void ParticleSystem::update(){
   /*
    * Input : None
@@ -141,63 +122,165 @@ void ParticleSystem::update(){
   
   std::vector<int> deleteMask (particles.size(), 0); //1 == delete, 0 == keep
   
-  for(int index = 0; index < particles; index++){
+  for(int index = 0; index < particles.size(); index++){
 
     Particle * cur = particles[index];
-    curPart->setOldPos(curPart->getPos());
+    cur->setOldPos(cur->getPos());
   
     // Check if we are not to be deleted
     if(deleteMask[index] == 0){
     
       // GATHER STEP //////////////////////////////////////////////////////////
-      std::vector<Particle *> gatheredParticles;
 
-      for(Particle * other : particles){
+      float gather_distance = RADIUS_PARTICLE_WAVE * 1.6;
+      float gather_angle    = M_PI / 4.0;
+
+
+      std::vector<unsigned int> gathered_particles_indices;
+
+      for(int i = 0; i < particles.size(); i++){
       
-        if( other == cur )
+        Particle * other = particles[i];
+
+        if( other == cur ) // dont count self
+          continue;
+
+        if( deleteMask[i] == 1 ) // dont count the dead
           continue;
 
         float dist = glm::distance(cur->getOldPos(), other->getOldPos());
-        float gather_distance = RADIUS_PARTICLE_WAVE * 1.6;
+
+
+        // Are we close enough
+        if( dist < gather_distance){
         
-        if( dist < gather_distance) 
-          gatheredParticles.push_back(other);
 
-      } // gatherloop
-
+          float angle = acos( glm::dot( cur->getDir(), other->getDir() ) / 
+              (glm::length(cur->getDir()) * glm::length(other->getDir())));
+          
+          // Are we traveling together
+          if( angle < gather_angle )
+            gathered_particles_indices.push_back(i);
+        
+        }
+      
+      }
 
       // MERGE STEP ///////////////////////////////////////////////////////////
     
-      for(Particle * m_cur : gatheredParticles){
-      
-        float dist = glm::distance(cur->getOldPos(), m_cur->getOldPos());
-        float gather_distance = RADIUS_PARTICLE_WAVE * ;
+      std::vector<Particle *> particles_to_merge; //  want to merge
 
+      for(int i = 0; i < gathered_particles_indices.size(); i++){
+
+        Particle * other = particles[gathered_particles_indices[i]];
+
+        if( other == cur ) // dont count self
+          continue;
+
+        if( deleteMask[gathered_particles_indices[i]] == 1 ) // dead particle
+          continue;
+
+        float dist = glm::distance(cur->getOldPos(), other->getOldPos());
+
+        float merge_distance = RADIUS_PARTICLE_WAVE * 0.1; // milimetter
+        
+        if( dist < merge_distance){
+          
+          // Store for later merging
+          particles_to_merge.push_back(other);
+
+          // update the delete mask
+          deleteMask[gathered_particles_indices[i]] = 1;
       
+        }
+
+      } // merge collection
+
+      // Merge those that require merging
+      if( particles_to_merge.size() > 0){
+
+        // Change that particle to new merged particle
+        particles_to_merge.push_back(cur);
+        Particle * mergedPart =  particleVectorMerge(particles_to_merge);
+        *cur = *mergedPart;
+
+      }
+
+
+      // Get particles that are alive for mask concideration
+      std::vector < Particle * > particle_for_mask_calc;
+      particle_for_mask_calc.push_back(cur);
+
+      for( int i = 0; i < gathered_particles_indices.size(); i++){
+
+        // If dead
+        if( deleteMask[gathered_particles_indices[i]] == 1 )
+          continue;
       
+        particle_for_mask_calc.push_back(particles[gathered_particles_indices[i]]);
       
+      }
       
-      
-      
-      
-      
-      } // merge step
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+      // Find Mask Step ///////////////////////////////////////////////////////
+      Mask mask;
+      generateMask(particle_for_mask_calc, mask);
+
+
+
+      // Split Step ///////////////////////////////////////////////////////////
+      // TODO
+
     
     
     } // Alive check
   } // for each particle
+
+
+  // Delete + Children Additon  ///////////////////////////////////////////////
+
+  for( unsigned int i = 0 ; i < particles.size(); i++){
+      // Keep if 0, else delete
+      if(deleteMask[i] == 1){
+
+          if(!newParticles.empty()){
+
+              // Put in new particle to fill gap
+              delete particles[i];
+              particles[i] = newParticles.back();
+              newParticles.pop_back();
+
+          }else{
+
+              // there is stuff to push off
+              if(i != particles.size()-1){
+
+                // Pop off back of vector to fill the gap
+                delete particles[i];
+                particles[i] = particles.back();
+                particles.pop_back();
+
+              }else{
+
+                // Just delete the last element, nothing need be poped
+                delete particles[i];
+                particles.pop_back();
+
+              }
+          }
+      }
+  }
+
+  // Add into the main vector those new particles yet added
+  for( unsigned int i = 0; i < newParticles.size(); i++)
+    particles.push_back(newParticles[i]);
+
+  // Move all particles step //////////////////////////////////////////////////
+  // for( Particle * p : particles){
+  // TODO
+  
+
+  // }//moveloop
+
 } // end func
 
 
@@ -398,8 +481,8 @@ void ParticleSystem::moveCursor( const float & dx,
 
   cursor+= glm::vec3(10*dx,10*dy,10*dz);
 
-  if(args->printcusorpos)
-    std::cout << "Cursor Pos" << cursor.x << ", " << cursor.y << ", " << cursor.z << std::endl;
+  //if(args->printcusorpos)
+    // std::cout << "Cursor Pos" << cursor.x << ", " << cursor.y << ", " << cursor.z << std::endl;
 
 }
 
@@ -638,74 +721,76 @@ void ParticleSystem::createInitWave(){
   }
 }
 
-void ParticleSystem::particlMerger(Particle * &p, 
-    std::vector<Particle *> & gatheredParticles, std::vector<int> & deleteMask ){
-  // Input:  A single particle, empty array filled by mask where 0 = keep 1 = merged and delete
-  // Output: True if we should split on this particle, False otherwise.
-  // Output: deleteMask will overwrite 1 at the index of particle that was merged
-  // Assumptions: Particles concidered should exisit and not be merged
-  // Assumptions: deleteMask the size of particle vector
-  // Side Effects: Will replace the current particle with a new particle merges were required
-  
-  glm::vec3 pos = p->getOldPos();
+// void ParticleSystem::particleMerger(Particle * &p, 
+//     std::vector<Particle *> & gatheredParticles, std::vector<int> & deleteMask ){
+// 
+//   // Input:  A single particle, empty array filled by mask where 0 = keep 1 = merged and delete
+//   // Output: None
+//   // Output (ref): deleteMask will overwrite 1 at the index of particle that was merged
+//   // Assumptions: Particles concidered should exisit and not be merged
+//   // Assumptions: deleteMask the size of particle vector
+//   // Side Effects: Will replace the current particle with a new particle merges were required
+//   
+//   glm::vec3 pos = p->getOldPos();
+// 
+//   std::vector<Particle *> particleToMerge;
+//   float mergeDistanceThresh = 0.01 * RADIUS_PARTICLE_WAVE;
+//   float mergeAngleThesh = (2*M_PI) / 8.0;
+// 
+//   // for each particle in the system
+//   for(int i = 0; i < gatheredParticles.size(); i++){
+// 
+//     // Do not count myself in this check and merger or particles already merged
+//     if( gatheredParticles[i] == p || deleteMask[i] == 1 )
+//       continue;
+// 
+//     // my distance to currently concidered particle
+//     float dist = glm::distance(p->getOldPos(), particles[i]->getOldPos());
+// 
+//     if(mergeDistanceThresh > dist ){
+//       // If we are close enough to concider merging these particles
+//       
+//       // Is the difference in direction similar
+//       float angle = acos( 
+//           glm::dot( particles[i]->getDir(), p->getDir() ) / 
+//           (glm::length(particles[i]->getDir()) * glm::length(p->getDir())));
+//           
+//       if(mergeAngleThesh > angle){
+//       
+//         // DEBUG ==============================================================
+//         // // Mark particle for deletion so we no longer concider it
+//         // deleteMask[i] = 1;
+// 
+//         // // Store for later merging
+//         // particleToMerge.push_back(particles[i]);
+//         // ====================================================================
+//       
+//       }
+//           
+//     }else if( splitDistanceThresh > dist) {
+//       // Still check if they fall within distance threshold for split check
+//       particlesWithinThesh++;
+//     
+//     }
+// 
+//   }//for
+// 
+// 
+//   // Handle Merges and overwrite this particle with a merged one
+//   if( particleToMerge.size() > 0){
+//   
+//     // Change that particle to new merged particle
+//     Particle * mergedPart =  particleVectorMerge(particleToMerge);
+//     *p = *mergedPart;
+//     return particleSplitCheckAndMerger(p, deleteMask);
+// 
+//   }
+//   
+//   // return false;
+//   return particlesWithinThesh < particlesWithinTheshRequired;
+// 
+// }
 
-  std::vector<Particle *> particleToMerge;
-  float mergeDistanceThresh = 0.01 * RADIUS_PARTICLE_WAVE;
-  float mergeAngleThesh = (2*M_PI) / 8.0;
-
-  // for each particle in the system
-  for(int i = 0; i < gatheredParticles.size(); i++){
-
-    // Do not count myself in this check and merger or particles already merged
-    if( gatheredParticles[i] == p || deleteMask[i] == 1 )
-      continue;
-
-    // my distance to currently concidered particle
-    float dist = glm::distance(p->getOldPos(), particles[i]->getOldPos());
-
-    if(mergeDistanceThresh > dist ){
-      // If we are close enough to concider merging these particles
-      
-      // Is the difference in direction similar
-      float angle = acos( 
-          glm::dot( particles[i]->getDir(), p->getDir() ) / 
-          (glm::length(particles[i]->getDir()) * glm::length(p->getDir())));
-          
-      if(mergeAngleThesh > angle){
-      
-        // DEBUG ==============================================================
-        // // Mark particle for deletion so we no longer concider it
-        // deleteMask[i] = 1;
-
-        // // Store for later merging
-        // particleToMerge.push_back(particles[i]);
-        // ====================================================================
-      
-      }
-          
-    }else if( splitDistanceThresh > dist) {
-      // Still check if they fall within distance threshold for split check
-      particlesWithinThesh++;
-    
-    }
-
-  }//for
-
-
-  // Handle Merges and overwrite this particle with a merged one
-  if( particleToMerge.size() > 0){
-  
-    // Change that particle to new merged particle
-    Particle * mergedPart =  particleVectorMerge(particleToMerge);
-    *p = *mergedPart;
-    return particleSplitCheckAndMerger(p, deleteMask);
-
-  }
-  
-  // return false;
-  return particlesWithinThesh < particlesWithinTheshRequired;
-
-}
 void ParticleSystem::munkresMatching 
   (const std::vector<Particle*> & partVec, vMat & matchingMat, vMat & costMat){
 
@@ -878,7 +963,6 @@ void ParticleSystem::munkresMatching
       
   }// rationalFor
 
-  std::cout << costSum[0] << " == " << costSum[1] << std::endl;
 
   if(costSum[0] > costSum[1]){
 
@@ -897,36 +981,17 @@ void ParticleSystem::munkresMatching
 
 
 
-void ParticleSystem::generateMask( Particle * &p, Mask &m ){
+void ParticleSystem::generateMask(std::vector <Particle*> & conciderForMask, Mask &m ){
   // Input: p is a particle that it not null, it will be the center of the mask
   // Input: Mask &m is a mask that will be populated by a mask object
   // Output: None, see input (2)
   
-  // Assumptions: p != null
+  // Assumptions: conciderForMask[0] is the center of the mask
   // Side effects: None.
   // Preformance: O(p) where p is the size of particles vector
 
 
-  // Particle in range
-  std::vector<Particle *> conciderForMask;  
-
-  
-  // Gather particles nearby ( including self )
-  conciderForMask.push_back(p);  
-
-  for(Particle* other: particles){
-  
-    if(p == other)
-      continue;
-
-    if(glm::distance(p->getPos(),
-          other->getPos()) <= 1.5*RADIUS_PARTICLE_WAVE){ // <-------------------------REFACTOR THIS THRESHOLD FOR TUNING
-      conciderForMask.push_back(other);
-    }
-  }
-
-  vMat cost;
-  vMat matching;
+  vMat cost; vMat matching;
 
   // Calculate the cost and matching matries
   munkresMatching(conciderForMask,matching,cost);
@@ -953,8 +1018,6 @@ void ParticleSystem::generateMask( Particle * &p, Mask &m ){
     maskCost.push_back(-1);
 
   }// for each column
-
-
 
   // Setting the memebers of the mask object
   m.setCenter(conciderForMask[0]);

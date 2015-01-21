@@ -353,6 +353,7 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       break;
     case 'v': case 'V':
       args->viz_type = (args-> viz_type + 1) % 4;
+      particleSystem->setupVBOs();
       if(args->viz_type == 0)
         std::cout << "Visualizing: Frequency White:Low Black:High\n";
       if(args->viz_type == 1)
@@ -366,6 +367,7 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       break;
     case 's': case 'S':
       args->source_type = (args-> source_type + 1) % 4;
+      particleSystem->setupVBOs();
       if(args->source_type == 0)
         std::cout << "Source Type: White Noise at 110 dBs\n";
       if(args->source_type == 1)
@@ -377,17 +379,20 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       break;
     case 'w': case 'W':
       args->wall_material = (args->wall_material + 1) % 3;
+      mesh->setupVBOs();
       if(args->wall_material == 0) std::cout << "Wall Type: Brick Wall \n";
       if(args->wall_material == 1) std::cout << "Wall Type: Concrete Wall\n";
       if(args->wall_material == 2) std::cout << "Wall Type: Cermaic Wall\n";
       break;
     case 'f': case 'F':
       args->floor_material = (args->floor_material + 1) % 2;
+      mesh->setupVBOs();
       if(args->source_type == 0) std::cout << "Floor Type: PVC Floor\n";
       if(args->source_type == 1) std::cout << "Floor Type: Carpated Floor\n";
       break;
     case 'r': case 'R':
       args->absorber = !args->absorber;
+      mesh->setupVBOs();
       if(args->absorber == true) std::cout << "Absorber Toggled On \n";
       if(args->absorber == false) std::cout << "Absorber Toggled Off \n";
       break;

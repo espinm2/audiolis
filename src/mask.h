@@ -11,10 +11,16 @@ class Mask{
 
   public:
 
+
     // Constructor
     Mask(Particle * cen, std::vector <Particle *> maskP){
       maskCenter = cen;
       maskParticles = maskP;
+    }
+
+    Mask(){
+
+
     }
     
     // Standard Accessors

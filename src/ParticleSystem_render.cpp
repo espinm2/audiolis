@@ -61,6 +61,7 @@ void ParticleSystem::setupVBOs(){
     setupOutlineAndHappinessVisual();
 
   HandleGLError("leave setup vbos");
+
 }
 
 void ParticleSystem::drawVBOs(){
@@ -259,7 +260,7 @@ void ParticleSystem::setupParticles(){
       
       }
 
-      std::cout <<"Overall Sum" << sum << std::endl;
+      // std::cout <<"Overall Sum" << sum << std::endl;
 
      int percentHappy = sum / 6 * 10000;
      color = glm::vec4(sum, sum, sum, 1);
@@ -534,7 +535,7 @@ void ParticleSystem::setupOutlineAndHappinessVisual(){
 
 
       double val= cost[particle_index][j] / (1.6*1000*RADIUS_PARTICLE_WAVE);
-      std::cout << " Happyness of particle " << cost[particle_index][j]  << std::endl;
+      // std::cout << " Happyness of particle " << cost[particle_index][j]  << std::endl;
 
       glm::vec4 happyColor =  GiveHeapMapping(val);
 

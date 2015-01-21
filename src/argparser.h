@@ -116,8 +116,8 @@ public:
 
     printcusorpos = true;
 
-    render_outline = true;
-    render_edges = true;
+    render_outline = false;
+    render_edges = false;
 
 
   }
