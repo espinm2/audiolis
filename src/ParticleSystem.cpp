@@ -119,6 +119,7 @@ void ParticleSystem::update(){
   
   // Hold new particles from split
   std::vector<Particle *> newSplitParticles;
+  maskEdges.clear(); // Clear previous
   
   std::vector<int> deleteMask (particles.size(), 0); //1 == delete, 0 == keep
   
@@ -135,7 +136,6 @@ void ParticleSystem::update(){
       float gather_distance = RADIUS_PARTICLE_WAVE * 1.6;
       float gather_angle    = M_PI / 4.0;
 
-
       std::vector<unsigned int> gathered_particles_indices;
 
       for(int i = 0; i < particles.size(); i++){
@@ -150,11 +150,9 @@ void ParticleSystem::update(){
 
         float dist = glm::distance(cur->getOldPos(), other->getOldPos());
 
-
         // Are we close enough
         if( dist < gather_distance){
         
-
           float angle = acos( glm::dot( cur->getDir(), other->getDir() ) / 
               (glm::length(cur->getDir()) * glm::length(other->getDir())));
           
@@ -224,12 +222,9 @@ void ParticleSystem::update(){
       // Find Mask Step ///////////////////////////////////////////////////////
       Mask mask;
       generateMask(particle_for_mask_calc, mask);
-
-
+      mask.renderCost(maskEdges);
 
       // Split Step ///////////////////////////////////////////////////////////
-      // TODO
-
     
     
     } // Alive check
@@ -275,12 +270,13 @@ void ParticleSystem::update(){
     particles.push_back(newParticles[i]);
 
   // Move all particles step //////////////////////////////////////////////////
-  // for( Particle * p : particles){
-  // TODO
-  
+  for( Particle * cur : particles){
+    moveParticle(cur,TIME_STEP);
+   }//moveloop
 
-  // }//moveloop
 
+  args->animate = false;
+  std::cout << "Edges to be drawn" <<  maskEdges.size() << std::endl;
 } // end func
 
 
@@ -531,7 +527,7 @@ void ParticleSystem::calcMeshCollision(Particle * &p){
   // SideEff:  Sets hitNormal
   
   // Create a ray
-  Ray r(p->getPos(), p->getDir());
+  Ray r(p->getOldPos(), p->getDir());
   Hit h;
   bool hitTriangle;
   bool backface = false;
@@ -667,7 +663,7 @@ void ParticleSystem::createInitWave(){
 
     Particle * p = new Particle(
         pos,                     // Position     
-        cursor,                  // OldPosition
+        pos,                     // OldPosition
         cursor,                  // CenterPos
         0,                       // Wattage
         0,                       // Freq
@@ -999,23 +995,29 @@ void ParticleSystem::generateMask(std::vector <Particle*> & conciderForMask, Mas
   // Inners of the mask class
   std::vector<Particle*> maskPart;
   std::vector<int> maskCost;
+  int size_of_mask = 0;
 
 
   // For each column in the matching matrix push back the matching particle 
-  for(int j = 1; j < matching[0].size(); j++){
+  for(int j = 1; j < 7; j++){
     
+    bool found = false;
     // Go and find what particle matches this
-    for(int i = 0; i < matching.size(); i++){
+    for(int i = 1; i < matching.size(); i++){
       if(matching[i][j] == 1){
         maskPart.push_back(conciderForMask[i]);
         maskCost.push_back(cost[i][j]);
-        continue;
+        size_of_mask++;
+        found = true;
+        break; // found particle from column
       }
     }
 
-    // If we can't find a match push back null
-    maskPart.push_back(NULL);
-    maskCost.push_back(-1);
+    if(!found){
+      // If we can't find a match push back null
+      maskPart.push_back(NULL);
+      maskCost.push_back(-1);
+    }
 
   }// for each column
 
@@ -1023,6 +1025,7 @@ void ParticleSystem::generateMask(std::vector <Particle*> & conciderForMask, Mas
   m.setCenter(conciderForMask[0]);
   m.setMaskParticles(maskPart);
   m.setCostVector(maskCost);
+  m.setSize(size_of_mask);
 
 }
 

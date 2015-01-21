@@ -57,8 +57,7 @@ void ParticleSystem::setupVBOs(){
   setupCursorPoint();
   setupVelocityVisual();
   setupParticles(); 
-  if(args->render_outline || args-> render_edges)
-    setupOutlineAndHappinessVisual();
+  setupEdges();
 
   HandleGLError("leave setup vbos");
 
@@ -73,8 +72,6 @@ void ParticleSystem::drawVBOs(){
 
   if(args->render_edges)
     drawHappinessVisual();
-  if(args->render_outline)
-    drawOutlineVisual();
 
   HandleGLError("leaving draw vbos");
 
@@ -454,13 +451,27 @@ void ParticleSystem::drawVelocityVisual(){
 
 }
 
-void ParticleSystem::setupOutlineAndHappinessVisual(){
+void ParticleSystem::setupEdges(){
   // This function will setup the outline_vert vector of points
+  
   // As well as the other VBO
 
   HandleGLError("entering setupOutlineVisual");
+  happyness_verts = maskEdges;
 
+  // Bind the happyness
+  glBindBuffer(GL_ARRAY_BUFFER,happyness_verts_VBO); 
 
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        sizeof(VBOPosNormalColor)*happyness_verts.size(),
+        &happyness_verts[0],
+        GL_DYNAMIC_DRAW); 
+
+  HandleGLError("leaving setupOutlineVisual");
+}
+
+  /*
   // Push the line segments into outline_verts
   for(int i = 0 ; i < particles.size(); i++){
     Particle * part = particles[i];
@@ -639,52 +650,52 @@ void ParticleSystem::setupOutlineAndHappinessVisual(){
         GL_DYNAMIC_DRAW); 
   HandleGLError("leaving setupOutlineVisual");
 
-}
+  */
 
-void ParticleSystem::drawOutlineVisual(){
-
-  HandleGLError("enter drawOutlineVisual");
-
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-  glBindBuffer(GL_ARRAY_BUFFER, outline_verts_VBO);
-
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,
-      sizeof(VBOPosNormalColor),(void*)0);
-
-  glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,
-      sizeof(VBOPosNormalColor),(void*)sizeof(glm::vec3) );
-
-  glEnableVertexAttribArray(2);
-  glVertexAttribPointer(2, 4, GL_FLOAT,GL_FALSE,
-      sizeof(VBOPosNormalColor), (void*)(sizeof(glm::vec3)*2));
-
-  if(OUTLINE_VIZ){
-
-    HandleGLError("enter debugDrawCall");
-    glDrawArrays(GL_LINES, 0, outline_verts.size());
-    HandleGLError("leaving debugDrawCall");
-  
-  
-  }else{
-
-    HandleGLError("enter debugDrawCall");
-    glDrawArrays(GL_TRIANGLE_FAN, 0, outline_verts.size());
-    HandleGLError("leaving debugDrawCall");
-  
-  }
-
-  glDisableVertexAttribArray(0);
-  glDisableVertexAttribArray(1);
-  glDisableVertexAttribArray(2);
-
-  glDisable(GL_BLEND);
-  HandleGLError("leaving drawOutlineVisual");
-
-}
+// void ParticleSystem::drawOutlineVisual(){
+// 
+//   HandleGLError("enter drawOutlineVisual");
+// 
+//   glEnable(GL_BLEND);
+//   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+// 
+//   glBindBuffer(GL_ARRAY_BUFFER, outline_verts_VBO);
+// 
+//   glEnableVertexAttribArray(0);
+//   glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,
+//       sizeof(VBOPosNormalColor),(void*)0);
+// 
+//   glEnableVertexAttribArray(1);
+//   glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,
+//       sizeof(VBOPosNormalColor),(void*)sizeof(glm::vec3) );
+// 
+//   glEnableVertexAttribArray(2);
+//   glVertexAttribPointer(2, 4, GL_FLOAT,GL_FALSE,
+//       sizeof(VBOPosNormalColor), (void*)(sizeof(glm::vec3)*2));
+// 
+//   if(OUTLINE_VIZ){
+// 
+//     HandleGLError("enter debugDrawCall");
+//     glDrawArrays(GL_LINES, 0, outline_verts.size());
+//     HandleGLError("leaving debugDrawCall");
+//   
+//   
+//   }else{
+// 
+//     HandleGLError("enter debugDrawCall");
+//     glDrawArrays(GL_TRIANGLE_FAN, 0, outline_verts.size());
+//     HandleGLError("leaving debugDrawCall");
+//   
+//   }
+// 
+//   glDisableVertexAttribArray(0);
+//   glDisableVertexAttribArray(1);
+//   glDisableVertexAttribArray(2);
+// 
+//   glDisable(GL_BLEND);
+//   HandleGLError("leaving drawOutlineVisual");
+// 
+// }
 
 void ParticleSystem::drawHappinessVisual(){
 

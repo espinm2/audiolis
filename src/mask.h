@@ -15,13 +15,9 @@ class Mask{
     // Constructor
     Mask(Particle * cen, std::vector <Particle *> maskP){
       maskCenter = cen;
-      maskParticles = maskP;
-    }
+      maskParticles = maskP; }
 
-    Mask(){
-
-
-    }
+    Mask(){ }
     
     // Standard Accessors
     const std::vector<Particle *> & getMaskParticles() { return maskParticles;}
@@ -31,11 +27,13 @@ class Mask{
     // Easier to use Accessors
     const Particle * getMaskParticle(int i){ return maskParticles[i];}
     const int getCost(int i){ return costVector[i];}
+    const int size(){ return size_of_mask; }
 
     // Standard setters
     void setCenter( Particle * p){ maskCenter = p; }
     void setMaskParticles( const std::vector<Particle *> pVec ){ maskParticles = pVec;}
     void setCostVector( const std::vector<int> costVec){ costVector = costVec;}
+    void setSize( int s ) { size_of_mask = s; }
 
     // Used to help render this data structure
     void renderOutline( std::vector<VBOPosNormalColor> & outline_verts);
@@ -51,6 +49,8 @@ class Mask{
 
     // Standard convention to -1 if there is no cost associated
     std::vector< int > costVector;
+
+    int size_of_mask;
 
 };
 

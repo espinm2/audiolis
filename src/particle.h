@@ -63,7 +63,7 @@ public:
   glm::vec3 getDir() const { 
 
     // Computes the direction
-    glm::vec3 res = (position-center); 
+    glm::vec3 res = (oldPosition-center); 
     res = glm::normalize(res);
     return res;
 
