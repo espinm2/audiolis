@@ -222,12 +222,29 @@ void ParticleSystem::update(){
       Mask mask;
       generateMask(particle_for_mask_calc, mask);
 
+
       // Split Step ///////////////////////////////////////////////////////////
-    
-    
+      std::vector<glm::vec3> newPos;
+
+      if(mask.resSpit(newPos)){
+        args->animate = false;
+        // Create new particles
+        for(glm::vec3 pos : newPos){
+
+          Particle * s = new Particle(
+              pos,                                   // Position
+              pos,                                   // OldPosition
+              cur->getOldPos(),                               // CenterPos
+              cur->getWatt() / (double)(SPLIT_AMOUNT + 1.0),   // Amp
+              cur->getFreq(),                                 // Freq
+              cur->getSplit() + 1);                           // SplitAmount
+
+          calcMeshCollision(s);                             // Manditory Calc
+          newParticles.push_back(s);
+        } // fornewparticle
+      } // ifwesplit
     } // Alive check
   } // for each particle
-
 
   // Delete + Children Additon  ///////////////////////////////////////////////
 
@@ -272,7 +289,6 @@ void ParticleSystem::update(){
     moveParticle(cur,TIME_STEP);
    }//moveloop
 
-  args->animate = false;
 } // end func
 
 
@@ -488,7 +504,7 @@ void ParticleSystem::particleSplit(Particle * &p,
     
     // Get hex shape on plane
     circle_points_on_plane(p->getOldPos(), 
-        p->getDir(), RADIUS_PARTICLE_WAVE, SPLIT_AMOUNT, newPart,args);
+        p->getDir(), 0.5* RADIUS_PARTICLE_WAVE, SPLIT_AMOUNT, newPart,args);
 
  
     // Project back on sphere // When particles should die
@@ -575,10 +591,9 @@ void ParticleSystem::createDebugParticle(){
 
 
   // default constructor
-
   Particle * p = new Particle(
       newPos,                     // Position     
-      cursor,                  // OldPosition
+      newPos,                  // OldPosition
       cursor,                  // CenterPos
       0,                       // Wattage
       0,                       // Freq
@@ -626,8 +641,18 @@ void ParticleSystem::createDebugParticle(){
   // Find out when it hits our mesh
   calcMeshCollision(p);
 
-  // put particle there
-  particles.push_back(p);
+
+  // Get new particles to be made and toss in split particles
+  std::vector<Particle *> splitParticles;
+  particleSplit(p, splitParticles);
+  splitParticles.push_back(p);
+
+  // change cur particle watts
+  p->setWatt(p->getWatt() / (double)(SPLIT_AMOUNT + 1.0));
+  
+  for(Particle * sp: splitParticles)
+    particles.push_back(sp);
+
 
 }
 

@@ -39,6 +39,11 @@ class Mask{
     void renderOutline( std::vector<VBOPosNormalColor> & outline_verts);
     void renderCost( std::vector<VBOPosNormalColor> & cost_verts);
 
+    // Splits rules for mask
+    bool resSpit(std::vector<glm::vec3> & newPartPos);
+
+
+
   private:
 
     // Center of the mask

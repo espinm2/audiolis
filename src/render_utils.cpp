@@ -87,6 +87,7 @@ glm::vec4 GiveHeapMapping(double position){
   glm::vec4 colorB;
 
 
+
   if(position > 0.80){
     // yellow -> red
     colorA = HEAT_YELLOW;
@@ -108,17 +109,16 @@ glm::vec4 GiveHeapMapping(double position){
   }else{
     // black to blue
     colorA = HEAT_BLACK;
-    colorB = HEAT_GREEN;
+    colorB = HEAT_BLUE;
   
   }
 
-
-
   glm::vec4 color;
-  color.r = colorA.r + position * (colorB.r - colorA.r);
-  color.g = colorA.g + position * (colorB.g - colorA.g);
-  color.b = colorA.b + position * (colorB.b - colorA.b);
+  color.r = colorA.r + (float)position * (colorB.r - colorA.r);
+  color.g = colorA.g + (float)position * (colorB.g - colorA.g);
+  color.b = colorA.b + (float)position * (colorB.b - colorA.b);
 
+  std::cout << color.r <<  ", "  << color.g <<  ", "  << color.b  << std::endl;
 
   return color;
 

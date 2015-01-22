@@ -92,7 +92,7 @@ public:
     width = 800;
     height = 600;
 
-    geometry = true;
+    geometry = false;
     bounding_box = false;
     gouraud_normals = false;
 
@@ -103,9 +103,9 @@ public:
     
     animate = false;
     wireframe = false;
-    render_top = false;
+    render_top = true;
     source_type = 0;
-    viz_type = 0;
+    viz_type = 3;
     direction = false;
 
 
@@ -117,7 +117,7 @@ public:
     printcusorpos = true;
 
     render_outline = false;
-    render_edges = false;
+    render_edges = true;
 
 
   }
