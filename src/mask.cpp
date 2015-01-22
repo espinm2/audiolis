@@ -32,32 +32,35 @@ void Mask::renderCost( std::vector<VBOPosNormalColor> & cost_verts){
 
 bool Mask::resSpit(std::vector<glm::vec3> & newPartPos){
 
-  // We only do resSPlit for those with a full mask
-  if(size_of_mask < 6)
-    return false;
 
   bool split_happened = false;
 
   for( int i = 0; i < maskParticles.size(); i++ ){
   
     Particle * curOuter = maskParticles[i];
-    assert(curOuter != NULL);
 
+    if(curOuter == NULL){
+      continue;
+
+    }
   
     // if that edge is too streched out
     if(costVector[i] > RADIUS_PARTICLE_WAVE * 1000 ){
 
+      std::cout << "Edge to far, split init" << std::endl;
 
       // Average both vectors postions
       glm::vec3 posA = maskCenter->getOldPos();
       glm::vec3 posB = curOuter->getOldPos();
       glm::vec3 posNew = ((float) 0.5 ) * (posA + posB);
+      glm::vec3 center = maskCenter->getCenter();
 
       // Get direction from the center
-      glm::vec3 dirNew = glm::normalize(posNew - posA);
+      glm::vec3 dirNew = glm::normalize(posNew - center);
     
       // Project on the imaginary sphere
-      posNew = posA + dirNew * RADIUS_PARTICLE_WAVE;
+      float dist = glm::distance(posA, center);
+      posNew = center + dirNew * dist;
 
       newPartPos.push_back(posNew);
       split_happened = true;

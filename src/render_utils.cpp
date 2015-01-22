@@ -118,7 +118,6 @@ glm::vec4 GiveHeapMapping(double position){
   color.g = colorA.g + (float)position * (colorB.g - colorA.g);
   color.b = colorA.b + (float)position * (colorB.b - colorA.b);
 
-  std::cout << color.r <<  ", "  << color.g <<  ", "  << color.b  << std::endl;
 
   return color;
 

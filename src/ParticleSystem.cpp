@@ -118,7 +118,7 @@ void ParticleSystem::update(){
   // SETUP ////////////////////////////////////////////////////////////////////
   
   // Hold new particles from split
-  std::vector<Particle *> newSplitParticles;
+  std::vector<Particle *> splitParticles;
   
   std::vector<int> deleteMask (particles.size(), 0); //1 == delete, 0 == keep
   
@@ -226,21 +226,23 @@ void ParticleSystem::update(){
       // Split Step ///////////////////////////////////////////////////////////
       std::vector<glm::vec3> newPos;
 
-      if(mask.resSpit(newPos)){
-        args->animate = false;
+      if( mask.resSpit(newPos) ){
+
+        args->animate = false; // Freezes the particles
+
         // Create new particles
         for(glm::vec3 pos : newPos){
 
           Particle * s = new Particle(
               pos,                                   // Position
               pos,                                   // OldPosition
-              cur->getOldPos(),                               // CenterPos
+              cur->getCenter(),                               // CenterPos
               cur->getWatt() / (double)(SPLIT_AMOUNT + 1.0),   // Amp
               cur->getFreq(),                                 // Freq
               cur->getSplit() + 1);                           // SplitAmount
 
           calcMeshCollision(s);                             // Manditory Calc
-          newParticles.push_back(s);
+          splitParticles.push_back(s);
         } // fornewparticle
       } // ifwesplit
     } // Alive check
@@ -252,12 +254,12 @@ void ParticleSystem::update(){
       // Keep if 0, else delete
       if(deleteMask[i] == 1){
 
-          if(!newParticles.empty()){
+          if(!splitParticles.empty()){
 
               // Put in new particle to fill gap
               delete particles[i];
-              particles[i] = newParticles.back();
-              newParticles.pop_back();
+              particles[i] = splitParticles.back();
+              splitParticles.pop_back();
 
           }else{
 
@@ -281,13 +283,13 @@ void ParticleSystem::update(){
   }
 
   // Add into the main vector those new particles yet added
-  for( unsigned int i = 0; i < newParticles.size(); i++)
-    particles.push_back(newParticles[i]);
+  for( unsigned int i = 0; i < splitParticles.size(); i++)
+    particles.push_back(splitParticles[i]);
 
   // Move all particles step //////////////////////////////////////////////////
   for( Particle * cur : particles){
     moveParticle(cur,TIME_STEP);
-   }//moveloop
+  }//moveloop
 
 } // end func
 
@@ -930,7 +932,7 @@ void ParticleSystem::munkresMatching
           double dist = glm::distance(partPos, maskPositions[j]);
 
           // Prevent concave shapes
-          if(dist <  0.5 * RADIUS_PARTICLE_WAVE){
+          if(dist <  0.3* RADIUS_PARTICLE_WAVE){
           
             // This will put in the scale of milimeters everything inside my matrix
             // Of which is small enough scale that it cover high freq wave lengths
