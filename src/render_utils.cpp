@@ -79,47 +79,61 @@ void addEdgeGeometry(std::vector<VBOPosNormalColor> &verts,
 #define HEAT_GREEN getColor(51,255,51,1)
 #define HEAT_BLUE getColor(51,51,255,1)
 #define HEAT_BLACK getColor(0,0,0,1)
+#define HEAT_WHITE getColor(255,255,255,1)
 
 glm::vec4 GiveHeapMapping(double position){
   // assume it is [0,1]
 
+  std::cout << "position" << position << std::endl;
+
+
   glm::vec4 colorA;
   glm::vec4 colorB;
 
+   // Means COST IS A BUG
+   if(position > 1.0){
+     std::cout << "CASE 1" << std::endl;
+     return HEAT_WHITE;
 
+   } else if(position > 0.80){
+     std::cout << "CASE 2" << std::endl;
 
-  if(position > 0.80){
-    // yellow -> red
-    colorA = HEAT_YELLOW;
-    colorB = HEAT_RED;
-      
-    
+     // yellow -> red
+     colorA = HEAT_YELLOW;
+     colorB = HEAT_RED;
+     position = position - 0.80;
+     position = position / (1.0 - .80);
+       
+   }else if( position > 0.50){
+     std::cout << "CASE 3" << std::endl;
+     // green - > yellow
+     colorA = HEAT_GREEN;
+     colorB = HEAT_YELLOW;
+     position = position - 0.50;
+     position = position / (.80 - .50);
+   
+   }else if (position > 0.20){
+     std::cout << "CASE 4" << std::endl;
+     // blue to green 
+     colorA = HEAT_BLUE;
+     colorB = HEAT_GREEN;
+     position = position - 0.20;
+     position = position / (.50 - .20);
+   
+   }else{
+     std::cout << "CASE 5" << std::endl;
+     // black to blue
+     colorA = HEAT_BLACK;
+     colorB = HEAT_BLUE;
+     position = position - 0.0;
+     position = position / (.20 - 0.0);
+   }
 
-  }else if( position > 0.50){
-    // green - > yellow
-    colorA = HEAT_GREEN;
-    colorB = HEAT_YELLOW;
-  
-  }else if (position > 0.1){
-    // blue to green 
-    colorA = HEAT_BLUE;
-    colorB = HEAT_GREEN;
-  
-  
-  }else{
-    // black to blue
-    colorA = HEAT_BLACK;
-    colorB = HEAT_BLUE;
-  
-  }
+   float r= colorA.r + (float)position * (colorB.r - colorA.r);
+   float g=  colorA.g + (float)position * (colorB.g - colorA.g);
+   float b= colorA.b + (float)position * (colorB.b - colorA.b);
 
-  glm::vec4 color;
-  color.r = colorA.r + (float)position * (colorB.r - colorA.r);
-  color.g = colorA.g + (float)position * (colorB.g - colorA.g);
-  color.b = colorA.b + (float)position * (colorB.b - colorA.b);
-
-
-  return color;
+   return glm::vec4(r,g,b,1);
 
 }
 

@@ -460,7 +460,7 @@ void ParticleSystem::setupEdges(){
  
     // GATHER STEP //////////////////////////////////////////////////////////
 
-    float gather_distance = RADIUS_PARTICLE_WAVE * 1.6;
+    float gather_distance = RADIUS_PARTICLE_WAVE * 2.1;
     float gather_angle    = M_PI / 4.0;
 
     std::vector<unsigned int> gathered_particles_indices;
@@ -514,7 +514,7 @@ void ParticleSystem::setupEdges(){
         GL_ARRAY_BUFFER,
         sizeof(VBOPosNormalColor)*happyness_verts.size(),
         &happyness_verts[0],
-        GL_DYNAMIC_DRAW); 
+        GL_STATIC_DRAW); 
 
   HandleGLError("leaving setupOutlineVisual");
 }
@@ -747,6 +747,9 @@ void ParticleSystem::setupEdges(){
 
 void ParticleSystem::drawHappinessVisual(){
 
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
   HandleGLError("enter drawHappyVisual");
   glBindBuffer(GL_ARRAY_BUFFER, happyness_verts_VBO);
 
@@ -771,6 +774,8 @@ void ParticleSystem::drawHappinessVisual(){
   glDisableVertexAttribArray(0);
   glDisableVertexAttribArray(1);
   glDisableVertexAttribArray(2);
+
+  glDisable(GL_BLEND);
 
   // glLineWidth(3);
   HandleGLError("leaving drawHappyVisual");

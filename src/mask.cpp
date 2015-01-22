@@ -19,11 +19,16 @@ void Mask::renderCost( std::vector<VBOPosNormalColor> & cost_verts){
     Particle * cur = maskParticles[i];
     int cost = costVector[i];
   
-    double val= cost / (1.6*1000* RADIUS_PARTICLE_WAVE); // <--------------------------------------- REALLY BAD CODE :( FORGIVE ME
+    double val= cost / (RADIUS_PARTICLE_WAVE * 1000.0); // <--------------------------------------- REALLY BAD CODE :( FORGIVE ME
     glm::vec4 happyColor =  GiveHeapMapping(val);
 
+    
     // Pushing a line segement from this point to center for happyness ////
     cost_verts.push_back(VBOPosNormalColor(maskCenter->getPos(), maskCenter->getDir(), happyColor));
+
+
+     happyColor.a = 0;
+
     cost_verts.push_back(VBOPosNormalColor(cur->getPos(), cur->getDir(), happyColor));
   }//for
 }//func
@@ -32,7 +37,36 @@ void Mask::renderCost( std::vector<VBOPosNormalColor> & cost_verts){
 
 bool Mask::resSpit(std::vector<glm::vec3> & newPartPos){
 
+  bool split_happened = false;
 
+  for( int i = 0; i < maskParticles.size(); i++ ){
+  
+    Particle * curOuter = maskParticles[i];
+
+    if(curOuter == NULL){
+      continue;
+
+    }
+  
+    // if that edge is too streched out
+    if(costVector[i] > 2*RADIUS_PARTICLE_WAVE * 1000 ){
+
+
+      // Average both vectors postions
+      glm::vec3 posA = maskCenter->getOldPos();
+      glm::vec3 posB = curOuter->getOldPos();
+      glm::vec3 posNew = ((float) 0.5 ) * (posA + posB);
+
+      newPartPos.push_back(posNew);
+      split_happened = true;
+    }
+      
+  } // for each edge
+
+  return split_happened;
+
+  // Blow if working resSplit for projection
+  /*
   bool split_happened = false;
 
   for( int i = 0; i < maskParticles.size(); i++ ){
@@ -47,7 +81,6 @@ bool Mask::resSpit(std::vector<glm::vec3> & newPartPos){
     // if that edge is too streched out
     if(costVector[i] > RADIUS_PARTICLE_WAVE * 1000 ){
 
-      std::cout << "Edge to far, split init" << std::endl;
 
       // Average both vectors postions
       glm::vec3 posA = maskCenter->getOldPos();
@@ -69,5 +102,6 @@ bool Mask::resSpit(std::vector<glm::vec3> & newPartPos){
   } // for each edge
 
   return split_happened;
+  */
 
 }

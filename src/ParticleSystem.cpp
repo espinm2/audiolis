@@ -132,7 +132,7 @@ void ParticleSystem::update(){
     
       // GATHER STEP //////////////////////////////////////////////////////////
 
-      float gather_distance = RADIUS_PARTICLE_WAVE * 1.6;
+      float gather_distance = RADIUS_PARTICLE_WAVE * 2.5;
       float gather_angle    = M_PI / 4.0;
 
       std::vector<unsigned int> gathered_particles_indices;
@@ -244,7 +244,9 @@ void ParticleSystem::update(){
           calcMeshCollision(s);                             // Manditory Calc
           splitParticles.push_back(s);
         } // fornewparticle
-      } // ifwesplit
+       } // ifwesplit
+
+
     } // Alive check
   } // for each particle
 
@@ -290,6 +292,7 @@ void ParticleSystem::update(){
   for( Particle * cur : particles){
     moveParticle(cur,TIME_STEP);
   }//moveloop
+
 
 } // end func
 
@@ -506,13 +509,13 @@ void ParticleSystem::particleSplit(Particle * &p,
     
     // Get hex shape on plane
     circle_points_on_plane(p->getOldPos(), 
-        p->getDir(), 0.5* RADIUS_PARTICLE_WAVE, SPLIT_AMOUNT, newPart,args);
+        p->getDir(), RADIUS_PARTICLE_WAVE, SPLIT_AMOUNT, newPart,args);
 
  
     // Project back on sphere // When particles should die
 
-    cirlce_point_on_sphere(p->getCenter(),
-        glm::distance( p->getOldPos(), p->getCenter()),newPart);
+    // cirlce_point_on_sphere(p->getCenter(),
+    //    glm::distance( p->getOldPos(), p->getCenter()),newPart);
 
     // For each calculated pos, make particle
     for(int i = 0; i < newPart.size(); i++){
@@ -588,7 +591,7 @@ void ParticleSystem::createDebugParticle(){
   directionToTarget  = glm::normalize(directionToTarget);
 
   // Create a ray to move up a little
-  glm::vec3 newPos = cursor + ( (float) RADIUS_INIT_SPHERE) * directionToTarget;
+  glm::vec3 newPos = cursor + ( (float) RADIUS_INIT_SPHERE * 2 ) * directionToTarget;
 
 
 
@@ -881,7 +884,7 @@ void ParticleSystem::munkresMatching
          matrix[i] = new int[sizeMatrix];
          // fill in with super large value
          for( int j = 0; j < sizeMatrix; j++){
-           matrix[i][j] = (int) (RADIUS_PARTICLE_WAVE*1.6*1000); // This is an entire 10,000 mm == 10 meters
+           matrix[i][j] = (int) (100000); // This is an entire 10,000 mm == 10 meters
          }
       }
       
@@ -912,8 +915,8 @@ void ParticleSystem::munkresMatching
       
       }
 
-      cirlce_point_on_sphere(center->getCenter(),
-          glm::distance( center->getPos(), center->getCenter()),maskPositions); 
+      // cirlce_point_on_sphere(center->getCenter(),
+      //     glm::distance( center->getPos(), center->getCenter()),maskPositions); 
 
 
       // Comparing the distance between each point in partVec and each point in
@@ -932,7 +935,7 @@ void ParticleSystem::munkresMatching
           double dist = glm::distance(partPos, maskPositions[j]);
 
           // Prevent concave shapes
-          if(dist <  0.3* RADIUS_PARTICLE_WAVE){
+          if(dist < RADIUS_PARTICLE_WAVE){
           
             // This will put in the scale of milimeters everything inside my matrix
             // Of which is small enough scale that it cover high freq wave lengths
