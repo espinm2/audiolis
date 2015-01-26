@@ -471,6 +471,7 @@ void ParticleSystem::setupEdges(){
 
       if( other == cur ) // dont count self
         continue;
+      
 
       float dist = glm::distance(cur->getOldPos(), other->getOldPos());
 
@@ -496,9 +497,12 @@ void ParticleSystem::setupEdges(){
 
    for( int i = 0; i < gathered_particles_indices.size(); i++)
      particle_for_mask_calc.push_back(particles[gathered_particles_indices[i]]);
+
+
    
    Mask mask;
    generateMask(particle_for_mask_calc, mask);
+
    mask.renderCost(happyness_verts);
 
   }

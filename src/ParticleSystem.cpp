@@ -915,6 +915,8 @@ void ParticleSystem::munkresMatching
       
       }
 
+      double radius_ideal_mask = glm::distance(maskPositions[0], maskPositions[1]);
+
       // cirlce_point_on_sphere(center->getCenter(),
       //     glm::distance( center->getPos(), center->getCenter()),maskPositions); 
 
@@ -932,10 +934,10 @@ void ParticleSystem::munkresMatching
           glm::vec3 partPos = partVec[i]->getOldPos();
 
           // distance calculation to get cost
-          double dist = glm::distance(partPos, maskPositions[j]);
+          double dist_from_ideal = glm::distance(partPos, maskPositions[j]);
 
           // Prevent concave shapes
-          if(dist < RADIUS_PARTICLE_WAVE){
+          if(dist_from_ideal < 0.5 * radius_ideal_mask){
           
             // This will put in the scale of milimeters everything inside my matrix
             // Of which is small enough scale that it cover high freq wave lengths

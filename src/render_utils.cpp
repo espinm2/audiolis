@@ -84,7 +84,6 @@ void addEdgeGeometry(std::vector<VBOPosNormalColor> &verts,
 glm::vec4 GiveHeapMapping(double position){
   // assume it is [0,1]
 
-  std::cout << "position" << position << std::endl;
 
 
   glm::vec4 colorA;
@@ -92,11 +91,9 @@ glm::vec4 GiveHeapMapping(double position){
 
    // Means COST IS A BUG
    if(position > 1.0){
-     std::cout << "CASE 1" << std::endl;
      return HEAT_WHITE;
 
    } else if(position > 0.80){
-     std::cout << "CASE 2" << std::endl;
 
      // yellow -> red
      colorA = HEAT_YELLOW;
@@ -105,7 +102,6 @@ glm::vec4 GiveHeapMapping(double position){
      position = position / (1.0 - .80);
        
    }else if( position > 0.50){
-     std::cout << "CASE 3" << std::endl;
      // green - > yellow
      colorA = HEAT_GREEN;
      colorB = HEAT_YELLOW;
@@ -113,7 +109,6 @@ glm::vec4 GiveHeapMapping(double position){
      position = position / (.80 - .50);
    
    }else if (position > 0.20){
-     std::cout << "CASE 4" << std::endl;
      // blue to green 
      colorA = HEAT_BLUE;
      colorB = HEAT_GREEN;
@@ -121,7 +116,6 @@ glm::vec4 GiveHeapMapping(double position){
      position = position / (.50 - .20);
    
    }else{
-     std::cout << "CASE 5" << std::endl;
      // black to blue
      colorA = HEAT_BLACK;
      colorB = HEAT_BLUE;

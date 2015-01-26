@@ -11,15 +11,23 @@ void Mask::renderCost( std::vector<VBOPosNormalColor> & cost_verts){
 
   assert(costVector.size() == maskParticles.size()); // Safety
 
-  if( size_of_mask < 6 )
-    return;
   
   for( unsigned int i = 0; i < maskParticles.size(); i++ ){
+
+    if(maskParticles[i] == NULL)
+      continue;
+
+    if(size_of_mask < 6)
+      continue;
 
     Particle * cur = maskParticles[i];
     int cost = costVector[i];
   
-    double val= cost / (RADIUS_PARTICLE_WAVE * 1000.0); // <--------------------------------------- REALLY BAD CODE :( FORGIVE ME
+    if(cost >= 1000000){
+      std::cout << "bleeding" << std::endl;
+    
+    }
+    double val= cost / (RADIUS_PARTICLE_WAVE * 1000.0); 
     glm::vec4 happyColor =  GiveHeapMapping(val);
 
     
@@ -48,9 +56,10 @@ bool Mask::resSpit(std::vector<glm::vec3> & newPartPos){
 
     }
   
-    // if that edge is too streched out
-    if(costVector[i] > 2*RADIUS_PARTICLE_WAVE * 1000 ){
+    float dist = glm::distance(curOuter->getOldPos(), maskCenter->getOldPos());
 
+    // if that edge is too streched out
+    if( dist > 2*RADIUS_PARTICLE_WAVE  ){
 
       // Average both vectors postions
       glm::vec3 posA = maskCenter->getOldPos();
