@@ -41,8 +41,7 @@ class Mask{
 
     // Splits rules for mask
     bool resSpit(std::vector<glm::vec3> & newPartPos);
-
-
+    void debugPrint();
 
   private:
 
@@ -58,7 +57,5 @@ class Mask{
     int size_of_mask;
 
 };
-
-
 
 #endif // MASK_H

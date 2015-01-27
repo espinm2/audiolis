@@ -84,7 +84,10 @@ void addEdgeGeometry(std::vector<VBOPosNormalColor> &verts,
 glm::vec4 GiveHeapMapping(double position){
   // assume it is [0,1]
 
-
+  // DEBUG ==============================================
+    // means an INF snuck in here
+    std::cout << "GiveHeapMapping(" << position << ")\n";
+  // END DEBUG ==========================================
 
   glm::vec4 colorA;
   glm::vec4 colorB;

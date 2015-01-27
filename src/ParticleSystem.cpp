@@ -223,6 +223,7 @@ void ParticleSystem::update(){
       generateMask(particle_for_mask_calc, mask);
 
 
+
       // Split Step ///////////////////////////////////////////////////////////
       std::vector<glm::vec3> newPos;
 
@@ -884,7 +885,7 @@ void ParticleSystem::munkresMatching
          matrix[i] = new int[sizeMatrix];
          // fill in with super large value
          for( int j = 0; j < sizeMatrix; j++){
-           matrix[i][j] = (int) (100000); // This is an entire 10,000 mm == 10 meters
+           matrix[i][j] = std::numeric_limits<int>::max(); // This is an entire 10,000 mm == 10 meters
          }
       }
       
@@ -941,7 +942,7 @@ void ParticleSystem::munkresMatching
           
             // This will put in the scale of milimeters everything inside my matrix
             // Of which is small enough scale that it cover high freq wave lengths
-            matrix[i][j] = (int) (dist * 1000);
+            matrix[i][j] = (int) (dist_from_ideal* 1000);
           
           }
         }
@@ -1027,12 +1028,13 @@ void ParticleSystem::generateMask(std::vector <Particle*> & conciderForMask, Mas
 
 
   // For each column in the matching matrix push back the matching particle 
-  for(int j = 1; j < 7; j++){
+  for(int j = 1; j < matching[0].size(); j++){
     
     bool found = false;
     // Go and find what particle matches this
     for(int i = 1; i < matching.size(); i++){
-      if(matching[i][j] == 1){
+      if(matching[i][j] == 1 && 
+          cost[i][j] != std::numeric_limits<int>::max()){
         maskPart.push_back(conciderForMask[i]);
         maskCost.push_back(cost[i][j]);
         size_of_mask++;

@@ -23,10 +23,8 @@ void Mask::renderCost( std::vector<VBOPosNormalColor> & cost_verts){
     Particle * cur = maskParticles[i];
     int cost = costVector[i];
   
-    if(cost >= 1000000){
-      std::cout << "bleeding" << std::endl;
     
-    }
+
     double val= cost / (RADIUS_PARTICLE_WAVE * 1000.0); 
     glm::vec4 happyColor =  GiveHeapMapping(val);
 
@@ -112,5 +110,34 @@ bool Mask::resSpit(std::vector<glm::vec3> & newPartPos){
 
   return split_happened;
   */
+
+}
+
+
+
+
+void Mask::debugPrint(){
+
+  std::cout << "============================\n";
+  std::cout << "Center " << &(*maskCenter) << "\n";
+
+  std::cout << "Particle Mask [";
+  for(Particle * p : maskParticles){
+    if( p != NULL)
+      std::cout << &(*p) << "\t";
+    else
+      std::cout << "NULL    " << "\t";
+  }
+  std::cout << "]\n";
+
+  std::cout << "Particle Cost [";
+  for(int c : costVector){
+    if( c == 1000000)
+      std::cout << "INF      " << "\t";
+    else
+    std::cout << c << "\t\t";
+  }
+
+  std::cout << "]\n";
 
 }
