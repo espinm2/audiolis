@@ -86,7 +86,7 @@ glm::vec4 GiveHeapMapping(double position){
 
   // DEBUG ==============================================
     // means an INF snuck in here
-    std::cout << "GiveHeapMapping(" << position << ")\n";
+    // std::cout << "GiveHeapMapping(" << position << ")\n";
   // END DEBUG ==========================================
 
   glm::vec4 colorA;

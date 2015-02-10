@@ -229,7 +229,7 @@ void ParticleSystem::update(){
 
       if( mask.resSpit(newPos) ){
 
-        args->animate = false; // Freezes the particles
+        // args->animate = false; // Freezes the particles
 
         // Create new particles
         for(glm::vec3 pos : newPos){
@@ -938,13 +938,13 @@ void ParticleSystem::munkresMatching
           double dist_from_ideal = glm::distance(partPos, maskPositions[j]);
 
           // Prevent concave shapes
-          if(dist_from_ideal < 0.5 * radius_ideal_mask){
+            if( dist_from_ideal < 1.2 * RADIUS_PARTICLE_WAVE){
           
             // This will put in the scale of milimeters everything inside my matrix
             // Of which is small enough scale that it cover high freq wave lengths
-            matrix[i][j] = (int) (dist_from_ideal* 1000);
+            matrix[i][j] = (int) (dist_from_ideal* 1000000);
           
-          }
+            }
         }
       }
 
@@ -1031,10 +1031,15 @@ void ParticleSystem::generateMask(std::vector <Particle*> & conciderForMask, Mas
   for(int j = 1; j < matching[0].size(); j++){
     
     bool found = false;
+
     // Go and find what particle matches this
     for(int i = 1; i < matching.size(); i++){
+
       if(matching[i][j] == 1 && 
           cost[i][j] != std::numeric_limits<int>::max()){
+
+        if(cost[i][j] > 1.1*RADIUS_PARTICLE_WAVE * 1000000) std::cout << cost[i][j] / 1000000.0 << std::endl;
+
         maskPart.push_back(conciderForMask[i]);
         maskCost.push_back(cost[i][j]);
         size_of_mask++;
@@ -1056,6 +1061,11 @@ void ParticleSystem::generateMask(std::vector <Particle*> & conciderForMask, Mas
   m.setMaskParticles(maskPart);
   m.setCostVector(maskCost);
   m.setSize(size_of_mask);
+
+
+
+
+
 
 }
 

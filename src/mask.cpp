@@ -9,6 +9,8 @@ void Mask::renderOutline( std::vector<VBOPosNormalColor> & outline_verts){
 
 void Mask::renderCost( std::vector<VBOPosNormalColor> & cost_verts){
 
+  // FIXME as of right now I am visualizing the distance to split
+  
   assert(costVector.size() == maskParticles.size()); // Safety
 
   
@@ -17,25 +19,29 @@ void Mask::renderCost( std::vector<VBOPosNormalColor> & cost_verts){
     if(maskParticles[i] == NULL)
       continue;
 
-    if(size_of_mask < 6)
-      continue;
 
     Particle * cur = maskParticles[i];
     int cost = costVector[i];
   
-    
+    double val= cost / (1.2 * RADIUS_PARTICLE_WAVE * 1000000); 
 
-    double val= cost / (RADIUS_PARTICLE_WAVE * 1000.0); 
+
     glm::vec4 happyColor =  GiveHeapMapping(val);
 
-    
     // Pushing a line segement from this point to center for happyness ////
-    cost_verts.push_back(VBOPosNormalColor(maskCenter->getPos(), maskCenter->getDir(), happyColor));
-
+    cost_verts.push_back(
+        VBOPosNormalColor(
+          maskCenter->getPos(), 
+          maskCenter->getDir(), 
+          happyColor));
 
      happyColor.a = 0;
 
-    cost_verts.push_back(VBOPosNormalColor(cur->getPos(), cur->getDir(), happyColor));
+    cost_verts.push_back(
+        VBOPosNormalColor(
+          cur->getPos(), 
+          cur->getDir(), 
+          happyColor));
   }//for
 }//func
 
@@ -54,10 +60,10 @@ bool Mask::resSpit(std::vector<glm::vec3> & newPartPos){
 
     }
   
-    float dist = glm::distance(curOuter->getOldPos(), maskCenter->getOldPos());
+    float dist_center_outer = glm::distance(curOuter->getOldPos(), maskCenter->getOldPos());
 
     // if that edge is too streched out
-    if( dist > 2*RADIUS_PARTICLE_WAVE  ){
+    if( dist_center_outer > 2 * RADIUS_PARTICLE_WAVE  ){
 
       // Average both vectors postions
       glm::vec3 posA = maskCenter->getOldPos();

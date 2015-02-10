@@ -42,6 +42,10 @@ void circle_points_on_plane( const glm::vec3 c, const glm::vec3 n,
     const float r, const int numberPoints, std::vector<glm::vec3> &pts, 
     ArgParser * &args, double offset = 0.0);
 
+// Given a refernece point same as above
+void circle_points_on_plane_refence( const glm::vec3 c, const glm::vec3 n, 
+    const float r, const int numberPoints, std::vector<glm::vec3> &pts, 
+    ArgParser * &args, double offset = 0.0);
 // Given points, we project them on a sphere 
 // Modified pts
 void cirlce_point_on_sphere( const glm::vec3 &center, const float radius, 

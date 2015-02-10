@@ -456,11 +456,14 @@ void ParticleSystem::setupEdges(){
   
   for(int index = 0; index < particles.size(); index++){
 
+    // DEEBUG
+    // if(index != 0 ) continue; // TODO REMOVE
+
     Particle * cur = particles[index];
  
     // GATHER STEP //////////////////////////////////////////////////////////
 
-    float gather_distance = RADIUS_PARTICLE_WAVE * 2.1;
+    float gather_distance = RADIUS_PARTICLE_WAVE * 2.5;
     float gather_angle    = M_PI / 4.0;
 
     std::vector<unsigned int> gathered_particles_indices;
