@@ -87,31 +87,22 @@ void circle_points_on_plane( const glm::vec3 c, const glm::vec3 n,
 
 }
 
-void circle_points_on_plane_refence( const glm::vec3 c, const::glm::vec3 refPt, const glm::vec3 n, 
-    const float r, const int numberPoints, 
-    std::vector<glm::vec3> &pts, ArgParser * &args, double offset){
+void circle_points_on_plane_refence( 
+    const glm::vec3 c,
+    const glm::vec3 n,
+    const glm::vec3 referance_point,
+    const float r,
+    const int numberPoints,
+    std::vector<glm::vec3> &pts,
+    ArgParser * &args,
+    double offset){
 
   float theta = 2 * M_PI / numberPoints;
 
-  // Solving for a  to be orthagonal // should be random
-  glm::vec3 a; a.x = 0.5; a.y = 0.5;
-
-  //glm::vec3 a; 
-  //a.x =  args->randomGen.rand();
-  //a.y =  args->randomGen.rand();
-  // std::cout << "x: " << a.x << " y: " << a.y << std::endl;
-
-  if(n.z != 0){
-
-    a.z = ( -1 * (n.x * a.x) - (n.y * a.y) )  / n.z;
-
-  }else{
-
-    a = glm::vec3(0,0,1);
-
-  }
-
+  // Make a new 'a' that is on the actual disk
+  glm::vec3 a = VectorProjectPlane(n, referance_point);
   a = glm::normalize(a);
+  a = c + a * r; 
   
   glm::vec3 b = glm::cross(n,a);
   b = glm::normalize(b);
@@ -269,5 +260,28 @@ bool triangle_intersect(
 }
 
 
+glm::vec3 VectorProjectPlane(const glm::vec3 & plane_normal, const glm::vec3 & v){
+  return v - plane_normal*(float)(glm::dot(v, plane_normal) / pow(glm::length(plane_normal), 2));
+}
 
+glm::vec3 ClosestPoint(const glm::vec3 & v, const std::vector<glm::vec3>  & points){
+
+
+  unsigned int closest_point_index = -1;
+  double closest_point = -1;
+
+  // Walk and check all points 
+  for(unsigned int i = 0; i < points.size(); i++){
+  
+    double dist = glm::distance( points[i] , v );
+
+    if( dist < closest_point ){
+      closest_point = dist;
+      closest_point_index = i;
+    }
+  
+  }
+  return points[closest_point_index];
+
+}
 

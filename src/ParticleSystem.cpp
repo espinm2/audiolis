@@ -895,12 +895,25 @@ void ParticleSystem::munkresMatching
       maskPositions.push_back(center->getPos()); // center  mask for submask
 
 
-
-      if(offset_i == 0){
+      if(true){ // <------------------------------------------------------------------------------------ DEBUG CODE PLEASE REFACTOR AND CLEAN
       
-      circle_points_on_plane(
+
+      // Sorting this array the point nearest me is the closest possible point
+      
+      double dist = std::numeric_limits<double>::max();
+      unsigned int nearest_part = -1;
+      for(int i = 1; i < partVec.size(); i++){
+          double d = glm::distance(partVec[i]->getOldPos(), maskPositions[0]);
+          if( d < dist  ){
+              dist = d; nearest_part = i;
+            }
+        }
+
+      // Geting the points form my magical function
+      circle_points_on_plane_refence(
           center->getPos(), 
-          center->getDir(), 
+          center->getDir(),
+          partVec[nearest_part]->getOldPos(),
           RADIUS_PARTICLE_WAVE,
           6,
           maskPositions,args);
@@ -916,7 +929,7 @@ void ParticleSystem::munkresMatching
       
       }
 
-      double radius_ideal_mask = glm::distance(maskPositions[0], maskPositions[1]);
+      // double radius_ideal_mask = glm::distance(maskPositions[0], maskPositions[1]);
 
       // cirlce_point_on_sphere(center->getCenter(),
       //     glm::distance( center->getPos(), center->getCenter()),maskPositions); 
@@ -927,10 +940,10 @@ void ParticleSystem::munkresMatching
       // Note: there will be partVec.size() * (6 + 1) comparisons
 
       // For every point
-      for(int i = 0; i < partVec.size(); i++){
+      for(unsigned int i = 0; i < partVec.size(); i++){
 
         // For every possible mask postion
-        for(int j = 0; j < maskPositions.size(); j++){
+        for(unsigned int j = 0; j < maskPositions.size(); j++){
 
           glm::vec3 partPos = partVec[i]->getOldPos();
 
@@ -938,7 +951,7 @@ void ParticleSystem::munkresMatching
           double dist_from_ideal = glm::distance(partPos, maskPositions[j]);
 
           // Prevent concave shapes
-            if( dist_from_ideal < 1.2 * RADIUS_PARTICLE_WAVE){
+            if( dist_from_ideal < 1.2 * RADIUS_PARTICLE_WAVE){ //<--------------------------------------------- Check this so that it works
           
             // This will put in the scale of milimeters everything inside my matrix
             // Of which is small enough scale that it cover high freq wave lengths
