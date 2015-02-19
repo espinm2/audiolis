@@ -41,6 +41,8 @@ class Mask{
 
     // Splits rules for mask
     bool resSpit(std::vector<glm::vec3> & newPartPos);
+
+    // Debug functions
     void debugPrint();
 
   private:

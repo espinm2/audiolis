@@ -125,6 +125,7 @@ void ParticleSystem::update(){
   for(int index = 0; index < particles.size(); index++){
 
     Particle * cur = particles[index];
+
     cur->setOldPos(cur->getPos());
   
     // Check if we are not to be deleted
@@ -214,14 +215,16 @@ void ParticleSystem::update(){
         if( deleteMask[gathered_particles_indices[i]] == 1 )
           continue;
       
-        particle_for_mask_calc.push_back(particles[gathered_particles_indices[i]]);
+        particle_for_mask_calc.push_back(
+            particles[gathered_particles_indices[i]]);
       
       }
       
       // Find Mask Step ///////////////////////////////////////////////////////
+      
+       
       Mask mask;
       generateMask(particle_for_mask_calc, mask);
-
 
 
       // Split Step ///////////////////////////////////////////////////////////
@@ -299,130 +302,6 @@ void ParticleSystem::update(){
 
 
 
-
-
-
-
-
-
-
-
-
-  // OLD UPDATE FUNCTION
-  
-  //   // Hold new particles from split
-  //   std::vector<Particle *> newParticles;
-  // 
-  //   // Marked for removal mask, 1 == delete, 0 == keep
-  //   std::vector<int>deleteMask (particles.size(), 0);
-  // 
-  //   unsigned int maskIndex = 0;
-  // 
-  //   for(ParticleIter iter = particles.begin(); iter != particles.end();){
-  // 
-  //      // This particles outdated "new" postion is our oldPosition
-  //      Particle * curPart = (*iter);
-  //      curPart->setOldPos(curPart->getPos());
-  //      curPart->setPos(glm::vec3(0,0,0)); // <-------------------------------------- Reveals an incidious bug 
-  // 
-  // 
-  //      if()
-  // 
-  // 
-  //     // Are we below a threhold just kill and move to another
-  //     if(curPart->getWatt() < MIN_WATTAGE ){ 
-  // 
-  //       // Kill this partcile and move to next
-  //       deleteMask[maskIndex++] = 1;
-  //       iter++;
-  //       continue;
-  // 
-  //     }
-  // 
-  //     // Particles are beyond a threshold init a split
-  //     if(particleSplitCheckAndMerger(curPart, deleteMask)){
-  // 
-  //         args->animate = false;
-  // 
-  //         // should we even bother? are they just going to flitter out
-  //         if(curPart->getWatt()/(SPLIT_AMOUNT+1.0) < MIN_WATTAGE ){
-  //           deleteMask[maskIndex++] = 1;
-  //           iter++;
-  //           continue;
-  //         }
-  // 
-  //         // Get new particles to be made
-  //         std::vector<Particle *> splitParticles;
-  //         particleSplit(curPart, splitParticles);
-  // 
-  //         // change cur particle watts
-  //         curPart->setWatt(curPart->getWatt() / (double)(SPLIT_AMOUNT + 1.0));
-  // 
-  //         // Update postiton and move to next particle
-  //         moveParticle(curPart,TIME_STEP);
-  // 
-  //         // Move them a timestep + add to new list
-  //         for(int i = 0; i < splitParticles.size(); i++){
-  //           moveParticle(splitParticles[i], TIME_STEP);
-  //           newParticles.push_back(splitParticles[i]);
-  //         }
-  // 
-  //       deleteMask[maskIndex++] = 0; // 1: kills center, 0: leave it alive
-  // 
-  //       iter++;
-  // 
-  // 
-  //     }else{
-  //     
-  //       // Update postiton and move to next particle
-  //       moveParticle(curPart,TIME_STEP);
-  //       deleteMask[maskIndex++] = 0; 
-  // 
-  //       iter++;
-  //     
-  //     }
-  // 
-  // 
-  //   } //forloop
-
-
-  // Deletetion step
-  // for( unsigned int i = 0 ; i < particles.size(); i++){
-  //     // Keep if 0, else delete
-  //     if(deleteMask[i] == 1){
-
-  //         if(!newParticles.empty()){
-
-  //             // Put in new particle to fill gap
-  //             delete particles[i];
-  //             particles[i] = newParticles.back();
-  //             newParticles.pop_back();
-
-  //         }else{
-
-  //             // there is stuff to push off
-  //             if(i != particles.size()-1){
-
-  //               // Pop off back of vector to fill the gap
-  //               delete particles[i];
-  //               particles[i] = particles.back();
-  //               particles.pop_back();
-
-  //             }else{
-
-  //               // Just delete the last element, nothing need be poped
-  //               delete particles[i];
-  //               particles.pop_back();
-
-  //             }
-  //         }
-  //     }
-  // }
-
-  // Add into the main vector those new particles yet added
-  // for( unsigned int i = 0; i < newParticles.size(); i++)
-  //    particles.push_back(newParticles[i]);
-
 bool ParticleSystem::moveParticle(Particle * p, double timestep){
   /*
    * Input : Particle ptr
@@ -453,7 +332,8 @@ bool ParticleSystem::moveParticle(Particle * p, double timestep){
     // If we hit an object in this interval of time 
 
     // We where we hit in space
-    glm::vec3 impactPos(oldPos + (dir * (float)time_until_impact) * VELOCITY_OF_MEDIUM);
+    glm::vec3 impactPos
+      (oldPos + (dir * (float)time_until_impact) * VELOCITY_OF_MEDIUM);
 
     // Get the new center to change direction
     glm::vec3 mir_dir = MirrorDirection(p->getHitNorm(), p->getDir());
@@ -478,26 +358,22 @@ bool ParticleSystem::moveParticle(Particle * p, double timestep){
  
     // Power has to be calculated after the hi:t
     double absorb_ratio = absorbFunc(p->getMaterialHit(), p->getFreq());
-    assert( absorb_ratio < 1); // <----------------------------------------------------------------- Selfcheck
-    p->setWatt( (1 - absorb_ratio ) * p->getWatt() ); // <------------------------------------------ Math 
-
+    assert( absorb_ratio < 1);                                                  // Sanity Check
+    p->setWatt( (1 - absorb_ratio ) * p->getWatt() );                           // Math Review Required
     p->incIter();
 
-    //moveParticle(p, time_after_impact); // this dude will move
-
-    return true;
-
+    //moveParticle(p, time_after_impact); // this dude will move                // Test when uncommented
   }
+
+  return true;
+
 }
 
 void ParticleSystem::moveCursor( const float & dx, 
     const float & dy, const float & dz ){
-
+  // Function called by glCanvas
+  
   cursor+= glm::vec3(10*dx,10*dy,10*dz);
-
-  //if(args->printcusorpos)
-    // std::cout << "Cursor Pos" << cursor.x << ", " << cursor.y << ", " << cursor.z << std::endl;
-
 }
 
 void ParticleSystem::particleSplit(Particle * &p,
@@ -510,7 +386,7 @@ void ParticleSystem::particleSplit(Particle * &p,
     
     // Get hex shape on plane
     circle_points_on_plane(p->getOldPos(), 
-        p->getDir(), RADIUS_PARTICLE_WAVE, SPLIT_AMOUNT, newPart,args);
+        p->getDir(), RADIUS_PARTICLE_WAVE, SPLIT_AMOUNT, newPart);
 
  
     // Project back on sphere // When particles should die
@@ -592,7 +468,8 @@ void ParticleSystem::createDebugParticle(){
   directionToTarget  = glm::normalize(directionToTarget);
 
   // Create a ray to move up a little
-  glm::vec3 newPos = cursor + ( (float) RADIUS_INIT_SPHERE * 2 ) * directionToTarget;
+  glm::vec3 newPos = 
+    cursor + ( (float) RADIUS_INIT_SPHERE * 2 ) * directionToTarget;
 
 
 
@@ -744,75 +621,6 @@ void ParticleSystem::createInitWave(){
   }
 }
 
-// void ParticleSystem::particleMerger(Particle * &p, 
-//     std::vector<Particle *> & gatheredParticles, std::vector<int> & deleteMask ){
-// 
-//   // Input:  A single particle, empty array filled by mask where 0 = keep 1 = merged and delete
-//   // Output: None
-//   // Output (ref): deleteMask will overwrite 1 at the index of particle that was merged
-//   // Assumptions: Particles concidered should exisit and not be merged
-//   // Assumptions: deleteMask the size of particle vector
-//   // Side Effects: Will replace the current particle with a new particle merges were required
-//   
-//   glm::vec3 pos = p->getOldPos();
-// 
-//   std::vector<Particle *> particleToMerge;
-//   float mergeDistanceThresh = 0.01 * RADIUS_PARTICLE_WAVE;
-//   float mergeAngleThesh = (2*M_PI) / 8.0;
-// 
-//   // for each particle in the system
-//   for(int i = 0; i < gatheredParticles.size(); i++){
-// 
-//     // Do not count myself in this check and merger or particles already merged
-//     if( gatheredParticles[i] == p || deleteMask[i] == 1 )
-//       continue;
-// 
-//     // my distance to currently concidered particle
-//     float dist = glm::distance(p->getOldPos(), particles[i]->getOldPos());
-// 
-//     if(mergeDistanceThresh > dist ){
-//       // If we are close enough to concider merging these particles
-//       
-//       // Is the difference in direction similar
-//       float angle = acos( 
-//           glm::dot( particles[i]->getDir(), p->getDir() ) / 
-//           (glm::length(particles[i]->getDir()) * glm::length(p->getDir())));
-//           
-//       if(mergeAngleThesh > angle){
-//       
-//         // DEBUG ==============================================================
-//         // // Mark particle for deletion so we no longer concider it
-//         // deleteMask[i] = 1;
-// 
-//         // // Store for later merging
-//         // particleToMerge.push_back(particles[i]);
-//         // ====================================================================
-//       
-//       }
-//           
-//     }else if( splitDistanceThresh > dist) {
-//       // Still check if they fall within distance threshold for split check
-//       particlesWithinThesh++;
-//     
-//     }
-// 
-//   }//for
-// 
-// 
-//   // Handle Merges and overwrite this particle with a merged one
-//   if( particleToMerge.size() > 0){
-//   
-//     // Change that particle to new merged particle
-//     Particle * mergedPart =  particleVectorMerge(particleToMerge);
-//     *p = *mergedPart;
-//     return particleSplitCheckAndMerger(p, deleteMask);
-// 
-//   }
-//   
-//   // return false;
-//   return particlesWithinThesh < particlesWithinTheshRequired;
-// 
-// }
 
 void ParticleSystem::munkresMatching 
   (const std::vector<Particle*> & partVec, vMat & matchingMat, vMat & costMat){
@@ -852,174 +660,147 @@ void ParticleSystem::munkresMatching
   //  This 'a' is concidered the center of my hexongal submask because it
   //  is first.
   //
-  //
-  //  TODO: Create a version that test against rotations
   
 
-    // Checking we  have a valid input
-    assert(partVec.size() != 0 );
+  assert(partVec.size() != 0 ); // Checking we  have a valid input 
 
-    std::vector< vMat > costMatries;
-    std::vector< vMat > matchingMatries;
-    std::vector< int >  costSum;
-
-
-
-    for(int offset_i = 0; offset_i < 2; offset_i++){
-    
-      // ========================================================================
-      // Create wrapper so that we can use the munkres.cpp, because munkers.cpp
-      // can only use 2D arrays.
-      // CREATION OF COST FUNCTION
-      
-      // Getting the center of our submask which we will base distance off of
-      Particle * center = partVec[0];
-
-      int sizeMatrix = 0; // 7 because 6 points + 1 center for hexagon
-      partVec.size() > 7 ? sizeMatrix = partVec.size() : sizeMatrix = 7;
-
-      // Create a square matrix and initiate all of it with infinate values
-      int ** matrix = new int*[sizeMatrix];
-      for(int i = 0; i < sizeMatrix; i++){
-         // create a new row
-         matrix[i] = new int[sizeMatrix];
-         // fill in with super large value
-         for( int j = 0; j < sizeMatrix; j++){
-           matrix[i][j] = std::numeric_limits<int>::max(); // This is an entire 10,000 mm == 10 meters
-         }
-      }
-      
-
-      // Getting the points that represent the hyprotheical mask
-      std::vector<glm::vec3> maskPositions; 
-      maskPositions.push_back(center->getPos()); // center  mask for submask
-
-
-      if(true){ // <------------------------------------------------------------------------------------ DEBUG CODE PLEASE REFACTOR AND CLEAN
-      
-
-      // Sorting this array the point nearest me is the closest possible point
-      
-      double dist = std::numeric_limits<double>::max();
-      unsigned int nearest_part = -1;
-      for(int i = 1; i < partVec.size(); i++){
-          double d = glm::distance(partVec[i]->getOldPos(), maskPositions[0]);
-          if( d < dist  ){
-              dist = d; nearest_part = i;
-            }
-        }
-
-      // Geting the points form my magical function
-      circle_points_on_plane_refence(
-          center->getPos(), 
-          center->getDir(),
-          partVec[nearest_part]->getOldPos(),
-          RADIUS_PARTICLE_WAVE,
-          6,
-          maskPositions,args);
-      
-      }else{
-      
-      circle_points_on_plane(
-          center->getPos(), 
-          center->getDir(), 
-          RADIUS_PARTICLE_WAVE,
-          6,
-          maskPositions,args, M_PI/8.0);
-      
-      }
-
-      // double radius_ideal_mask = glm::distance(maskPositions[0], maskPositions[1]);
-
-      // cirlce_point_on_sphere(center->getCenter(),
-      //     glm::distance( center->getPos(), center->getCenter()),maskPositions); 
-
-
-      // Comparing the distance between each point in partVec and each point in
-      // point in the mask and tossing it into the matrix. 
-      // Note: there will be partVec.size() * (6 + 1) comparisons
-
-      // For every point
-      for(unsigned int i = 0; i < partVec.size(); i++){
-
-        // For every possible mask postion
-        for(unsigned int j = 0; j < maskPositions.size(); j++){
-
-          glm::vec3 partPos = partVec[i]->getOldPos();
-
-          // distance calculation to get cost
-          double dist_from_ideal = glm::distance(partPos, maskPositions[j]);
-
-          // Prevent concave shapes
-            if( dist_from_ideal < 1.2 * RADIUS_PARTICLE_WAVE){ //<--------------------------------------------- Check this so that it works
-          
-            // This will put in the scale of milimeters everything inside my matrix
-            // Of which is small enough scale that it cover high freq wave lengths
-            matrix[i][j] = (int) (dist_from_ideal* 1000000);
-          
-            }
-        }
-      }
-
-    // SAVING THIS COST MATRIX IN MM
-
-    vMat costTemp;
-    for(int i = 0; i < sizeMatrix; i++){
-      std::vector<int> temp;
-      for(int j = 0; j < maskPositions.size(); j++){
-        temp.push_back(matrix[i][j]);
-      }
-      costTemp.push_back(temp);
-    }
-    costMatries.push_back(costTemp);
-
-    // SOLVING FOR THE MATCHING 
-    matrix = runMunkers(matrix,sizeMatrix,false);
-
-    // CREATE OUTPUT matchingMat 
-    vMat matchingTemp;
-    int totalCost;
-    for(int i = 0; i < partVec.size(); i++){
-      std::vector<int> temp;
-      for(int j = 0; j < maskPositions.size(); j++){
-
-        if(matrix[i][j] == 1)
-          totalCost += costTemp[i][j];
-        
-        temp.push_back(matrix[i][j]);
-      }
-      matchingTemp.push_back(temp);
-    }
-    matchingMatries.push_back(matchingTemp);
-    costSum.push_back(totalCost);
-
-      
-    // deallocation of created array in matrix **
-    for(int i = 0; i < sizeMatrix; i++)
-      delete [] matrix[i];
-    delete [] matrix;
-      
-  }// rationalFor
-
-
-  if(costSum[0] > costSum[1]){
-
-   matchingMat = matchingMatries[1];
-   costMat = costMatries[1];
-
+  // ==========================================================================
+  // Create wrapper matrix so that we can use the munkres.cpp
+  // ==========================================================================
   
-  }else{
-  
-   matchingMat = matchingMatries[0];
-   costMat = costMatries[0];
+  // Getting the center of our submask which all distance will be relative to
+  Particle * center = partVec[0];
+  glm::vec3 centerMaskPos = center->getOldPos();
 
-  
+  // Setting the dimension of our square matrix
+  unsigned int maxtrix_dimension = 0;
+  partVec.size() > 7 ? maxtrix_dimension = partVec.size() : maxtrix_dimension = 7;
+
+  // Create a square matrix and initiate all of it with infinate values
+  int ** matrix = new int*[maxtrix_dimension];
+  for(int i = 0; i < maxtrix_dimension; i++){
+     // create a new row
+     matrix[i] = new int[maxtrix_dimension];
+     // fill in with super large value
+     for( int j = 0; j < maxtrix_dimension; j++){
+       matrix[i][j] = 1000; // This is an entire 1000mm = 1m 
+     }
   }
+  
+  // ==========================================================================
+  // Generation of delusional particle positions
+  // ==========================================================================
+
+  // Get the nearest particle around the center of the mask
+  // We will use this particle to orient our delusional particles
+  
+
+  // Search
+  double dist = std::numeric_limits<double>::max(); 
+  unsigned int nearest_part = 0;
+
+  for(int i = 1; i < partVec.size(); i++){
+    float  curDist = glm::distance(partVec[i]->getOldPos(), centerMaskPos);
+    if( curDist < dist  ){
+        dist = curDist; nearest_part = i;
+      }
+  }
+
+  // Result
+  glm::vec3 nearestParticlePosition = partVec[nearest_part]->getOldPos();
+
+  // Where we store the points that represent the hyprotheical mask
+  std::vector<glm::vec3> maskPositions; 
+  maskPositions.push_back(centerMaskPos); // maskPositions[0] is mask center
+
+
+  // Geting the points form my magical untested function
+  circle_points_on_plane(
+      centerMaskPos,                        // center of mask
+      center->getDir(),                     // direction of plane
+      // nearestParticlePosition,              // particle using for reference
+      RADIUS_PARTICLE_WAVE,                 // radius of my mask
+      6,                                    // number of particles mask has
+      maskPositions);                       // where I will append my results
+
+  // ==========================================================================
+  // Creating a cost for each particle being concidered
+  // ==========================================================================
+  
+  // Comparing the distance between each point in partVec and each point in
+  // point in the mask and tossing it into the matrix. 
+  // Note: there will be partVec.size() * (6 + 1) comparisons
+
+  // For every point
+  for(unsigned int i = 0; i < partVec.size(); i++){
+
+    // For every possible mask postion
+    for(unsigned int j = 0; j < maskPositions.size(); j++){
+
+      // Position of particle I am concidering right now
+      glm::vec3 partPos = partVec[i]->getOldPos();
+
+      // distance calculation from partPos to all possible mask
+      double dist_from_ideal = glm::distance(partPos, maskPositions[j]);
+
+      // Prevent concave shapes
+      if( dist_from_ideal <= RADIUS_PARTICLE_WAVE){ 
+    
+        // This will put in the scale of milimeters everything inside my matrix
+        matrix[i][j] = (int) (dist_from_ideal * 1000); 
+    
+      }
+    }
+  }
+
+
+  // Conversion from 2d array to 2d vector
+  for(int i = 0; i < partVec.size(); i++){
+
+    std::vector<int> temp;
+
+    for(int j = 0; j < maskPositions.size(); j++)
+
+      temp.push_back(matrix[i][j]);
+
+    costMat.push_back(temp);
+
+  }
+
+
+  // ==========================================================================
+  // Compute the optimal solution
+  // ==========================================================================
+  matrix = runMunkers(matrix,maxtrix_dimension,false);
+
+
+  // ==========================================================================
+  // Save the result
+  // ==========================================================================
+  for(int i = 0; i < partVec.size(); i++){
+
+    std::vector<int> temp;
+
+    for(int j = 0; j < maskPositions.size(); j++)
+      temp.push_back(matrix[i][j]);
+
+    matchingMat.push_back(temp);
+  }
+
+  
+  // ==========================================================================
+  // deallocation of created array in matrix **
+  // ==========================================================================
+  
+  for(int i = 0; i < maxtrix_dimension; i++)
+    delete [] matrix[i];
+  delete [] matrix;
+      
 }
 
 
-
-void ParticleSystem::generateMask(std::vector <Particle*> & conciderForMask, Mask &m ){
+void ParticleSystem::generateMask(
+    std::vector <Particle*> & conciderForMask, Mask &m ){
   // Input: p is a particle that it not null, it will be the center of the mask
   // Input: Mask &m is a mask that will be populated by a mask object
   // Output: None, see input (2)
@@ -1033,6 +814,12 @@ void ParticleSystem::generateMask(std::vector <Particle*> & conciderForMask, Mas
 
   // Calculate the cost and matching matries
   munkresMatching(conciderForMask,matching,cost);
+
+  assert(matching.size() == cost.size());
+  assert(matching[0].size() == cost[0].size());
+
+  assert(matching.size() == conciderForMask.size()); 
+  assert(matching[0].size() == 7); 
 
   // Inners of the mask class
   std::vector<Particle*> maskPart;
@@ -1048,10 +835,7 @@ void ParticleSystem::generateMask(std::vector <Particle*> & conciderForMask, Mas
     // Go and find what particle matches this
     for(int i = 1; i < matching.size(); i++){
 
-      if(matching[i][j] == 1 && 
-          cost[i][j] != std::numeric_limits<int>::max()){
-
-        if(cost[i][j] > 1.1*RADIUS_PARTICLE_WAVE * 1000000) std::cout << cost[i][j] / 1000000.0 << std::endl;
+      if(matching[i][j] == 1){
 
         maskPart.push_back(conciderForMask[i]);
         maskCost.push_back(cost[i][j]);
@@ -1064,7 +848,7 @@ void ParticleSystem::generateMask(std::vector <Particle*> & conciderForMask, Mas
     if(!found){
       // If we can't find a match push back null
       maskPart.push_back(NULL);
-      maskCost.push_back(-1);
+      maskCost.push_back(1000); // cost is 1000mm = 1m
     }
 
   }// for each column
@@ -1075,42 +859,42 @@ void ParticleSystem::generateMask(std::vector <Particle*> & conciderForMask, Mas
   m.setCostVector(maskCost);
   m.setSize(size_of_mask);
 
-
-
-
-
-
 }
 
 bool ParticleSystem::shouldSplit(Particle * &p){
   // In here we compare all particles against eachother
   // Very expensive to do, however we also check to see if
   // we can merge any two particles into one
-  return false; //<-------------------------------------------------------------DEBUG
 
-  glm::vec3 pos = p->getOldPos();
-  float nearestDistance = 100000;
-  float threshold = 3 * RADIUS_PARTICLE_WAVE;
+  std::cout << "Function not supported anymore" << std::endl;
+  assert(false);
 
-  // for each particle in the system
-  for(int i = 0; i < particles.size(); i++){
+  // glm::vec3 pos = p->getOldPos();
+  // float nearestDistance = 100000;
+  // float threshold = 3 * RADIUS_PARTICLE_WAVE;
 
-    if(particles[i] == p)
-      continue;
+  // // for each particle in the system
+  // for(int i = 0; i < particles.size(); i++){
 
-    float dist = glm::distance(p->getOldPos(), particles[i]->getOldPos());
-    if(nearestDistance > dist)
-      nearestDistance = dist;
-  }
+  //   if(particles[i] == p)
+  //     continue;
 
-  // I now have nearest distance
-  return( fabs( nearestDistance - threshold) <= EPSILON || 
-      nearestDistance > threshold);
+  //   float dist = glm::distance(p->getOldPos(), particles[i]->getOldPos());
+  //   if(nearestDistance > dist)
+  //     nearestDistance = dist;
+  // }
+
+  // // I now have nearest distance
+  // return( fabs( nearestDistance - threshold) <= EPSILON || 
+  //     nearestDistance > threshold);
+ 
+  return false;
 }
 
 Particle * ParticleSystem::particlePairMerge(Particle * &a, Particle * &b){ 
 
-  // Input: A pair of particles and an empty pointer that will be result in a new particle
+  // Input: A pair of particles and an empty pointer that 
+  //   will be result in a new particle
   // Output: None, handled through pass by reference
   // Assumptions: non null pointers
   // Side Effects: Calls directly particleVectorMerge
@@ -1126,11 +910,13 @@ Particle * ParticleSystem::particlePairMerge(Particle * &a, Particle * &b){
 
 Particle * ParticleSystem::particleVectorMerge(std::vector<Particle *> &vec){
 
-  // Input: A vector of particles and an empty pointer that will be result in a new particle
+  // Input: A vector of particles and an empty pointer that will be 
+  //  result in a new particle
   // Output: None, handled through pass by reference
   // Assumptions: vec is populated with at least 1 particle 
   // Side Effects: None
-  // Bugs: What should I do with the freq of merged particles & splits (split not as much)
+  // Bugs: What should I do with the freq of merged particles & splits 
+  //    (split not as much)
 
   // Values will accumlate to find the average
   double pos_x = 0; double cen_x = 0;
@@ -1173,10 +959,11 @@ Particle * ParticleSystem::particleVectorMerge(std::vector<Particle *> &vec){
       cen_y / vec.size(), 
       cen_z / vec.size());
 
-  mergeFreq  = mergeFreq  / vec.size(); //FIXME What should be done regarding freq ?
+  mergeFreq  = mergeFreq  / vec.size();                                         // Patch for merging freq
   mergeSplit = mergeSplit / vec.size();
 
-  Particle * newPart = new Particle(mergedPos,mergedPos,mergedCen, mergeWatt, mergeFreq, mergeSplit);
+  Particle * newPart = new Particle(
+      mergedPos,mergedPos,mergedCen, mergeWatt, mergeFreq, mergeSplit);
   newPart->setIter(mergeIter);
 
   // Calc where I will hit next
@@ -1190,7 +977,7 @@ Particle * ParticleSystem::particleVectorMerge(std::vector<Particle *> &vec){
 double ParticleSystem::absorbFunc(const std::string & mtlName, 
     const double freq){
 
-  std::string materialName = mtlName; // <---- change back to materialName 
+  std::string materialName = mtlName;
 
   // A few checks
   if( freq < 20 ){
@@ -1212,7 +999,7 @@ double ParticleSystem::absorbFunc(const std::string & mtlName,
       std::string temp  = materialName.substr(5);
       int index = atoi(temp.c_str()) % 3;
 
-      if(index == 1 && args->absorber) { //<------------------------------------------ Get absorber to show
+      if(index == 1 && args->absorber) { 
 
         // Make this wall an absorber
         materialName = "absorber_parete";

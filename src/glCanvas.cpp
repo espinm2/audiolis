@@ -351,6 +351,10 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       particleSystem->createDebugParticle();
       particleSystem->setupVBOs();
       break;
+    case 'x': case 'X':
+      args->render_mask = (args->render_mask + 1) %  particleSystem->numParticles();
+      particleSystem->setupVBOs();
+      break;
     case 'v': case 'V':
       args->viz_type = (args-> viz_type + 1) % 4;
       particleSystem->setupVBOs();

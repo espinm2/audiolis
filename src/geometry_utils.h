@@ -40,7 +40,7 @@ glm::vec3 parametric_circle_3d(glm::vec3 a, glm::vec3 b,
 // pts we fill with points
 void circle_points_on_plane( const glm::vec3 c, const glm::vec3 n, 
     const float r, const int numberPoints, std::vector<glm::vec3> &pts, 
-    ArgParser * &args, double offset = 0.0);
+     double offset = 0.0);
 
 // Given a refernece point same as above
 void circle_points_on_plane_refence( 
@@ -50,7 +50,6 @@ void circle_points_on_plane_refence(
     const float r,  //  Radius at which to set this at
     const int numberPoints,  // Number of points to generate
     std::vector<glm::vec3> &pts,  // The place we will be storing the point
-    ArgParser * &args,  // Required for some variations of this code
     double offset = 0.0); // Offset from the refrence point
 
 // Given points, we project them on a sphere 
@@ -85,10 +84,12 @@ inline float AreaOfTriangle(const glm::vec3 &a,
 glm::vec3 MirrorDirection(const glm::vec3 &normal, 
     const glm::vec3 &incoming);
 
+
+// Untested ... what does this even do?
 glm::vec3 VectorProjectPlane(const glm::vec3 & plane_normal, const glm::vec3 & v);
 
-glm::vec3 ClosestPoint(const glm::vec3 & v, const std::vector<glm::vec3>  & points);
-
+// Returns the point closest to points
+glm::vec3 ClosestPoint(const glm::vec3 & point, const std::vector<glm::vec3>  & points);
 
 
 #endif

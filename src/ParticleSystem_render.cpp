@@ -454,63 +454,65 @@ void ParticleSystem::drawVelocityVisual(){
 void ParticleSystem::setupEdges(){
   // This function will setup the outline_vert vector of points
   
-  for(int index = 0; index < particles.size(); index++){
+  // If I have nothing to setup don't
+  if(particles.size() == 0)
+    return;
 
-    // DEEBUG
-    // if(index != 0 ) continue; // TODO REMOVE
+  int index = args->render_mask;
 
-    Particle * cur = particles[index];
- 
-    // GATHER STEP //////////////////////////////////////////////////////////
+  // DEEBUG
+  // if(index != 0 ) continue; // TODO REMOVE
 
-    float gather_distance = RADIUS_PARTICLE_WAVE * 2.5;
-    float gather_angle    = M_PI / 4.0;
+  Particle * cur = particles[index];
 
-    std::vector<unsigned int> gathered_particles_indices;
+  // GATHER STEP //////////////////////////////////////////////////////////
 
-    for(int i = 0; i < particles.size(); i++){
+  float gather_distance = RADIUS_PARTICLE_WAVE * 2.5;
+  float gather_angle    = M_PI / 4.0;
+
+  std::vector<unsigned int> gathered_particles_indices;
+
+  for(int i = 0; i < particles.size(); i++){
+  
+    Particle * other = particles[i];
+
+    if( other == cur ) // dont count self
+      continue;
     
-      Particle * other = particles[i];
 
-      if( other == cur ) // dont count self
-        continue;
-      
+    float dist = glm::distance(cur->getOldPos(), other->getOldPos());
 
-      float dist = glm::distance(cur->getOldPos(), other->getOldPos());
-
-      // Are we close enough
-      if( dist < gather_distance){
+    // Are we close enough
+    if( dist < gather_distance){
+    
+      float angle = acos( glm::dot( cur->getDir(), other->getDir() ) / 
+          (glm::length(cur->getDir()) * glm::length(other->getDir())));
       
-        float angle = acos( glm::dot( cur->getDir(), other->getDir() ) / 
-            (glm::length(cur->getDir()) * glm::length(other->getDir())));
-        
-        // Are we traveling together
-        if( angle < gather_angle )
-          gathered_particles_indices.push_back(i);
-      
-      }
+      // Are we traveling together
+      if( angle < gather_angle )
+        gathered_particles_indices.push_back(i);
     
     }
-
-   // Find Mask Step ///////////////////////////////////////////////////////
-   
-   // Get particles that are alive for mask concideration
-   std::vector < Particle * > particle_for_mask_calc;
-   particle_for_mask_calc.push_back(cur);
-
-   for( int i = 0; i < gathered_particles_indices.size(); i++)
-     particle_for_mask_calc.push_back(particles[gathered_particles_indices[i]]);
-
-   
-   Mask mask;
-   generateMask(particle_for_mask_calc, mask);
-
-   mask.renderCost(happyness_verts);
-
+  
   }
 
- // As well as the other VBO
+ // Find Mask Step ///////////////////////////////////////////////////////
+ 
+ // Get particles that are alive for mask concideration
+ std::vector < Particle * > particle_for_mask_calc;
+ particle_for_mask_calc.push_back(cur);
 
+ for( int i = 0; i < gathered_particles_indices.size(); i++)
+   particle_for_mask_calc.push_back(particles[gathered_particles_indices[i]]);
+
+ 
+ Mask mask;
+ generateMask(particle_for_mask_calc, mask);
+
+ mask.renderCost(happyness_verts);
+
+
+  // As well as the other VBO
   HandleGLError("entering setupOutlineVisual");
 
   // Bind the happyness

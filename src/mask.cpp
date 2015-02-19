@@ -23,7 +23,7 @@ void Mask::renderCost( std::vector<VBOPosNormalColor> & cost_verts){
     Particle * cur = maskParticles[i];
     int cost = costVector[i];
   
-    double val= cost / (1.2 * RADIUS_PARTICLE_WAVE * 1000000); 
+    double val= cost / (RADIUS_PARTICLE_WAVE * 1000); 
 
 
     glm::vec4 happyColor =  GiveHeapMapping(val);
@@ -118,8 +118,6 @@ bool Mask::resSpit(std::vector<glm::vec3> & newPartPos){
   */
 
 }
-
-
 
 
 void Mask::debugPrint(){

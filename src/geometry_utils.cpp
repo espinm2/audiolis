@@ -46,7 +46,7 @@ glm::vec3 MirrorDirection(const glm::vec3 &normal,
 
 void circle_points_on_plane( const glm::vec3 c, const glm::vec3 n, 
     const float r, const int numberPoints, 
-    std::vector<glm::vec3> &pts, ArgParser * &args, double offset){
+    std::vector<glm::vec3> &pts, double offset){
 
   float theta = 2 * M_PI / numberPoints;
 
@@ -94,7 +94,6 @@ void circle_points_on_plane_refence(
     const float r,
     const int numberPoints,
     std::vector<glm::vec3> &pts,
-    ArgParser * &args,
     double offset){
 
   float theta = 2 * M_PI / numberPoints;
@@ -261,12 +260,14 @@ bool triangle_intersect(
 
 
 glm::vec3 VectorProjectPlane(const glm::vec3 & plane_normal, const glm::vec3 & v){
+  // Untested
   return v - plane_normal*(float)(glm::dot(v, plane_normal) / pow(glm::length(plane_normal), 2));
+
 }
 
 glm::vec3 ClosestPoint(const glm::vec3 & v, const std::vector<glm::vec3>  & points){
-
-
+  // Untested
+  
   unsigned int closest_point_index = -1;
   double closest_point = -1;
 

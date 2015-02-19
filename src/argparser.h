@@ -85,6 +85,7 @@ public:
   }
 
   void DefaultValues() {
+
     input_file = "";
     path = "";
     shader_filename = "../src/shader";
@@ -99,7 +100,6 @@ public:
     timer = 0.0;
     timestep = 0.000001;
     num_init_particles = 1000;
-
     
     animate = false;
     wireframe = false;
@@ -107,7 +107,6 @@ public:
     source_type = 0;
     viz_type = 3;
     direction = false;
-
 
     wall_material = 0;
     floor_material = 0;
@@ -119,6 +118,7 @@ public:
     render_outline = false;
     render_edges = true;
 
+    render_mask = 0;
 
   }
 
@@ -141,7 +141,6 @@ public:
   double timestep; // passed to ParticleSystem.cpp
   unsigned int num_init_particles; // passed to ParticleSystem.cpp
 
-
   // Toggles visualizations also acts like global varibles
   bool animate;       
   bool wireframe;
@@ -159,6 +158,8 @@ public:
   bool render_outline;
   bool render_edges;
 
+  int render_mask;
+
   // Material Key
   // wall_material 0 => bricked_wall; 
   //               1 => concrete_wall; 
@@ -169,6 +170,7 @@ public:
   //
   // ceiling set to plaster_ceiling
   // glass is set to double plated glass
+  
 
   // Random number generator
   MTRand randomGen;
