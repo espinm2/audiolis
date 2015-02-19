@@ -744,7 +744,7 @@ void ParticleSystem::munkresMatching
       double dist_from_ideal = glm::distance(partPos, maskPositions[j]);
 
       // Prevent concave shapes
-      if( dist_from_ideal <= RADIUS_PARTICLE_WAVE){ 
+      if( dist_from_ideal <= 1.2*RADIUS_PARTICLE_WAVE){ 
     
         // This will put in the scale of milimeters everything inside my matrix
         matrix[i][j] = (int) (dist_from_ideal * 1000); 
@@ -835,7 +835,7 @@ void ParticleSystem::generateMask(
     // Go and find what particle matches this
     for(int i = 1; i < matching.size(); i++){
 
-      if(matching[i][j] == 1){
+      if(matching[i][j] == 1 && cost[i][j] < 1000){ // second part is because this makes arb matches
 
         maskPart.push_back(conciderForMask[i]);
         maskCost.push_back(cost[i][j]);
@@ -853,6 +853,7 @@ void ParticleSystem::generateMask(
 
   }// for each column
 
+  assert(maskPart.size()==6);
   // Setting the memebers of the mask object
   m.setCenter(conciderForMask[0]);
   m.setMaskParticles(maskPart);
@@ -1197,3 +1198,21 @@ double ParticleSystem::absorbFunc(const std::string & mtlName,
   }
 }
 
+
+void ParticleSystem::delusionalParticleLocations(
+    Particle * &cur_particle,
+    std::vector<Particle *> &gathered_particles,
+    std::vector<glm::vec3> & output){
+
+  // Input : cur_particle is the particle we will use the center of the mask
+  // Input : gathered_particles are the particles we will use to orient ourselves
+  // Input (output) :  We will return our locations here
+
+  circle_points_on_plane(
+      cur_particle->getOldPos(),                        // center of mask
+      cur_particle->getDir(),                     // direction of plane
+      // nearestParticlePosition,              // particle using for reference
+      RADIUS_PARTICLE_WAVE,                 // radius of my mask
+      6,                                    // number of particles mask has
+      output);                       // where I will append my results
+}

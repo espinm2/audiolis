@@ -67,6 +67,9 @@ class ParticleSystem {
     void createDebugParticle(); // used for debugging in testing_chamber_1.obj
     void munkresMatching (const std::vector<Particle*> & partVec, vMat & matchingMat, vMat & costMat);
     void generateMask(std::vector <Particle*> & conciderForMask, Mask &m );
+    void delusionalParticleLocations(Particle * &cur_particle,
+        std::vector<Particle *> &gathered_particles,
+        std::vector<glm::vec3> & output);
     
 
 
@@ -99,9 +102,11 @@ class ParticleSystem {
     void drawVelocityVisual();
 
     void setupEdges();
-    // void setupOutlineAndHappinessVisual();
-    // void drawOutlineVisual();
     void drawHappinessVisual();
+    
+    void setupDelusionalParticles();
+    void drawDelusionalParticles();
+    void drawDelusionalConnections();
 
     // Memebers
     ArgParser * args;
@@ -132,9 +137,11 @@ class ParticleSystem {
     GLuint cursor_verts_VBO;
     GLuint velocity_verts_VBO;
     GLuint velocity_tri_indices_VBO;
-    GLuint outline_verts_VBO; // <--------------------------------------------- New 
-    GLuint happyness_verts_VBO; // <------------------------------------------- extra new!
+    GLuint outline_verts_VBO;                                                   // unused 
+    GLuint happyness_verts_VBO; 
 
+    GLuint delusional_verts_VBO; // TODO
+    GLuint connection_verts_VBO; // TODO
 
 
     // Vertices for VBOs
@@ -144,6 +151,12 @@ class ParticleSystem {
     std::vector<VBOIndexedTri> velocity_tri_indices;
     std::vector<VBOPosNormalColor> outline_verts;
     std::vector<VBOPosNormalColor> happyness_verts;
+
+
+    // Experimental
+    std::vector<VBOPosNormalColor> delusional_verts; // TODO
+    std::vector<VBOPosNormalColor> connection_verts; // TODO
+
 
 };
 

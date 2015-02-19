@@ -39,6 +39,8 @@ void ParticleSystem::initializeVBOs(){
   glGenBuffers(1,&velocity_tri_indices_VBO);
   glGenBuffers(1,&outline_verts_VBO);
   glGenBuffers(1,&happyness_verts_VBO);
+  glGenBuffers(1,&delusional_verts_VBO);
+  glGenBuffers(1,&connection_verts_VBO);
 
 }
 
@@ -52,12 +54,17 @@ void ParticleSystem::setupVBOs(){
   velocity_tri_indices.clear();
   outline_verts.clear();
   happyness_verts.clear();
+  delusional_verts.clear();
+  connection_verts.clear();
 
   // Setup new Data
   setupCursorPoint();
   setupVelocityVisual();
   setupParticles(); 
-  setupEdges();
+
+  setupEdges(); // debug visualization
+
+  setupDelusionalParticles(); // better visualization
 
   HandleGLError("leave setup vbos");
 
@@ -67,11 +74,19 @@ void ParticleSystem::drawVBOs(){
   HandleGLError("enter draw vbos");
 
   drawCursorPoint();
+
+
+  if(args->render_edges){
+    // drawHappinessVisual();
+    drawDelusionalParticles();
+    drawDelusionalConnections();
+  }
+
+
   drawVelocityVisual();
   drawParticles();
 
-  if(args->render_edges)
-    drawHappinessVisual();
+
 
   HandleGLError("leaving draw vbos");
 
@@ -85,6 +100,8 @@ void ParticleSystem::cleanupVBOs(){
   glDeleteBuffers(1,&velocity_tri_indices_VBO);
   glDeleteBuffers(1,&outline_verts_VBO);
   glDeleteBuffers(1,&happyness_verts_VBO);
+  glDeleteBuffers(1,&delusional_verts_VBO);
+  glDeleteBuffers(1,&connection_verts_VBO);
   HandleGLError("leave clean vbos");
 }
 
@@ -789,5 +806,232 @@ void ParticleSystem::drawHappinessVisual(){
   HandleGLError("leaving drawHappyVisual");
 
 }
+
+
+
+void ParticleSystem::setupDelusionalParticles(){
+  HandleGLError("entering setupDelusionalParticles");
+
+
+  // If I have nothing to setup don't
+  if(particles.size() == 0)
+    return;
+
+  int index = args->render_mask;
+
+  Particle * cur = particles[index];
+
+  // GATHER STEP //////////////////////////////////////////////////////////
+
+  float gather_distance = RADIUS_PARTICLE_WAVE * 2.5;
+  float gather_angle    = M_PI / 4.0;
+
+  std::vector<unsigned int> gathered_particles_indices;
+
+  for(int i = 0; i < particles.size(); i++){
+  
+    Particle * other = particles[i];
+
+    if( other == cur ) // dont count self
+      continue;
+    
+
+    float dist = glm::distance(cur->getOldPos(), other->getOldPos());
+
+    // Are we close enough
+    if( dist < gather_distance){
+    
+      float angle = acos( glm::dot( cur->getDir(), other->getDir() ) / 
+          (glm::length(cur->getDir()) * glm::length(other->getDir())));
+      
+      // Are we traveling together
+      if( angle < gather_angle )
+        gathered_particles_indices.push_back(i);
+    
+    }
+  
+  }
+
+  
+  // ==========================================================================
+  // Setup of delusional particle points
+  // ==========================================================================
+  
+  // Get particles that are alive for mask concideration
+  std::vector < Particle * > particle_for_mask_calc;
+  particle_for_mask_calc.push_back(cur);
+ 
+  for( int i = 0; i < gathered_particles_indices.size(); i++)
+    particle_for_mask_calc.push_back(particles[gathered_particles_indices[i]]);
+ 
+ 
+  // Pushing in  center of mask
+  delusional_verts.push_back(
+      VBOPosNormalColor(cur->getOldPos(),glm::vec3(0,0,0),glm::vec4(1,1,1,1)));
+
+
+  std::vector < glm::vec3 > positions;
+  delusionalParticleLocations(cur, particle_for_mask_calc,positions);
+
+
+// ==========================================================================
+// Setup of connecting matching
+// ==========================================================================
+
+ Mask mask;
+ generateMask(particle_for_mask_calc, mask);
+
+ // get particles there
+ const std::vector<Particle*> maskParticles = mask.getMaskParticles();
+
+ assert(maskParticles.size()==positions.size());
+
+  glm::vec4 active_color = GREEN; active_color.a = 0.4;
+
+  glm::vec4 nonactive_color = GREEN; nonactive_color.a = 0.1;
+
+ for(int i = 0; i < maskParticles.size(); i++){
+   Particle * cur = maskParticles[i];
+
+   if(cur == NULL){
+    delusional_verts.push_back(
+        VBOPosNormalColor(positions[i],glm::vec3(0,0,0),glm::vec4(1,1,1,0.2)));
+     continue;
+   }
+   
+
+  glm::vec4 color = GiveHeapMapping( mask.getCost(i)/ (RADIUS_PARTICLE_WAVE * 1000.0));
+
+
+  color.a = 0.1;
+   connection_verts.push_back(
+       VBOPosNormalColor(cur->getOldPos(), glm::vec3(0,0,0), color));
+
+  color.a = 1;
+   connection_verts.push_back(
+       VBOPosNormalColor(positions[i], glm::vec3(0,0,0), color));
+
+  color.a = 0.5;
+  delusional_verts.push_back(
+      VBOPosNormalColor(positions[i],glm::vec3(0,0,0),color));
+ 
+ 
+ }
+
+
+  // Bind the delusional particles
+  glBindBuffer(GL_ARRAY_BUFFER,delusional_verts_VBO); 
+
+  
+  glBufferData(
+      GL_ARRAY_BUFFER,
+      sizeof(VBOPosNormalColor)*delusional_verts.size(),
+      &delusional_verts[0],
+      GL_STATIC_DRAW); 
+
+  // Bind the happyness
+  glBindBuffer(GL_ARRAY_BUFFER,connection_verts_VBO); 
+
+  glBufferData(
+      GL_ARRAY_BUFFER,
+      sizeof(VBOPosNormalColor)*connection_verts.size(),
+      &connection_verts[0],
+      GL_STATIC_DRAW); 
+
+  // VBO SETUP
+  HandleGLError("leaving setupDelusionalParticles");
+}
+
+
+void ParticleSystem::drawDelusionalParticles(){
+  HandleGLError("entering drawDelusionalParticles");
+
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  glPointSize(10) ; 
+  glBindBuffer(GL_ARRAY_BUFFER, delusional_verts_VBO);
+
+
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,
+      sizeof(VBOPosNormalColor),(void*)0);
+
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,
+      sizeof(VBOPosNormalColor),(void*)sizeof(glm::vec3) );
+
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(2, 4, GL_FLOAT,GL_FALSE,
+      sizeof(VBOPosNormalColor), (void*)(sizeof(glm::vec3)*2));
+
+
+  glDrawArrays(GL_POINTS, 0, delusional_verts.size());
+
+  HandleGLError("leaving debug");
+
+  glDisableVertexAttribArray(0);
+  glDisableVertexAttribArray(1);
+  glDisableVertexAttribArray(2);
+
+
+  glDisable(GL_BLEND);
+
+
+  HandleGLError("leaving drawDelusionalParticles");
+}
+
+
+void ParticleSystem::drawDelusionalConnections(){
+
+  HandleGLError("entering drawDelusionalConnections");
+
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  glBindBuffer(GL_ARRAY_BUFFER, connection_verts_VBO);
+
+  // glLineWidth(3);
+  glEnableVertexAttribArray(0);
+
+  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,
+      sizeof(VBOPosNormalColor),(void*)0);
+
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,
+      sizeof(VBOPosNormalColor),(void*)sizeof(glm::vec3) );
+
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(2, 4, GL_FLOAT,GL_FALSE,
+      sizeof(VBOPosNormalColor), (void*)(sizeof(glm::vec3)*2));
+
+  glDrawArrays(GL_LINES, 0, connection_verts.size());
+
+  glDisableVertexAttribArray(0);
+  glDisableVertexAttribArray(1);
+  glDisableVertexAttribArray(2);
+
+  glDisable(GL_BLEND);
+
+  HandleGLError("leaving drawDelusionalConnections");
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
