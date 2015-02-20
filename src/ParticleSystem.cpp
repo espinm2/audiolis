@@ -1,6 +1,7 @@
 #include "ParticleSystem.h"
 
 #include <glm/glm.hpp>
+#include <glm/gtx/vector_angle.hpp>
 #include <iostream>
 #include <cmath>
 #include <limits>
@@ -722,10 +723,24 @@ void ParticleSystem::munkresMatching
 
       // distance calculation from partPos to all possible mask
       double dist_from_ideal = glm::distance(partPos, maskPositions[j]);
+      bool within_angle_constrant = true;
 
+      if( j !=  0 && i != 0 ){
+        glm::vec3 dir_ideal = maskPositions[j] - center->getOldPos();
+        glm::vec3 dir_of_partPos = partPos-center->getOldPos();
+
+        double angle = acos( glm::dot( dir_ideal, dir_of_partPos ) / 
+          (glm::length( dir_ideal ) * glm::length( dir_of_partPos)));
+
+        angle <= 0.436332313 ? within_angle_constrant = true : within_angle_constrant = false;
+
+      }
+
+      
       // Prevent concave shapes
-      if( dist_from_ideal <= 1.2*RADIUS_PARTICLE_WAVE){ 
+      if( dist_from_ideal <= 1.2*RADIUS_PARTICLE_WAVE && within_angle_constrant  ){ 
     
+
         // This will put in the scale of milimeters everything inside my matrix
         matrix[i][j] = (int) (dist_from_ideal * 1000); 
     

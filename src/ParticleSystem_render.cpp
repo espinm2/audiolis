@@ -470,7 +470,7 @@ void ParticleSystem::drawVelocityVisual(){
 
 void ParticleSystem::setupEdges(){
   // This function will setup the outline_vert vector of points
-  
+
   // If I have nothing to setup don't
   if(particles.size() == 0)
     return;
@@ -490,7 +490,7 @@ void ParticleSystem::setupEdges(){
   std::vector<unsigned int> gathered_particles_indices;
 
   for(int i = 0; i < particles.size(); i++){
-  
+
     Particle * other = particles[i];
 
     if( other == cur ) // dont count self
@@ -510,23 +510,23 @@ void ParticleSystem::setupEdges(){
         gathered_particles_indices.push_back(i);
     
     }
-  
+
   }
 
- // Find Mask Step ///////////////////////////////////////////////////////
- 
- // Get particles that are alive for mask concideration
- std::vector < Particle * > particle_for_mask_calc;
- particle_for_mask_calc.push_back(cur);
+  // Find Mask Step ///////////////////////////////////////////////////////
 
- for( int i = 0; i < gathered_particles_indices.size(); i++)
+  // Get particles that are alive for mask concideration
+  std::vector < Particle * > particle_for_mask_calc;
+  particle_for_mask_calc.push_back(cur);
+
+  for( int i = 0; i < gathered_particles_indices.size(); i++)
    particle_for_mask_calc.push_back(particles[gathered_particles_indices[i]]);
 
- 
- Mask mask;
- generateMask(particle_for_mask_calc, mask);
 
- mask.renderCost(happyness_verts);
+  Mask mask;
+  generateMask(particle_for_mask_calc, mask);
+
+  mask.renderCost(happyness_verts);
 
 
   // As well as the other VBO
@@ -535,11 +535,11 @@ void ParticleSystem::setupEdges(){
   // Bind the happyness
   glBindBuffer(GL_ARRAY_BUFFER,happyness_verts_VBO); 
 
-    glBufferData(
-        GL_ARRAY_BUFFER,
-        sizeof(VBOPosNormalColor)*happyness_verts.size(),
-        &happyness_verts[0],
-        GL_STATIC_DRAW); 
+  glBufferData(
+      GL_ARRAY_BUFFER,
+      sizeof(VBOPosNormalColor)*happyness_verts.size(),
+      &happyness_verts[0],
+      GL_STATIC_DRAW); 
 
   HandleGLError("leaving setupOutlineVisual");
 }
@@ -874,23 +874,23 @@ void ParticleSystem::setupDelusionalParticles(){
   delusionalParticleLocations(cur, particle_for_mask_calc,positions);
 
 
-// ==========================================================================
-// Setup of connecting matching
-// ==========================================================================
+  // ==========================================================================
+  // Setup of connecting matching
+  // ==========================================================================
 
- Mask mask;
- generateMask(particle_for_mask_calc, mask);
+  Mask mask;
+  generateMask(particle_for_mask_calc, mask);
 
- // get particles there
- const std::vector<Particle*> maskParticles = mask.getMaskParticles();
+  // get particles there
+  const std::vector<Particle*> maskParticles = mask.getMaskParticles();
 
- assert(maskParticles.size()==positions.size());
+  assert(maskParticles.size()==positions.size());
 
   glm::vec4 active_color = GREEN; active_color.a = 0.4;
 
   glm::vec4 nonactive_color = GREEN; nonactive_color.a = 0.1;
 
- for(int i = 0; i < maskParticles.size(); i++){
+  for(int i = 0; i < maskParticles.size(); i++){
    Particle * cur = maskParticles[i];
 
    if(cur == NULL){
