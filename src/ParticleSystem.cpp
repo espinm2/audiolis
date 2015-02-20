@@ -62,6 +62,20 @@ void ParticleSystem::load(){
   RADIUS_PARTICLE_WAVE  = 0.1; // Will be later removed for better split
   SPLIT_AMOUNT          = 6; // Will be later removed for better split
 
+  ITERATION             = 0;
+
+
+
+
+  // Profiler stuff
+  output_profiler_str.open(args->output_file);
+
+  if( !output_profiler_str.good() ){
+    std::cerr << "Cant open output file for profiler " << std::endl;
+    exit(1);
+  }
+
+
 
   // Debug function used to test things upon creations
   // debug();
@@ -115,6 +129,12 @@ void ParticleSystem::update(){
    * Asumpt: There are particles to move
    * SideEf: Updates postition of particles/ removes particles
    */
+
+  // Data for output file
+  unsigned int iteration = ITERATION;
+  unsigned int particle_number = particles.size();
+  unsigned int merge_count = 0;
+  unsigned int split_count = 0;
 
   // SETUP ////////////////////////////////////////////////////////////////////
   
@@ -190,6 +210,9 @@ void ParticleSystem::update(){
 
           // update the delete mask
           deleteMask[gathered_particles_indices[i]] = 1;
+
+
+          merge_count++;
       
         }
 
@@ -248,6 +271,7 @@ void ParticleSystem::update(){
 
           calcMeshCollision(s);                             // Manditory Calc
           splitParticles.push_back(s);
+          split_count++;
         } // fornewparticle
        } // ifwesplit
 
@@ -298,6 +322,19 @@ void ParticleSystem::update(){
     moveParticle(cur,TIME_STEP);
   }//moveloop
 
+
+  // ooutput
+
+  // unsigned int iteration = ITERATION;
+  // unsigned int particle_number = particles.size();
+  // unsigned int merge_count = 0;
+  // unsigned int split_count = 0;
+  //
+  if(particle_number != 0){
+    output_profiler_str << iteration << " " << particle_number 
+      << " " << merge_count << " " << split_count << std::endl;
+  }
+  ITERATION ++;
 
 } // end func
 

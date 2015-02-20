@@ -225,6 +225,7 @@ void GLCanvas::cleanupVBOs(){
   bbox.cleanupVBOs();
   mesh->cleanupVBOs();
   particleSystem->cleanupVBOs();
+  particleSystem->closeProfiler();
 }
 
 

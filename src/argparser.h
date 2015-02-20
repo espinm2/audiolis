@@ -116,9 +116,11 @@ public:
     printcusorpos = true;
 
     render_outline = false;
-    render_edges = true;
+    render_edges = false;
 
     render_mask = 0;
+
+    output_file = "merge_profiling.txt";
 
   }
 
@@ -129,6 +131,8 @@ public:
   std::string input_file;
   std::string path;
   std::string shader_filename;
+
+  std::string output_file;
 
   int width;
   int height;
