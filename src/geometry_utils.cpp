@@ -90,7 +90,7 @@ void circle_points_on_plane( const glm::vec3 c, const glm::vec3 n,
 void circle_points_on_plane_refence( 
     const glm::vec3 c,
     const glm::vec3 n,
-    const glm::vec3 referance_point,
+    const glm::vec3 refer,
     const float r,
     const int numberPoints,
     std::vector<glm::vec3> &pts,
@@ -98,12 +98,12 @@ void circle_points_on_plane_refence(
 
   float theta = 2 * M_PI / numberPoints;
 
+
   // Make a new 'a' that is on the actual disk
-  glm::vec3 a = VectorProjectPlane(n, referance_point);
-  a = glm::normalize(a);
-  a = c + a * r; 
-  
-  glm::vec3 b = glm::cross(n,a);
+  glm::vec3 projRef = refer - (glm::dot(refer-c, n) * n);
+  projRef = glm::normalize(refer - c);
+
+  glm::vec3 b = glm::cross(n,projRef);
   b = glm::normalize(b);
 
 
@@ -112,7 +112,7 @@ void circle_points_on_plane_refence(
     double t = th / 1000.00;
 
     // Get point
-    glm::vec3 pos = parametric_circle_3d(a,b,c,r,t);
+    glm::vec3 pos = parametric_circle_3d(projRef,b,c,r,t);
 
     pts.push_back(pos);
 

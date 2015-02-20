@@ -65,7 +65,7 @@ class ParticleSystem {
     // Experimental
     // void particleSplitCheckAndMerger(Particle *&p, std::vector<int> &deleteMask);
     void createDebugParticle(); // used for debugging in testing_chamber_1.obj
-    void munkresMatching (const std::vector<Particle*> & partVec, vMat & matchingMat, vMat & costMat);
+    void munkresMatching (std::vector<Particle*> & partVec, vMat & matchingMat, vMat & costMat);
     void generateMask(std::vector <Particle*> & conciderForMask, Mask &m );
     void delusionalParticleLocations(Particle * &cur_particle,
         std::vector<Particle *> &gathered_particles,

@@ -180,7 +180,7 @@ void ParticleSystem::update(){
 
         float dist = glm::distance(cur->getOldPos(), other->getOldPos());
 
-        float merge_distance = RADIUS_PARTICLE_WAVE * 0.1; // milimetter
+        float merge_distance = RADIUS_PARTICLE_WAVE * 0.2; // milimetter
         
         if( dist < merge_distance){
           
@@ -623,7 +623,7 @@ void ParticleSystem::createInitWave(){
 
 
 void ParticleSystem::munkresMatching 
-  (const std::vector<Particle*> & partVec, vMat & matchingMat, vMat & costMat){
+  (std::vector<Particle*> & partVec, vMat & matchingMat, vMat & costMat){
 
   // Function: Creates a matching to a hexonagal mask on particles given
   //
@@ -695,33 +695,13 @@ void ParticleSystem::munkresMatching
   // We will use this particle to orient our delusional particles
   
 
-  // Search
-  double dist = std::numeric_limits<double>::max(); 
-  unsigned int nearest_part = 0;
-
-  for(int i = 1; i < partVec.size(); i++){
-    float  curDist = glm::distance(partVec[i]->getOldPos(), centerMaskPos);
-    if( curDist < dist  ){
-        dist = curDist; nearest_part = i;
-      }
-  }
-
-  // Result
-  glm::vec3 nearestParticlePosition = partVec[nearest_part]->getOldPos();
 
   // Where we store the points that represent the hyprotheical mask
   std::vector<glm::vec3> maskPositions; 
   maskPositions.push_back(centerMaskPos); // maskPositions[0] is mask center
 
 
-  // Geting the points form my magical untested function
-  circle_points_on_plane(
-      centerMaskPos,                        // center of mask
-      center->getDir(),                     // direction of plane
-      // nearestParticlePosition,              // particle using for reference
-      RADIUS_PARTICLE_WAVE,                 // radius of my mask
-      6,                                    // number of particles mask has
-      maskPositions);                       // where I will append my results
+  delusionalParticleLocations(center,partVec, maskPositions);
 
   // ==========================================================================
   // Creating a cost for each particle being concidered
@@ -1208,6 +1188,34 @@ void ParticleSystem::delusionalParticleLocations(
   // Input : gathered_particles are the particles we will use to orient ourselves
   // Input (output) :  We will return our locations here
 
+
+  assert(cur_particle == gathered_particles[0]);
+
+
+  // Search
+  double dist = RADIUS_PARTICLE_WAVE * 10; // really large number
+  unsigned int nearest_part = 0;
+
+  for(int i = 1; i < gathered_particles.size(); i++){
+    float  curDist = glm::distance(gathered_particles[i]->getOldPos(), cur_particle->getOldPos());
+    if( curDist < dist  ){
+        dist = curDist; nearest_part = i;
+      }
+  }
+
+  glm::vec3 nearest_pos = gathered_particles[nearest_part]->getOldPos();
+
+  circle_points_on_plane_refence(
+      cur_particle->getOldPos(),                        // center of mask
+      cur_particle->getDir(),                     // direction of plane
+      nearest_pos,              // particle using for reference
+      RADIUS_PARTICLE_WAVE,                 // radius of my mask
+      6,                                    // number of particles mask has
+      output);                       // where I will append my results
+
+  /*
+
+  assert(cur_particle == gathered_particles[0]);
   circle_points_on_plane(
       cur_particle->getOldPos(),                        // center of mask
       cur_particle->getDir(),                     // direction of plane
@@ -1215,4 +1223,9 @@ void ParticleSystem::delusionalParticleLocations(
       RADIUS_PARTICLE_WAVE,                 // radius of my mask
       6,                                    // number of particles mask has
       output);                       // where I will append my results
+
+
+  */
+
+
 }
