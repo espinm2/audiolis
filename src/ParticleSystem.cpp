@@ -53,7 +53,7 @@ void ParticleSystem::load(){
   VELOCITY_OF_MEDIUM    = 340; //implement to sound speed in m/s
 
   // simuation var init
-  RADIUS_INIT_SPHERE    = 0.1; // Doesnt get changed to often
+  RADIUS_INIT_SPHERE    = 0.1; // Doesnt get changed to ofte
   NUM_INIT_PARTICLES    = args->num_init_particles; // imported from args
   MIN_WATTAGE           = 0.000000000002; // Doesnt change often
   MAX_ITERATIONS        = 6000; // Doesnt change often
