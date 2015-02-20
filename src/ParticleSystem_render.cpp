@@ -288,7 +288,7 @@ void ParticleSystem::setupParticles(){
     // a particle without having to hit any surface in the open.
     if(part->getMaterialHit() == "none"){
       color = glm::vec4(1,0,0,1);
-      args->animate = false;
+      // args->animate = false;
     }
     // DEBUG///////////////////////////////////////////////////////////////////
     
