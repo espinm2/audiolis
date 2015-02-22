@@ -120,7 +120,7 @@ public:
 
     render_mask = 0;
 
-    output_file = "merge_profiling.txt";
+    output_file = "merge_profiling_try_1.txt";
 
   }
 

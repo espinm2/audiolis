@@ -257,9 +257,29 @@ void ParticleSystem::update(){
       if( mask.resSpit(newPos) ){
 
         // args->animate = false; // Freezes the particles
+        
+
 
         // Create new particles
         for(glm::vec3 pos : newPos){
+
+          bool repeat_particle = false;
+
+          // We  want to check that we are not recreating particles we already have
+          for(Particle * sp : particles){                                       // DO NOT LIKE
+
+            double dist = glm::distance(sp->getOldPos(), pos);
+            
+            if( dist < RADIUS_PARTICLE_WAVE * 0.2){
+              repeat_particle = true;
+              break;
+            }
+
+          }
+
+          // Do not concider this particle
+          if(repeat_particle)
+            continue;
 
           Particle * s = new Particle(
               pos,                                   // Position
