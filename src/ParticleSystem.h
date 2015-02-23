@@ -11,6 +11,7 @@
 
 #include <vector>
 #include <iostream>
+#include <fstream>
 #include <glm/glm.hpp>
 
 #include "glCanvas.h"
@@ -72,6 +73,9 @@ class ParticleSystem {
         std::vector<glm::vec3> & output);
     
 
+    void closeProfiler(){
+      output_profiler_str.close();
+    }
 
     // Two merge particles functions //////////////////////////////////////////
     Particle * particlePairMerge(Particle * &a, Particle * &b); 
@@ -127,10 +131,17 @@ class ParticleSystem {
     double            RADIUS_PARTICLE_WAVE; // radius of cluster created upon splits
     unsigned int      SPLIT_AMOUNT; // how many created upon splits, excluding center
     
+    unsigned int      ITERATION;
+
     std::vector<Particle *> particles; // Where we store partilces in current iterations
     std::vector<Particle *> newParticles; // Where we put split particles 
 
     glm::vec3 cursor; // Where the cursor is in world space
+
+
+    // Used to save profiling output
+    std::ofstream output_profiler_str;
+    
 
     // VBOs Ids
     GLuint particle_verts_VBO;
