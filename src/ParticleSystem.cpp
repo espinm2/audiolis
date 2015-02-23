@@ -53,7 +53,7 @@ void ParticleSystem::load(){
   VELOCITY_OF_MEDIUM    = 340; //implement to sound speed in m/s
 
   // simuation var init
-  RADIUS_INIT_SPHERE    = 0.1; // Doesnt get changed to ofte
+  RADIUS_INIT_SPHERE    = 0.7; // Doesnt get changed to ofte
   NUM_INIT_PARTICLES    = args->num_init_particles; // imported from args
   MIN_WATTAGE           = 0.000000000002; // Doesnt change often
   MAX_ITERATIONS        = 6000; // Doesnt change often
@@ -78,47 +78,21 @@ void ParticleSystem::load(){
 
 
   // Debug function used to test things upon creations
-  // debug();
+  debug();
 
 }
 
 void ParticleSystem::debug(){
   // Currently just testing if our merge function works as expected
 
-  /*
-  // Create particle template
-  Particle * a = new Particle(glm::vec3(0,0,0), // NewPos
-                              glm::vec3(0,0,0), // OldPos
-                              glm::vec3(0,0,0), // Cen
-                              0, // Watts
-                              0, // Freq
-                              0); // spits
-                              a->setIter(0); // iterations
-  */
+  
+  glm::vec3 p(0,0,0);
+  glm::vec3 q(2,3,1);
 
+  glm::vec3 force = CalcRepulsiveForces(p,q,5,2);
 
-  // Testing oldPos
-  Particle * a = new Particle(glm::vec3(0,0,0), // NewPos
-                              glm::vec3(0,0,0), // OldPos
-                              glm::vec3(0,0,0), // Cen
-                              0, // Watts
-                              0, // Freq
-                              0); // spits
-                              a->setIter(0); // iterations
-
-  Particle * b = new Particle(glm::vec3(0,0,0), // NewPos
-                              glm::vec3(1,1,1), // OldPos
-                              glm::vec3(0,0,0), // Cen
-                              0, // Watts
-                              0, // Freq
-                              0); // spits
-                              b->setIter(0); // iterations
-
-  Particle * c = particlePairMerge(a,b);
-
-  std::cout << &c << std::endl;
-
-
+  std::cout << "FORCE "<< force << std::endl;
+  
 }
 
 
@@ -135,6 +109,71 @@ void ParticleSystem::update(){
   unsigned int particle_number = particles.size();
   unsigned int merge_count = 0;
   unsigned int split_count = 0;
+
+  // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEB
+  // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEB
+  
+  glm::vec3 sumForces(0,0,0);
+
+  if(args->setupInitParticles){
+    
+    for(Particle * p : particles){
+
+      // Set OldPos
+      p->setOldPos(p->getPos());
+
+
+      // Find nearest particle
+      float nearest_distance = 1000;
+      glm::vec3 nearest_pos = (glm::vec3) NULL;
+
+      for(Particle * o : particles) {
+
+        if( o == p ) // dont count self
+          continue;
+
+        float dist = glm::distance(p->getOldPos(), o->getOldPos());
+
+        // Are we close enough
+        if( dist < nearest_distance ){
+          nearest_distance = dist;
+          nearest_pos = o->getOldPos();
+        }
+      }
+
+
+      // Case where no particles are near me 
+      if(nearest_distance == 1000)
+        continue;
+      
+      
+      // Get force
+      glm::vec3 force = CalcRepulsiveForces(
+        p->getOldPos(), nearest_pos, RADIUS_PARTICLE_WAVE, 1);
+    
+      sumForces += force;
+
+      // Apply force to my particle x0 + 0.5 f t^2
+      glm::vec3 newPos = p->getOldPos()  +  force;
+
+
+      newPos = glm::normalize(newPos - p->getCenter())*(float)RADIUS_INIT_SPHERE 
+        + p->getCenter();
+      
+      p->setPos(newPos);
+
+        
+    }
+
+    std::cout << "FORCES : " << glm::length(sumForces) << std::endl;
+    if(glm::length(sumForces) < 0.01){
+      args->setupInitParticles = false;
+    }
+    return; // Do no continue
+  }
+
+  // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEB
+  // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEB
 
   // SETUP ////////////////////////////////////////////////////////////////////
   
@@ -350,10 +389,14 @@ void ParticleSystem::update(){
   // unsigned int merge_count = 0;
   // unsigned int split_count = 0;
   //
-  if(particle_number != 0){
-    output_profiler_str << iteration << " " << particle_number 
-      << " " << merge_count << " " << split_count << std::endl;
+
+  if(args->profile){
+    if(particle_number != 0){
+      output_profiler_str << iteration << " " << particle_number 
+        << " " << merge_count << " " << split_count << std::endl;
+    }
   }
+
   ITERATION ++;
 
 } // end func
@@ -527,7 +570,7 @@ void ParticleSystem::createDebugParticle(){
 
   // Create a ray to move up a little
   glm::vec3 newPos = 
-    cursor + ( (float) RADIUS_INIT_SPHERE * 2 ) * directionToTarget;
+    cursor + ( (float) RADIUS_INIT_SPHERE  ) * directionToTarget;
 
 
 
@@ -613,7 +656,7 @@ void ParticleSystem::createInitWave(){
     glm::vec3 pos(x,y,z);
   
     // Project into a circle
-    float radius = s * sqrt(2.0);
+    float radius = s;
     
     glm::vec3 dir = pos - cursor;
   

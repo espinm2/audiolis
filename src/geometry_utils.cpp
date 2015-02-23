@@ -286,3 +286,21 @@ glm::vec3 ClosestPoint(const glm::vec3 & v, const std::vector<glm::vec3>  & poin
 
 }
 
+glm::vec3 CalcRepulsiveForces(const glm::vec3 & p, const glm::vec3 & q, 
+    float r, float k){
+
+  // Assumptions : p is particle in question
+  // Assumptions : q is the particle we are pushing against
+  // Assumptions : r is the rest length used
+   
+  
+  glm::vec3 restPoint = p + r * glm::normalize(q-p);
+  glm::vec3 displacement = q - restPoint;
+  glm::vec3 force = k * displacement;
+
+  return force;
+  
+
+
+
+}

@@ -77,6 +77,9 @@ public:
         i++; assert (i < argc); 
         timestep = atof(argv[i]);
 
+      } else if (!strcmp(argv[i],"-profile")) {
+        profile = true;
+
       } else {
         printf ("whoops error with command line argument %d: '%s'\n",i,argv[i]);
         assert(0);
@@ -120,7 +123,11 @@ public:
 
     render_mask = 0;
 
-    output_file = "merge_profiling_try_1.txt";
+    output_file = "merge_profiling_data.txt";
+
+    profile = false;
+
+    setupInitParticles = true;
 
   }
 
@@ -163,6 +170,9 @@ public:
   bool render_edges;
 
   int render_mask;
+
+  bool setupInitParticles;
+  bool profile;
 
   // Material Key
   // wall_material 0 => bricked_wall; 
