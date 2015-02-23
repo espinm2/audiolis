@@ -92,4 +92,7 @@ glm::vec3 VectorProjectPlane(const glm::vec3 & plane_normal, const glm::vec3 & v
 glm::vec3 ClosestPoint(const glm::vec3 & point, const std::vector<glm::vec3>  & points);
 
 
+// Returns vector of repulive forces
+glm::vec3 CalcRepulsiveForces(const glm::vec3 & p, const glm::vec3 & q, 
+    float r, float k);
 #endif

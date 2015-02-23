@@ -120,6 +120,8 @@ public:
 
     render_mask = 0;
 
+    setupInitParticles = true;
+
   }
 
   // ==============
@@ -159,6 +161,8 @@ public:
   bool render_edges;
 
   int render_mask;
+
+  bool setupInitParticles;
 
   // Material Key
   // wall_material 0 => bricked_wall; 
