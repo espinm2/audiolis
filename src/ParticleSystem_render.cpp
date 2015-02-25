@@ -41,6 +41,10 @@ void ParticleSystem::initializeVBOs(){
   glGenBuffers(1,&happyness_verts_VBO);
   glGenBuffers(1,&delusional_verts_VBO);
   glGenBuffers(1,&connection_verts_VBO);
+  
+  HandleGLError("kd init enter");
+  particle_kdtree.initializeVBOs();
+  HandleGLError("kd init leave");
 
 }
 
@@ -56,8 +60,12 @@ void ParticleSystem::setupVBOs(){
   happyness_verts.clear();
   delusional_verts.clear();
   connection_verts.clear();
-
+  
   // Setup new Data
+  HandleGLError("setupvbo kd enter");
+  particle_kdtree.setupVBOs();
+  HandleGLError("setupvbo kd leave");
+
   setupCursorPoint();
   setupVelocityVisual();
   setupParticles(); 
@@ -67,14 +75,12 @@ void ParticleSystem::setupVBOs(){
   setupDelusionalParticles(); // better visualization
 
   HandleGLError("leave setup vbos");
-
 }
 
 void ParticleSystem::drawVBOs(){
   HandleGLError("enter draw vbos");
 
   drawCursorPoint();
-
 
   if(args->render_edges){
     // drawHappinessVisual();
@@ -86,7 +92,9 @@ void ParticleSystem::drawVBOs(){
   drawVelocityVisual();
   drawParticles();
 
-
+  HandleGLError("drawvbo kd enter");
+  particle_kdtree.drawVBOs();
+  HandleGLError("drawvbo kd leave");
 
   HandleGLError("leaving draw vbos");
 
@@ -102,6 +110,14 @@ void ParticleSystem::cleanupVBOs(){
   glDeleteBuffers(1,&happyness_verts_VBO);
   glDeleteBuffers(1,&delusional_verts_VBO);
   glDeleteBuffers(1,&connection_verts_VBO);
+
+
+
+  HandleGLError("kdtree clean enter");
+  particle_kdtree.cleanupVBOs();
+  HandleGLError("kdtree clean leave");
+
+
   HandleGLError("leave clean vbos");
 }
 

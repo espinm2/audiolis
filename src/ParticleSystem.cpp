@@ -149,7 +149,7 @@ void ParticleSystem::update(){
       
       // Get force
       glm::vec3 force = CalcRepulsiveForces(
-        p->getOldPos(), nearest_pos, RADIUS_PARTICLE_WAVE, 1);
+        p->getOldPos(), nearest_pos, RADIUS_PARTICLE_WAVE, 0.05);
     
       sumForces += force;
 
@@ -167,7 +167,7 @@ void ParticleSystem::update(){
 
     std::cout << "FORCES : " << glm::length(sumForces) << std::endl;
     if(glm::length(sumForces) < 0.01){
-      args->setupInitParticles = false;
+    //  args->setupInitParticles = false;
     }
     return; // Do no continue
   }
@@ -396,6 +396,9 @@ void ParticleSystem::update(){
         << " " << merge_count << " " << split_count << std::endl;
     }
   }
+
+
+  particle_kdtree.update(particles, *bbox);
 
   ITERATION ++;
 
@@ -720,6 +723,9 @@ void ParticleSystem::createInitWave(){
     particles.push_back(p);
   
   }
+
+
+  particle_kdtree.update(particles, *bbox);
 }
 
 

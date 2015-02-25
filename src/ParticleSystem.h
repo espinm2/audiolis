@@ -18,6 +18,7 @@
 #include "boundingbox.h"
 #include "vbo_structs.h"
 #include "mask.h"
+#include "KDTree.h"
 
 typedef std::vector<std::vector<int>> vMat;
 
@@ -112,10 +113,14 @@ class ParticleSystem {
     void drawDelusionalParticles();
     void drawDelusionalConnections();
 
+
+
+
     // Memebers
     ArgParser * args;
     BoundingBox * bbox;
     Mesh * mesh;
+    
 
 
     // Simuation Important Varibles
@@ -135,6 +140,7 @@ class ParticleSystem {
 
     std::vector<Particle *> particles; // Where we store partilces in current iterations
     std::vector<Particle *> newParticles; // Where we put split particles 
+    KDTree particle_kdtree; // Where we store particles in a td tre
 
     glm::vec3 cursor; // Where the cursor is in world space
 
