@@ -66,7 +66,7 @@ void KDTree::Optimize(uint i, uint j, partPtrVec & a, uint8 d, uint hp){
 
   std::cout << "Optimize(" << i << ", " << j << ", a, " << d << ", " << hp << ");\n";
   // Do we have a legal hp?p
-  if( binary_heap.size() < hp ){
+  if( binary_heap.size() < hp || i == j ){
   
     std::cout << "Rejected: " << hp << std::endl;
     return;
@@ -101,7 +101,10 @@ void KDTree::Optimize(uint i, uint j, partPtrVec & a, uint8 d, uint hp){
   d = (d + 1)  % 3; // update descriminator
 
   // Left child & Right child recur
+  std::cout << "Optimize(" << i << ", " << j << ", a, " << d << ", " << hp << ") ==> Left Child ";
   Optimize(i             , median_index, a, d, hp * 2 + 1 );
+
+  std::cout << "Optimize(" << i << ", " << j << ", a, " << d << ", " << hp << ") ==> Right Child ";
   Optimize(median_index+1, j           , a, d, hp * 2 + 2 );
 
 }
