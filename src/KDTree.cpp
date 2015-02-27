@@ -4,6 +4,7 @@
 #include <vector>
 #include <algorithm>
 #include <iostream>
+#include <cmath>
 
 #include "vbo_structs.h"
 #include "render_utils.h"
@@ -30,8 +31,9 @@ void KDTree::update(const std::vector<Particle *> & unsorted, const BoundingBox 
   // Copy boundbox
   bbox = b;
 
+  unsigned int padding = pow(2, (int)log(unsorted.size()));
   // Full the heap with empty values
-  binary_heap = partPtrVec(unsorted.size(),NULL);
+  binary_heap = partPtrVec(unsorted.size() + padding ,NULL);
 
   // If we didnt get any particles
   if(binary_heap.size() == 0)
@@ -45,36 +47,39 @@ void KDTree::update(const std::vector<Particle *> & unsorted, const BoundingBox 
   // std::cout << "Done Building" << std::endl;
   
 
-  for( uint i = 0; i < binary_heap.size(); i++ ){
-    if(binary_heap[i] == NULL ){
-    
-      std::cout << "ERROR INFO HEAP DUMP" << std::endl;
-      std::cout << "Size of array A" << unsorted.size() << std::endl;
-      for( uint j = 0; j < binary_heap.size(); j++ ){
-        std::cout << "binary_heap[" << j <<"] = " << binary_heap[j] << std::endl;
-      }
-      assert(false);
-    
-    }
-  }
-
+  // for( uint i = 0; i < binary_heap.size(); i++ ){
+  //   if(binary_heap[i] == NULL ){
+  //   
+  //     std::cout << "ERROR INFO HEAP DUMP" << std::endl;
+  //     std::cout << "Size of array A" << unsorted.size() << std::endl;
+  //     for( uint j = 0; j < binary_heap.size(); j++ ){
+  //       std::cout << "binary_heap[" << j <<"] = " << binary_heap[j] << std::endl;
+  //     }
+  //     assert(false);
+  //   
+  //   }
+  // }
 }
 
 void KDTree::Optimize(uint i, uint j, partPtrVec & a, uint8 d, uint hp){
   // Reminders : this will always be changing vector a in place
   // FIXME: Might not work inplace
 
-  std::cout << "Optimize(" << i << ", " << j << ", a, " << d << ", " << hp << ");\n";
+  // std::cout << "Optimize(" << i << ", " << j << ", a, " << d << ", " << hp << ");\n";
   // Do we have a legal hp?p
   if( binary_heap.size() < hp || i == j ){
   
-    std::cout << "Rejected: " << hp << std::endl;
+    //std::cout << "Rejected: " << hp << std::endl;
     return;
   }
 
-
   if( i + 1 == j ){ // No need to sort
     binary_heap[hp] = a[i]; // cpy pointer for heap
+    return;
+  }
+
+  if( i == j ) {
+    binary_heap[hp] = NULL;
     return;
   }
 
@@ -101,10 +106,10 @@ void KDTree::Optimize(uint i, uint j, partPtrVec & a, uint8 d, uint hp){
   d = (d + 1)  % 3; // update descriminator
 
   // Left child & Right child recur
-  std::cout << "Optimize(" << i << ", " << j << ", a, " << d << ", " << hp << ") ==> Left Child ";
+  // std::cout << "Optimize(" << i << ", " << j << ", a, " << d << ", " << hp << ") ==> Left Child ";
   Optimize(i             , median_index, a, d, hp * 2 + 1 );
 
-  std::cout << "Optimize(" << i << ", " << j << ", a, " << d << ", " << hp << ") ==> Right Child ";
+  // std::cout << "Optimize(" << i << ", " << j << ", a, " << d << ", " << hp << ") ==> Right Child ";
   Optimize(median_index+1, j           , a, d, hp * 2 + 2 );
 
 }
@@ -117,20 +122,6 @@ const Particle *  KDTree::leftChild(unsigned int index)  const{
   return (binary_heap[index*2 + 1]);
 }
 
-void KDTree::rightChild(uint index, Particle * p){
-  uint i = index * 2 + 2;
-  assert(0 <= index && i < binary_heap.size()); // sanity check
-  binary_heap[i] = p; // copied the pointer p into my heap
-
-}
-
-void KDTree::leftChild(uint index, Particle * p){
-  uint i = index * 2 + 1;
-  assert(0 <= index && i < binary_heap.size()); // sanity check
-  binary_heap[i] = p; // copied the pointer p into my heap
-}
-
-
 // Used to render  for debuging, will render children of  hp
 void KDTree::renderKDTree(uint hp, uint8 d, const glm::vec3 & minPt, const glm::vec3 & maxPt) {
 
@@ -138,6 +129,9 @@ void KDTree::renderKDTree(uint hp, uint8 d, const glm::vec3 & minPt, const glm::
   assert( 0 <= hp && hp < binary_heap.size() );
   assert( 0 <= d && d <= 2 );
 
+  // Skipping because null
+  if( binary_heap[hp] == NULL)
+    return;
 
   glm::vec3 minLeft = minPt;
   glm::vec3 maxLeft;
@@ -193,6 +187,158 @@ void KDTree::renderKDTree(uint hp, uint8 d, const glm::vec3 & minPt, const glm::
     renderKDTree(hp*2+2, (d+1)%3, minRight, maxRight);
 
 }
+
+
+bool KDTree::ParticleSearch(const Particle * &p){
+
+  uint cur_index = 0;
+  uint8 d = 0;
+  bool found = false;
+
+  while(!found){
+  
+    // I feel off the tree in some way
+    if(binary_heap.size() <= cur_index || binary_heap[cur_index] == NULL)
+      break;
+
+    // If I found my thing
+    if(binary_heap[cur_index] == p){
+      found = true; break;
+    }
+
+    if( d == 0 ){
+      // xs
+      if(p->getOldPos().x < binary_heap[cur_index]->getOldPos().x){
+        cur_index = cur_index * 2 + 1;
+      }else{
+        cur_index = cur_index * 2 + 2;
+      }
+
+    } else if( d == 1) {
+      //ys
+      if(p->getOldPos().y < binary_heap[cur_index]->getOldPos().y){
+        cur_index = cur_index * 2 + 1;
+      }else{
+        cur_index = cur_index * 2 + 2;
+      }
+    
+    
+    }else{
+      //zs
+      if(p->getOldPos().z < binary_heap[cur_index]->getOldPos().z){
+        cur_index = cur_index * 2 + 1;
+      }else{
+        cur_index = cur_index * 2 + 2;
+      }
+    }
+    
+    d = ( d + 1) % 3;
+  
+  }
+
+}
+
+
+void KDTree::GatherParticles( Particle * center_particle, double gather_radius, 
+    uint heap_index, uint8 d, partPtrVec & gathered_particles, 
+    glm::vec3 minPt, glm::vec3 maxPt){
+
+    // I feel off the heap or reached a leaf
+    if(binary_heap.size() <= heap_index || binary_heap[heap_index] == NULL)
+      return;
+
+
+    // If you fall inside the sphere
+    if(glm::distance(center_particle->getPos(),binary_heap[heap_index]->getPos()) <= gather_radius ){
+      gathered_particles.push_back(binary_heap[heap_index]);
+    }
+
+    // Generate bbox for each
+    glm::vec3 minLeft = minPt;
+    glm::vec3 maxLeft;
+    
+    glm::vec3 minRight;
+    glm::vec3 maxRight = maxPt;
+
+    glm::vec3 point = binary_heap[heap_index]->getPos();
+
+
+    if(d == 0){
+      // Split along x axis
+      
+      maxLeft = glm::vec3(point.x, 
+                          maxPt.y,
+                          maxPt.z);
+    
+      minRight = glm::vec3(point.x,
+                           minPt.y,
+                           minPt.z);
+    
+    }else if( d == 1){
+      // Split along y axis
+      maxLeft = glm::vec3(maxPt.x, 
+                          point.y,
+                          maxPt.z);
+    
+      minRight = glm::vec3(minPt.x,
+                           point.y,
+                           minPt.z);
+    }else{
+      // Split along z axis
+      maxLeft = glm::vec3(maxPt.x, 
+                          maxPt.y,
+                          point.z);
+    
+      minRight = glm::vec3(minPt.x,
+                           minPt.y,
+                           point.z);
+    
+    }
+
+    if(Intersection(minLeft,maxLeft,center_particle->getPos(),gather_radius))
+      GatherParticles(center_particle, gather_radius, heap_index*2+1, (d+1)%3, gathered_particles,minLeft,maxLeft);
+      
+    if(Intersection(minRight,maxRight,center_particle->getPos(),gather_radius))
+      GatherParticles(center_particle, gather_radius, heap_index*2+2, (d+1)%3, gathered_particles,minRight,maxRight);
+}
+
+
+bool KDTree::Intersection(glm::vec3 tmp_min, glm::vec3 tmp_max, 
+   glm::vec3 sph_center, double sph_radius){
+
+
+  // Make a bounding box for the spehere
+  glm::vec3 sph_min(sph_center.x - sph_radius, sph_center.y - sph_radius, sph_center.y - sph_radius);
+  glm::vec3 sph_max(sph_center.x + sph_radius, sph_center.y + sph_radius, sph_center.y + sph_radius);
+
+  if (sph_min.x > tmp_max.x) return false;
+  if (tmp_min.x > sph_max.x) return false;
+  if (sph_min.y > tmp_max.y) return false;
+  if (tmp_min.y > sph_max.y) return false;
+  if (sph_min.z > tmp_max.z) return false;
+  
+  return true;
+
+
+}
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Render Code ================================================================
+
 
 void KDTree::renderBBox(const glm::vec3 &A, const glm::vec3 &B) {
 

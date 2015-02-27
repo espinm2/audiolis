@@ -20,16 +20,18 @@ class KDTree{
 
     // Will create an balanced KDTree.
     KDTree(){}
-    void update(const std::vector<Particle *> & unsorted, const BoundingBox & bbox);
+    void update(const partPtrVec & unsorted, const BoundingBox & bbox);
     void Optimize(uint i, uint j, partPtrVec & a, uint8 d, uint hp);
+
+    bool ParticleSearch(const Particle * &p);
+
+    void GatherParticles( Particle * center_particle, double gather_radius, uint heap_index, uint8 d, partPtrVec & gathered_particles, glm::vec3 minPt, glm::vec3 maxPt);
+
+    bool Intersection(glm::vec3 min_pt, glm::vec3 max_pt, glm::vec3 sph_center, double sph_radius);
     
     // Used to get the children
     const Particle * rightChild(uint index) const;
     const Particle * leftChild(uint index)  const;
-
-    // Used to set children
-    void rightChild(uint index, Particle * p);
-    void leftChild(uint index, Particle * p);
 
     bool hasLeft(const uint & index)const{
       return 0 <= index && index * 2 + 1 < binary_heap.size(); }

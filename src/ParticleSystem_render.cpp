@@ -41,10 +41,7 @@ void ParticleSystem::initializeVBOs(){
   glGenBuffers(1,&happyness_verts_VBO);
   glGenBuffers(1,&delusional_verts_VBO);
   glGenBuffers(1,&connection_verts_VBO);
-  
-  HandleGLError("kd init enter");
   particle_kdtree.initializeVBOs();
-  HandleGLError("kd init leave");
 
 }
 
@@ -62,17 +59,20 @@ void ParticleSystem::setupVBOs(){
   connection_verts.clear();
   
   // Setup new Data
-  HandleGLError("setupvbo kd enter");
-  particle_kdtree.setupVBOs();
-  HandleGLError("setupvbo kd leave");
+  if(args->kdtree_render)
+    particle_kdtree.setupVBOs();
 
   setupCursorPoint();
-  setupVelocityVisual();
+
+  if(args->direction)
+    setupVelocityVisual();
+
   setupParticles(); 
 
-  setupEdges(); // debug visualization
-
-  setupDelusionalParticles(); // better visualization
+  if(args->render_edges){
+    // setupEdges(); // Dead to me
+    setupDelusionalParticles(); // better visualization
+  }
 
   HandleGLError("leave setup vbos");
 }
@@ -88,13 +88,13 @@ void ParticleSystem::drawVBOs(){
     drawDelusionalConnections();
   }
 
+  if(args->direction)
+    drawVelocityVisual();
 
-  drawVelocityVisual();
+  if(args->kdtree_render)
+    particle_kdtree.drawVBOs();
+
   drawParticles();
-
-  HandleGLError("drawvbo kd enter");
-  particle_kdtree.drawVBOs();
-  HandleGLError("drawvbo kd leave");
 
   HandleGLError("leaving draw vbos");
 
@@ -486,6 +486,7 @@ void ParticleSystem::drawVelocityVisual(){
 
 void ParticleSystem::setupEdges(){
   // This function will setup the outline_vert vector of points
+  assert(false);
 
   // If I have nothing to setup don't
   if(particles.size() == 0)
