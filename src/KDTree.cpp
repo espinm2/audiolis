@@ -65,15 +65,17 @@ void KDTree::Optimize(uint i, uint j, partPtrVec & a, uint8 d, uint hp){
   // Reminders : this will always be changing vector a in place
   // FIXME: Might not work inplace
 
-  // std::cout << "Optimize(" << i << ", " << j << ", a, " << d << ", " << hp << ");\n";
+  //std::cout << "Optimize(" << i << ", " << j << ", a, " << d << ", " << hp << ");\n";
+
   // Do we have a legal hp?p
-  if( binary_heap.size() < hp || i == j ){
+  if( binary_heap.size() <= hp || i == j ){
   
     //std::cout << "Rejected: " << hp << std::endl;
     return;
   }
 
   if( i + 1 == j ){ // No need to sort
+    //std::cout << "binary_heap[" << hp << "] = a[" << i << "]; // binary_heap.size() == " << binary_heap.size() << std::endl;
     binary_heap[hp] = a[i]; // cpy pointer for heap
     return;
   }
