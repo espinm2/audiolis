@@ -256,15 +256,15 @@ void KDTree::GatherParticles( Particle * center_particle, double gather_radius,
       return;
 
     // If you fall inside the sphere
-    bool dist_okay =  glm::distance(center_particle->getPos(),binary_heap[heap_index]->getPos()) <= gather_radius;
-    bool angl_okay =  angleBetweenVectors(center_particle->getDir(), binary_heap[heap_index]->getDir()) <= gather_angle;
+    bool dist_okay =  glm::distance(center_particle->getPos(),binary_heap[heap_index]->getPos()) < gather_radius;
+    bool angl_okay =  angleBetweenVectors(center_particle->getDir(), binary_heap[heap_index]->getDir()) < gather_angle;
 
     if( dist_okay  && angl_okay){
       Particle * pending = binary_heap[heap_index];
 
       // Check that I am not adding myself or a dead particle
       if( pending != center_particle && ! pending->isDead() )
-        gathered_particles.push_back(binary_heap[heap_index]);
+        gathered_particles.push_back(pending);
     }
 
     // Generate bbox for each
@@ -322,8 +322,8 @@ bool KDTree::Intersection(glm::vec3 tmp_min, glm::vec3 tmp_max,
 
 
   // Make a bounding box for the spehere
-  glm::vec3 sph_min(sph_center.x - sph_radius, sph_center.y - sph_radius, sph_center.y - sph_radius);
-  glm::vec3 sph_max(sph_center.x + sph_radius, sph_center.y + sph_radius, sph_center.y + sph_radius);
+  glm::vec3 sph_min(sph_center.x - sph_radius, sph_center.y - sph_radius, sph_center.z - sph_radius);
+  glm::vec3 sph_max(sph_center.x + sph_radius, sph_center.y + sph_radius, sph_center.z + sph_radius);
 
   if (sph_min.x > tmp_max.x) return false;
   if (tmp_min.x > sph_max.x) return false;

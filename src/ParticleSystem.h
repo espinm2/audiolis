@@ -21,6 +21,7 @@
 #include "KDTree.h"
 
 typedef std::vector<std::vector<int>> vMat;
+typedef std::vector<Particle *> PartPtrVec;
 
 // Forward declaration
 class ArgParser;
@@ -73,6 +74,8 @@ class ParticleSystem {
         std::vector<Particle *> &gathered_particles,
         std::vector<glm::vec3> & output);
     void stabalizeInitalSphere();
+    
+    void linearGatherParticles(Particle * center, double r, double a, PartPtrVec & result);
 
     void closeProfiler(){
       output_profiler_str.close();

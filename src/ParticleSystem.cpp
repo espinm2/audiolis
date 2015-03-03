@@ -154,6 +154,32 @@ void ParticleSystem::stabalizeInitalSphere(){
   }
 }
 
+
+void ParticleSystem::linearGatherParticles(Particle * center, double r, double a, PartPtrVec & result){
+
+  // Old Gather code
+  for(int i = 0; i < particles.size(); i++){
+
+    Particle * other = particles[i];
+
+    if(other == center)
+      continue;
+
+    if(other->isDead())
+      continue;
+
+    float dist = glm::distance(center->getOldPos(), other->getOldPos());
+
+    if(dist < r){
+
+      float angle = angleBetweenVectors(center->getDir(), other->getDir());
+
+      if( angle < a)
+        result.push_back(other);
+    }
+  }
+}
+
 void ParticleSystem::update(){
   /*
    * Input : None
@@ -192,13 +218,23 @@ void ParticleSystem::update(){
     PartPtrVec mask_pending_particles;
     std::vector < glm::vec3 > new_positions; // used incase we split
 
-    // GATHER our particles from our kd tree (will be generious)
-    particle_kdtree.GatherParticles(cur,gather_distance, gather_angle,gathered_particles_kdtree);
+    // Use KDTree or Old Code // DEBUG DEBUG DEBUG
+    if(true){
+      // GATHER our particles from our kd tree (will be generious)
+      particle_kdtree.GatherParticles(cur,gather_distance, gather_angle,
+        gathered_particles_kdtree);
 
-    // Refine our results 
-    for(Particle * p: gathered_particles_kdtree)
-      if(glm::distance(p->getOldPos(), cur->getOldPos()) < gather_distance )
-        gathered_particles.push_back(p);
+      // Refine our results 
+      for(Particle * p: gathered_particles_kdtree)
+        if(glm::distance(p->getOldPos(), cur->getOldPos()) < gather_distance )
+          gathered_particles.push_back(p);
+
+    }else{
+
+      linearGatherParticles(cur,gather_distance,gather_angle,gathered_particles);
+
+    }
+
 
 
 
