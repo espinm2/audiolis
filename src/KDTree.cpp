@@ -241,6 +241,10 @@ bool KDTree::ParticleSearch(const Particle * &p){
 }
 
 
+void KDTree::GatherParticles(Particle * center, double r, partPtrVec & result){
+  // Used to call the recusrive function
+  GatherParticles(center, r, 0, 0, result, bbox.getMin(), bbox.getMax());
+}
 void KDTree::GatherParticles( Particle * center_particle, double gather_radius, 
     uint heap_index, uint8 d, partPtrVec & gathered_particles, 
     glm::vec3 minPt, glm::vec3 maxPt){
@@ -249,10 +253,13 @@ void KDTree::GatherParticles( Particle * center_particle, double gather_radius,
     if(binary_heap.size() <= heap_index || binary_heap[heap_index] == NULL)
       return;
 
-
     // If you fall inside the sphere
     if(glm::distance(center_particle->getPos(),binary_heap[heap_index]->getPos()) <= gather_radius ){
-      gathered_particles.push_back(binary_heap[heap_index]);
+      Particle * pending = binary_heap[heap_index];
+
+      // Check that I am not adding myself or a dead particle
+      if( pending != center_particle && ! pending->isDead() )
+        gathered_particles.push_back(binary_heap[heap_index]);
     }
 
     // Generate bbox for each
@@ -323,25 +330,8 @@ bool KDTree::Intersection(glm::vec3 tmp_min, glm::vec3 tmp_max,
 
 
 }
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // Render Code ================================================================
-
-
 void KDTree::renderBBox(const glm::vec3 &A, const glm::vec3 &B) {
 
   float thickness = 0.0005 * glm::length( B - A );

@@ -25,6 +25,7 @@ public:
 
     timeLeft     = 0;
     iterations   = 0;
+    isDead      = false;
 
     materialHit =  "";
   }
@@ -43,9 +44,9 @@ public:
 
       timeLeft    = 0;
       iterations  = 0;
+      isDead      = false;
 
       materialHit =  "";
-
   }
 
   // Accessors ////////////////////////////////////////////////////////////////
@@ -57,17 +58,13 @@ public:
   double  getWatt()     const { return wattage; }
   double  getFreq()     const { return freqency; }
   int     getSplit()    const { return splits; }
+
+
   double  getTimeLeft() const { return timeLeft; }
   int     getIter()     const { return iterations; }
+  bool    isDead()      const { return isDead; }
 
-  glm::vec3 getDir() const { 
-
-    // Computes the direction
-    glm::vec3 res = (oldPosition-center); 
-    res = glm::normalize(res);
-    return res;
-
-  }
+  glm::vec3 getDir() const { return glm::normalize(oldPosition-center); }
 
   std::string     getMaterialHit(){ return materialHit; }
 
@@ -86,6 +83,7 @@ public:
   void decTime    (const double  & t)  { timeLeft = timeLeft - t; }
   void setIter    (const int & i)      { iterations = i; }
   void incIter    () { iterations++; }
+  void kill       () { isDead = true; }
 
   void setMaterial (const std::string & name ) { materialHit = name; } 
 
@@ -107,8 +105,10 @@ private:
 
   double    timeLeft;       // How much time left until you hit wall
   int       iterations;     // How many iterations have I been around for
+  bool isDead;              // Replacement for the delete mask
 
   std::string materialHit;  // Name of the material I will hit next
+
 
 };
 

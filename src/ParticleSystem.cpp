@@ -75,11 +75,8 @@ void ParticleSystem::load(){
     exit(1);
   }
 
-
-
   // Debug function used to test things upon creations
-  debug();
-
+  // debug();
 }
 
 void ParticleSystem::debug(){
@@ -110,11 +107,11 @@ void ParticleSystem::update(){
   unsigned int merge_count = 0;
   unsigned int split_count = 0;
 
-  // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEB
-  // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEB
-  
+
+  // Where we store how much force is in the inital system
   glm::vec3 sumForces(0,0,0);
 
+  // Find good start configeration before we expand outwards
   if(args->setupInitParticles){
     
     for(Particle * p : particles){
@@ -146,7 +143,6 @@ void ParticleSystem::update(){
       if(nearest_distance == 1000)
         continue;
       
-      
       // Get force
       glm::vec3 force = CalcRepulsiveForces(
         p->getOldPos(), nearest_pos, RADIUS_PARTICLE_WAVE, 0.05);
@@ -165,22 +161,18 @@ void ParticleSystem::update(){
         
     }
 
-    std::cout << "FORCES : " << glm::length(sumForces) << std::endl;
-    if(glm::length(sumForces) < 0.01){
+    // std::cout << "FORCES : " << glm::length(sumForces) << std::endl;
+    // if(glm::length(sumForces) < 0.01){
     //  args->setupInitParticles = false;
-    }
-    return; // Do no continue
-  }
+    // }
 
-  // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEB
-  // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEB
+    return; // Do no continue to "update"
+  }
 
   // SETUP ////////////////////////////////////////////////////////////////////
   
   // Hold new particles from split
   std::vector<Particle *> splitParticles;
-  
-  std::vector<int> deleteMask (particles.size(), 0); //1 == delete, 0 == keep
   
   for(int index = 0; index < particles.size(); index++){
 
@@ -189,55 +181,30 @@ void ParticleSystem::update(){
     cur->setOldPos(cur->getPos());
   
     // Check if we are not to be deleted
-    if(deleteMask[index] == 0){
+    if(!cur->isDead()){
     
       // GATHER STEP //////////////////////////////////////////////////////////
 
+      // Criteria for gathering particles
       float gather_distance = RADIUS_PARTICLE_WAVE * 2.5;
       float gather_angle    = M_PI / 4.0;
 
-      std::vector<unsigned int> gathered_particles_indices;
+      std::vector<Particle *> gathered_particles; // new
 
-      for(int i = 0; i < particles.size(); i++){
-      
-        Particle * other = particles[i];
-
-        if( other == cur ) // dont count self
-          continue;
-
-        if( deleteMask[i] == 1 ) // dont count the dead
-          continue;
-
-        float dist = glm::distance(cur->getOldPos(), other->getOldPos());
-
-        // Are we close enough
-        if( dist < gather_distance){
-        
-          float angle = acos( glm::dot( cur->getDir(), other->getDir() ) / 
-              (glm::length(cur->getDir()) * glm::length(other->getDir())));
-          
-          // Are we traveling together
-          if( angle < gather_angle )
-            gathered_particles_indices.push_back(i);
-        
-        }
-      
-      }
+      // Call to our updated gather function
+      particle_kdtree.GatherParticles(cur,gather_distance,gathered_particles);
 
       // MERGE STEP ///////////////////////////////////////////////////////////
-    
       std::vector<Particle *> particles_to_merge; //  want to merge
 
-      for(int i = 0; i < gathered_particles_indices.size(); i++){
+      for(int i = 0; i < gathered_particles.size(); i++){
 
-        Particle * other = particles[gathered_particles_indices[i]];
+        Particle * other = gathered_particles[i];
 
-        if( other == cur ) // dont count self
+        if( other == cur || other->isDead()) // dont count self
           continue;
 
-        if( deleteMask[gathered_particles_indices[i]] == 1 ) // dead particle
-          continue;
-
+        // FIXME: FIX THIS MESS
         float dist = glm::distance(cur->getOldPos(), other->getOldPos());
 
         float merge_distance = RADIUS_PARTICLE_WAVE * 0.2; // milimetter
@@ -382,14 +349,9 @@ void ParticleSystem::update(){
   }//moveloop
 
 
-  // ooutput
 
-  // unsigned int iteration = ITERATION;
-  // unsigned int particle_number = particles.size();
-  // unsigned int merge_count = 0;
-  // unsigned int split_count = 0;
-  //
-
+  // Used to output to the profiler to see how many times we have to call
+  // Specific functions 
   if(args->profile){
     if(particle_number != 0){
       output_profiler_str << iteration << " " << particle_number 
@@ -398,6 +360,7 @@ void ParticleSystem::update(){
   }
 
 
+  // Build our kd tree
   particle_kdtree.update(particles, *bbox);
 
   ITERATION ++;
