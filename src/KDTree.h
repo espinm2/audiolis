@@ -11,7 +11,7 @@ class VBOPosNormalColor;
 
 typedef unsigned int uint;
 typedef short unsigned int uint8;
-typedef std::vector<Particle *>  partPtrVec;
+typedef std::vector<Particle *>  PartPtrVec;
 
 // Custom kd-tree class to store our particle system in 3d space
 class KDTree{
@@ -20,16 +20,16 @@ class KDTree{
 
     // Will create an balanced KDTree.
     KDTree(){}
-    void update(const partPtrVec & unsorted, const BoundingBox & bbox);
-    void Optimize(uint i, uint j, partPtrVec & a, uint8 d, uint hp);
+    void update(const PartPtrVec & unsorted, const BoundingBox & bbox);
+    void Optimize(uint i, uint j, PartPtrVec & a, uint8 d, uint hp);
 
     // Untested functions
     bool ParticleSearch(const Particle * &p);
 
-    void GatherParticles(Particle * center, double r, partPtrVec & result);
+    void GatherParticles(Particle * center, double r, double a, PartPtrVec & result);
     
-    void GatherParticles( Particle * center_particle, double gather_radius, uint heap_index, 
-        uint8 d, partPtrVec & gathered_particles, glm::vec3 minPt, glm::vec3 maxPt);
+    void GatherParticles(Particle * center_particle, double gather_radius, double gather_angle, 
+        uint heap_index, uint8 d, PartPtrVec & gathered_particles, glm::vec3 minPt, glm::vec3 maxPt);
 
     bool Intersection(glm::vec3 min_pt, glm::vec3 max_pt, glm::vec3 sph_center, double sph_radius);
     

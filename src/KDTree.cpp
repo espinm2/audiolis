@@ -8,11 +8,12 @@
 
 #include "vbo_structs.h"
 #include "render_utils.h"
+#include "geometry_utils.h"
 #include "glCanvas.h"
 
 typedef unsigned int uint;
 typedef short unsigned int uint8;
-typedef std::vector<Particle *>  partPtrVec;
+typedef std::vector<Particle *>  PartPtrVec;
 
 // Nonmemeber comparsion functions used by Optimize
 bool compare_x_pos(Particle * a, Particle * b){
@@ -33,14 +34,14 @@ void KDTree::update(const std::vector<Particle *> & unsorted, const BoundingBox 
 
   unsigned int padding = pow(2, (int)log(unsorted.size()));
   // Full the heap with empty values
-  binary_heap = partPtrVec(unsorted.size() + padding ,NULL);
+  binary_heap = PartPtrVec(unsorted.size() + padding ,NULL);
 
   // If we didnt get any particles
   if(binary_heap.size() == 0)
     return;
 
   // Create  an unsorted array
-  partPtrVec unsorted_copy = unsorted;
+  PartPtrVec unsorted_copy = unsorted;
 
   // Create my binary heap rec
   Optimize(0, unsorted_copy.size(), unsorted_copy, 0, 0);
@@ -61,7 +62,7 @@ void KDTree::update(const std::vector<Particle *> & unsorted, const BoundingBox 
   // }
 }
 
-void KDTree::Optimize(uint i, uint j, partPtrVec & a, uint8 d, uint hp){
+void KDTree::Optimize(uint i, uint j, PartPtrVec & a, uint8 d, uint hp){
   // Reminders : this will always be changing vector a in place
   // FIXME: Might not work inplace
 
@@ -241,20 +242,24 @@ bool KDTree::ParticleSearch(const Particle * &p){
 }
 
 
-void KDTree::GatherParticles(Particle * center, double r, partPtrVec & result){
+void KDTree::GatherParticles(Particle * center, double r, double a, PartPtrVec & result){
   // Used to call the recusrive function
-  GatherParticles(center, r, 0, 0, result, bbox.getMin(), bbox.getMax());
+  GatherParticles(center, r, a,  0, 0, result, bbox.getMin(), bbox.getMax());
 }
-void KDTree::GatherParticles( Particle * center_particle, double gather_radius, 
-    uint heap_index, uint8 d, partPtrVec & gathered_particles, 
-    glm::vec3 minPt, glm::vec3 maxPt){
+
+void KDTree::GatherParticles( Particle * center_particle, double gather_radius,  
+  double gather_angle, uint heap_index, uint8 d, PartPtrVec & gathered_particles,
+  glm::vec3 minPt, glm::vec3 maxPt){
 
     // I feel off the heap or reached a leaf
     if(binary_heap.size() <= heap_index || binary_heap[heap_index] == NULL)
       return;
 
     // If you fall inside the sphere
-    if(glm::distance(center_particle->getPos(),binary_heap[heap_index]->getPos()) <= gather_radius ){
+    bool dist_okay =  glm::distance(center_particle->getPos(),binary_heap[heap_index]->getPos()) <= gather_radius;
+    bool angl_okay =  angleBetweenVectors(center_particle->getDir(), binary_heap[heap_index]->getDir()) <= gather_angle;
+
+    if( dist_okay  && angl_okay){
       Particle * pending = binary_heap[heap_index];
 
       // Check that I am not adding myself or a dead particle
@@ -305,10 +310,10 @@ void KDTree::GatherParticles( Particle * center_particle, double gather_radius,
     }
 
     if(Intersection(minLeft,maxLeft,center_particle->getPos(),gather_radius))
-      GatherParticles(center_particle, gather_radius, heap_index*2+1, (d+1)%3, gathered_particles,minLeft,maxLeft);
+      GatherParticles(center_particle, gather_radius, gather_angle, heap_index*2+1, (d+1)%3, gathered_particles,minLeft,maxLeft);
       
     if(Intersection(minRight,maxRight,center_particle->getPos(),gather_radius))
-      GatherParticles(center_particle, gather_radius, heap_index*2+2, (d+1)%3, gathered_particles,minRight,maxRight);
+      GatherParticles(center_particle, gather_radius, gather_angle, heap_index*2+2, (d+1)%3, gathered_particles,minRight,maxRight);
 }
 
 

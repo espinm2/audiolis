@@ -162,6 +162,7 @@ void ParticleSystem::update(){
    * SideEf: Updates postition of particles/ removes particles
    */
 
+  // std::cout << "particles.size() == " << particles.size() << std::endl;
   // Data for output file
   unsigned int iteration = ITERATION;
   unsigned int particle_number = particles.size();
@@ -185,13 +186,21 @@ void ParticleSystem::update(){
     if(cur->isDead()){continue;}   // Skip those dead particles
     cur->setOldPos(cur->getPos()); // Concider only oldPos for updates
 
+    PartPtrVec gathered_particles_kdtree;
     PartPtrVec gathered_particles;      // temp particle holders
     PartPtrVec merge_pending_particles;
     PartPtrVec mask_pending_particles;
     std::vector < glm::vec3 > new_positions; // used incase we split
 
-    // GATHER our particles from our kd tree
-    particle_kdtree.GatherParticles(cur,gather_distance,gathered_particles);
+    // GATHER our particles from our kd tree (will be generious)
+    particle_kdtree.GatherParticles(cur,gather_distance, gather_angle,gathered_particles_kdtree);
+
+    // Refine our results 
+    for(Particle * p: gathered_particles_kdtree)
+      if(glm::distance(p->getOldPos(), cur->getOldPos()) < gather_distance )
+        gathered_particles.push_back(p);
+
+
 
     // MERGE particles we gathered that are too close
     for(Particle * pending: gathered_particles) {
@@ -533,6 +542,8 @@ void ParticleSystem::createDebugParticle(){
   
   for(Particle * sp: new_particles)
     particles.push_back(sp);
+
+  particle_kdtree.update(particles,*bbox);
 
 
 }
