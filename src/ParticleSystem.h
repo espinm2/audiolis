@@ -72,7 +72,7 @@ class ParticleSystem {
     void delusionalParticleLocations(Particle * &cur_particle,
         std::vector<Particle *> &gathered_particles,
         std::vector<glm::vec3> & output);
-    bool stabalizeInitalSphere();
+    void stabalizeInitalSphere();
 
     void closeProfiler(){
       output_profiler_str.close();
