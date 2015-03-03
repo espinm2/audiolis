@@ -82,6 +82,7 @@ public:
   void setTime    (const double  & t)  { timeLeft = t ; }
   void decTime    (const double  & t)  { timeLeft = timeLeft - t; }
   void setIter    (const int & i)      { iterations = i; }
+  
   void incIter    () { iterations++; }
   void kill       () { isDead = true; }
 
