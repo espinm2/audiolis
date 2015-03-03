@@ -241,6 +241,10 @@ bool KDTree::ParticleSearch(const Particle * &p){
 
 }
 
+bool KDTree::IdenticalParticle(const glm::vec3 & position){
+
+
+}
 
 void KDTree::GatherParticles(Particle * center, double r, double a, PartPtrVec & result){
   // Used to call the recusrive function

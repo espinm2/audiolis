@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 
 
 
-lines = [line.strip() for line in open("../build/merge_profiling_try_1.txt")]
+lines = [line.strip() for line in open("../build/merge_profiling_data.txt")]
 
 particle_num = np.zeros((len(lines), 2), dtype='uint32');
 merge_num = np.zeros((len(lines), 2));
