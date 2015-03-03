@@ -25,7 +25,7 @@ public:
 
     timeLeft     = 0;
     iterations   = 0;
-    isDead      = false;
+    _isDead      = false;
 
     materialHit =  "";
   }
@@ -44,7 +44,7 @@ public:
 
       timeLeft    = 0;
       iterations  = 0;
-      isDead      = false;
+      _isDead      = false;
 
       materialHit =  "";
   }
@@ -62,7 +62,7 @@ public:
 
   double  getTimeLeft() const { return timeLeft; }
   int     getIter()     const { return iterations; }
-  bool    isDead()      const { return isDead; }
+  bool    isDead()      const { return _isDead; }
 
   glm::vec3 getDir() const { return glm::normalize(oldPosition-center); }
 
@@ -84,7 +84,7 @@ public:
   void setIter    (const int & i)      { iterations = i; }
   
   void incIter    () { iterations++; }
-  void kill       () { isDead = true; }
+  void kill       () { _isDead = true; }
 
   void setMaterial (const std::string & name ) { materialHit = name; } 
 
@@ -106,7 +106,7 @@ private:
 
   double    timeLeft;       // How much time left until you hit wall
   int       iterations;     // How many iterations have I been around for
-  bool isDead;              // Replacement for the delete mask
+  bool      _isDead;        // Replacement for the delete mask
 
   std::string materialHit;  // Name of the material I will hit next
 

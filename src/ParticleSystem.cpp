@@ -169,7 +169,7 @@ void ParticleSystem::update(){
   unsigned int split_count = 0;
 
   // TODO: Make stabalization happen in createinitwave
-  stabalizeInitalSphere();
+  if(false){stabalizeInitalSphere(); }
 
 
   // Properties we will use for gathering and merging
@@ -180,7 +180,7 @@ void ParticleSystem::update(){
   // Where we will hold new particles
   PartPtrVec new_particles;
   
-  for( PartPtrVec cur : particles) {
+  for( Particle * cur : particles) {
 
     if(cur->isDead()){continue;}   // Skip those dead particles
     cur->setOldPos(cur->getPos()); // Concider only oldPos for updates
@@ -195,7 +195,7 @@ void ParticleSystem::update(){
 
     // MERGE particles we gathered that are too close
     for(Particle * pending: gathered_particles) {
-      if( pending == cur || pending->isDead()) {continue;""}
+      if( pending == cur || pending->isDead()) {continue;}
       float dist = glm::distance(cur->getOldPos(), pending->getOldPos());
       if( dist < merge_distance){
         merge_pending_particles.push_back(pending);
@@ -206,7 +206,7 @@ void ParticleSystem::update(){
     if(!merge_pending_particles.empty()){
       // push self into merge mix, merge and get new particle
       merge_pending_particles.push_back(cur);
-      Particle * mergedPart =  particleVectorMerge(particles_to_merge);
+      Particle * mergedPart =  particleVectorMerge(merge_pending_particles);
       *cur = *mergedPart;
     }
 
@@ -214,7 +214,7 @@ void ParticleSystem::update(){
     mask_pending_particles.push_back(cur);
 
     for( Particle * pending : gathered_particles ){
-      if(pending->isDead){ continue; }
+      if(pending->isDead()){ continue; }
       mask_pending_particles.push_back(pending);
     }
 
