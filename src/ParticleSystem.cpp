@@ -226,7 +226,6 @@ void ParticleSystem::update(){
 
     if(cur->isDead()){continue;}   // Skip those dead particles
 
-    PartPtrVec gathered_particles_kdtree;
     PartPtrVec gathered_particles;      // temp particle holders
     PartPtrVec merge_pending_particles;
     PartPtrVec mask_pending_particles;
@@ -244,6 +243,7 @@ void ParticleSystem::update(){
       linearGatherParticles(cur,gather_distance,gather_angle,gathered_particles);
 
     }
+
 
     // MERGE particles we gathered that are too close
     for(Particle * pending: gathered_particles) {
@@ -353,9 +353,7 @@ void ParticleSystem::update(){
     }
   }
 
-
   ITERATION ++;
-
 } // end func
 
 
