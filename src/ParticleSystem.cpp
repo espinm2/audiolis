@@ -534,7 +534,7 @@ void ParticleSystem::createDebugParticle(){
 
   // Create a ray to move up a little
   glm::vec3 newPos = 
-    cursor + ( (float) RADIUS_INIT_SPHERE  ) * directionToTarget;
+    cursor + ( (float) RADIUS_INIT_SPHERE * 2  ) * directionToTarget;
 
 
 
