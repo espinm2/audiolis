@@ -56,7 +56,7 @@ void ParticleSystem::load(){
   VELOCITY_OF_MEDIUM    = 340; //implement to sound speed in m/s
 
   // simuation var init
-  RADIUS_INIT_SPHERE    = 0.1; // Doesnt get changed to ofte
+  RADIUS_INIT_SPHERE    = 0.7; // Doesnt get changed to ofte
   NUM_INIT_PARTICLES    = args->num_init_particles; // imported from args
   MIN_WATTAGE           = 0.000000000002; // Doesnt change often
   MAX_ITERATIONS        = 6000; // Doesnt change often
@@ -187,21 +187,18 @@ bool ParticleSystem::linearNewDuplicateSearch(const glm::vec3 & pos, const PartP
   return false;
 }
 
-#define USE_KD_TREE false
+#define USE_KD_TREE true
 
 void ParticleSystem::update(){
   
-  // enforce that we use only relavent data
-  for( Particle * cur : particles) {
-    cur->setOldPos(cur->getPos()); // Enforce OldPositions
-    cur->setPos( (glm::vec3) NULL ); // Extra insurance
-  }
-
   // TODO: Make stabalization happen in createinitwave
   args->setupInitParticles = false;
   if(args->setupInitParticles){ stabalizeInitalSphere(); return;}
   // Build our binary Tree
-  particle_kdtree.update(particles, *bbox);
+
+  if(USE_KD_TREE){
+    particle_kdtree.update(particles, *bbox);
+  }
 
   /*
    * Input : None
@@ -216,8 +213,6 @@ void ParticleSystem::update(){
   unsigned int particle_number = particles.size();
   unsigned int merge_count = 0;
   unsigned int split_count = 0;
-
-
 
   // Properties we will use for gathering and merging
   float gather_distance = RADIUS_PARTICLE_WAVE * 2.5;
@@ -242,12 +237,7 @@ void ParticleSystem::update(){
 
       // GATHER our particles from our kd tree (will be generious)
       particle_kdtree.GatherParticles(cur,gather_distance, gather_angle,
-        gathered_particles_kdtree);
-
-      // Refine our results 
-      for(Particle * p: gathered_particles_kdtree)
-        if(glm::distance(p->getOldPos(), cur->getOldPos()) < gather_distance )
-          gathered_particles.push_back(p);
+        gathered_particles);
 
     }else{
 
@@ -288,6 +278,7 @@ void ParticleSystem::update(){
 
     if( ! mask.resSpit(new_positions) ){ continue; } // skip no splits occur
     // args->animate = false; // Freezes the particles
+
 
     // Create new particles
     for(glm::vec3 pos : new_positions){
@@ -350,6 +341,7 @@ void ParticleSystem::update(){
   // Move all particles step //////////////////////////////////////////////////
   for( Particle * cur : particles){
     moveParticle(cur,TIME_STEP);
+    cur->setOldPos(cur->getPos()); // Enforce OldPositions
   }//moveloop
 
   // Used to output to the profiler to see how many times we have to call
