@@ -56,7 +56,7 @@ void ParticleSystem::load(){
   VELOCITY_OF_MEDIUM    = 340; //implement to sound speed in m/s
 
   // simuation var init
-  RADIUS_INIT_SPHERE    = 0.7; // Doesnt get changed to ofte
+  RADIUS_INIT_SPHERE    = 0.1; // Doesnt get changed to ofte
   NUM_INIT_PARTICLES    = args->num_init_particles; // imported from args
   MIN_WATTAGE           = 0.000000000002; // Doesnt change often
   MAX_ITERATIONS        = 6000; // Doesnt change often
@@ -173,16 +173,16 @@ void ParticleSystem::linearGatherParticles(Particle * center, double r, double a
   }
 }
 
-bool ParticleSystem::linearDuplicateSearch(const glm::vec3 & pos){
+bool ParticleSystem::linearDuplicateSearch(const glm::vec3 & pos, double th){
    for( Particle * p : particles)
-     if ( glm::distance(p->getOldPos(), pos ) < 0.001)
+     if ( glm::distance(p->getOldPos(), pos ) < th)
       return true;
   return false;
 }
 
-bool ParticleSystem::linearNewDuplicateSearch(const glm::vec3 & pos, const PartPtrVec & newVec ){
+bool ParticleSystem::linearNewDuplicateSearch(const glm::vec3 & pos, const PartPtrVec & newVec , double th){
    for( Particle * p : newVec)
-     if ( glm::distance(p->getOldPos(), pos ) < 0.001)
+     if ( glm::distance(p->getOldPos(), pos ) < th)
       return true;
   return false;
 }
@@ -198,6 +198,7 @@ void ParticleSystem::update(){
   }
 
   // TODO: Make stabalization happen in createinitwave
+  args->setupInitParticles = false;
   if(args->setupInitParticles){ stabalizeInitalSphere(); return;}
   // Build our binary Tree
   particle_kdtree.update(particles, *bbox);
@@ -293,11 +294,11 @@ void ParticleSystem::update(){
 
       // place a check to prevent repeat particles
       if(USE_KD_TREE){
-        if(particle_kdtree.IdenticalParticle(pos)){ continue; }
+        if(particle_kdtree.IdenticalParticle(pos, merge_distance)){ continue; }
       } else{
-        if(linearDuplicateSearch(pos)){ continue; }
+        if(linearDuplicateSearch(pos, merge_distance)){ continue; }
       }
-      linearNewDuplicateSearch(pos, new_particles); // check for doubles
+      linearNewDuplicateSearch(pos, new_particles, merge_distance); // check for doubles
       Particle * s = new Particle(pos, pos, cur->getCenter(),
           cur->getWatt() / (double)(SPLIT_AMOUNT + 1.0),   
           cur->getFreq(), cur->getSplit() + 1);

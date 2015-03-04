@@ -328,7 +328,7 @@ void ParticleSystem::drawParticles(){
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   HandleGLError("enter drawParticles");
-  glPointSize(2) ;  // CHANGE ME <------------------------------- back to 2
+  glPointSize(4) ;  // CHANGE ME <------------------------------- back to 2
   glBindBuffer(GL_ARRAY_BUFFER, particle_verts_VBO);
 
   glEnableVertexAttribArray(0);

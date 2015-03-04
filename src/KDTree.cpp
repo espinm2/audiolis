@@ -241,7 +241,7 @@ bool KDTree::ParticleSearch(const Particle * &p){
 
 }
 
-bool KDTree::IdenticalParticle(const glm::vec3 & p){
+bool KDTree::IdenticalParticle(const glm::vec3 & p, double th){
 
   uint cur_index = 0;   // Index that we traverse things on the heap
   uint8 d = 0;          // descrinator
@@ -254,7 +254,7 @@ bool KDTree::IdenticalParticle(const glm::vec3 & p){
 
     // If I am the point being searched for
     float dist = glm::distance( binary_heap[cur_index]->getOldPos()  , p);
-    if(dist < 0.001 ){
+    if(dist < th){
       return true;
     }
 

@@ -26,7 +26,7 @@ class KDTree{
     // Untested functions
     bool ParticleSearch(const Particle * &p);
 
-    bool IdenticalParticle(const glm::vec3 & position);
+    bool IdenticalParticle(const glm::vec3 & position, double th);
 
     void GatherParticles(Particle * center, double r, double a, PartPtrVec & result);
     

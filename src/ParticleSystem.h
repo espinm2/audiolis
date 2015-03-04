@@ -76,8 +76,8 @@ class ParticleSystem {
     void stabalizeInitalSphere();
 
     void linearGatherParticles(Particle * center, double r, double a, PartPtrVec & result);
-    bool linearDuplicateSearch(const glm::vec3 & pos);
-    bool linearNewDuplicateSearch(const glm::vec3 & pos, const PartPtrVec & newVec );
+    bool linearDuplicateSearch(const glm::vec3 & pos, double th);
+    bool linearNewDuplicateSearch(const glm::vec3 & pos, const PartPtrVec & newVec , double th);
 
     void closeProfiler(){
       output_profiler_str.close();
