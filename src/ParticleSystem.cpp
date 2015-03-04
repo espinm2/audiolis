@@ -97,17 +97,10 @@ void ParticleSystem::debug(){
 void ParticleSystem::stabalizeInitalSphere(){
   // TODO: Test this function
 
-  // Only run if args saids we can run it
-  if(!args->setupInitParticles)
-    return;
-
   // Where we store how much force is in the inital system
   glm::vec3 sumForces(0,0,0);
 
   for(Particle * p : particles){
-
-    // Set OldPos
-    p->setOldPos(p->getPos());
 
     // Find nearest particle
     float nearest_distance = 1000;
@@ -148,9 +141,9 @@ void ParticleSystem::stabalizeInitalSphere(){
   }
 
   // Check if we are stabalized enough yet
-  if(glm::length(sumForces) < 0.01){
+  if(glm::length(sumForces) < 0.007){
     args->setupInitParticles = false;
-    std::cout << "finished stabalizeInitalSphere\n";
+    std::cout << "finished stabalizeInitalSphere: " << glm::length(sumForces) << "\n";
   }
 }
 
@@ -180,7 +173,29 @@ void ParticleSystem::linearGatherParticles(Particle * center, double r, double a
   }
 }
 
+bool ParticleSystem::linearDuplicateSearch(const glm::vec3 & pos){
+   for( Particle * p : particles)
+     if ( glm::distance(p->getOldPos(), pos ) < 0.0001)
+      return true;
+  return false;
+}
+
+#define USE_KD_TREE true
+
 void ParticleSystem::update(){
+  
+  // enforce that we use only relavent data
+  for( Particle * cur : particles) {
+    cur->setOldPos(cur->getPos()); // Enforce OldPositions
+    cur->setPos( (glm::vec3) NULL ); // Extra insurance
+  }
+
+  // TODO: Make stabalization happen in createinitwave
+  if(args->setupInitParticles){ stabalizeInitalSphere(); return;}
+  
+  // Build our binary Tree
+  particle_kdtree.update(particles, *bbox);
+
   /*
    * Input : None
    * Output: This function will update our particle simuations
@@ -195,8 +210,6 @@ void ParticleSystem::update(){
   unsigned int merge_count = 0;
   unsigned int split_count = 0;
 
-  // TODO: Make stabalization happen in createinitwave
-  if(false){stabalizeInitalSphere(); }
 
 
   // Properties we will use for gathering and merging
@@ -210,7 +223,6 @@ void ParticleSystem::update(){
   for( Particle * cur : particles) {
 
     if(cur->isDead()){continue;}   // Skip those dead particles
-    cur->setOldPos(cur->getPos()); // Concider only oldPos for updates
 
     PartPtrVec gathered_particles_kdtree;
     PartPtrVec gathered_particles;      // temp particle holders
@@ -219,7 +231,8 @@ void ParticleSystem::update(){
     std::vector < glm::vec3 > new_positions; // used incase we split
 
     // Use KDTree or Old Code // DEBUG DEBUG DEBUG
-    if(true){
+    if(USE_KD_TREE){
+
       // GATHER our particles from our kd tree (will be generious)
       particle_kdtree.GatherParticles(cur,gather_distance, gather_angle,
         gathered_particles_kdtree);
@@ -234,9 +247,6 @@ void ParticleSystem::update(){
       linearGatherParticles(cur,gather_distance,gather_angle,gathered_particles);
 
     }
-
-
-
 
     // MERGE particles we gathered that are too close
     for(Particle * pending: gathered_particles) {
@@ -274,7 +284,14 @@ void ParticleSystem::update(){
 
     // Create new particles
     for(glm::vec3 pos : new_positions){
-      // TODO place a check to prevent repeat particles
+
+      // place a check to prevent repeat particles
+      if(USE_KD_TREE){
+        if(particle_kdtree.IdenticalParticle(pos)){ continue; }
+      } else{
+        if(linearDuplicateSearch(pos)){ continue; }
+      }
+
       Particle * s = new Particle(pos, pos, cur->getCenter(),
           cur->getWatt() / (double)(SPLIT_AMOUNT + 1.0),   
           cur->getFreq(), cur->getSplit() + 1);
@@ -337,8 +354,6 @@ void ParticleSystem::update(){
     }
   }
 
-  // Rebuild our kdtree
-  particle_kdtree.update(particles, *bbox);
 
   ITERATION ++;
 

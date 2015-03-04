@@ -26,7 +26,7 @@ class KDTree{
     // Untested functions
     bool ParticleSearch(const Particle * &p);
 
-    bool IdenticalParticle(const glm::vec3 & position)
+    bool IdenticalParticle(const glm::vec3 & position);
 
     void GatherParticles(Particle * center, double r, double a, PartPtrVec & result);
     
@@ -39,12 +39,17 @@ class KDTree{
     const Particle * rightChild(uint index) const;
     const Particle * leftChild(uint index)  const;
 
-    bool hasLeft(const uint & index)const{
-      return 0 <= index && index * 2 + 1 < binary_heap.size(); }
+    bool hasLeft(const uint & index) const{
+      return (0 <= index) && (index * 2 + 1 < binary_heap.size()) && (binary_heap[2*index+1] != NULL); }
 
-    bool hasRight(const uint & index)const{ 
-      return 0 <= index && index * 2 + 2 < binary_heap.size(); }
+    bool hasRight(const uint & index) const{ 
+      return (0 <= index) && (index * 2 + 2 < binary_heap.size()) && (binary_heap[2*index+2] != NULL); }
 
+    bool isLeaf(const uint & index) const{
+        return !hasRight(index) && !hasLeft(index);
+
+
+    }
     // Recursive function to render the tree
     void renderKDTree(uint hp, uint8 d, const glm::vec3 & minPt, const glm::vec3 & maxPt);
 
@@ -70,5 +75,5 @@ class KDTree{
 
 };
 
-#endif // KDTREE_H
+#endif //KDTREE_H
 

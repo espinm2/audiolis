@@ -17,13 +17,13 @@ typedef std::vector<Particle *>  PartPtrVec;
 
 // Nonmemeber comparsion functions used by Optimize
 bool compare_x_pos(Particle * a, Particle * b){
-  return a->getPos().x < b->getPos().x; }
+  return a->getOldPos().x < b->getOldPos().x; }
 
 bool compare_y_pos(Particle * a, Particle * b){
-  return a->getPos().y < b->getPos().y; }
+  return a->getOldPos().y < b->getOldPos().y; }
 
 bool compare_z_pos(Particle * a, Particle * b){
-  return a->getPos().z < b->getPos().z; }
+  return a->getOldPos().z < b->getOldPos().z; }
 
 
 // Constructor where you have all the elments of the KD tree
@@ -142,7 +142,7 @@ void KDTree::renderKDTree(uint hp, uint8 d, const glm::vec3 & minPt, const glm::
   glm::vec3 minRight;
   glm::vec3 maxRight = maxPt;
 
-  glm::vec3 point = binary_heap[hp]->getPos();
+  glm::vec3 point = binary_heap[hp]->getOldPos();
 
 
   if(d == 0){
@@ -241,8 +241,54 @@ bool KDTree::ParticleSearch(const Particle * &p){
 
 }
 
-bool KDTree::IdenticalParticle(const glm::vec3 & position){
+bool KDTree::IdenticalParticle(const glm::vec3 & p){
 
+  uint cur_index = 0;   // Index that we traverse things on the heap
+  uint8 d = 0;          // descrinator
+
+  while(true){
+  
+    // I feel off the tree in some way
+    if(binary_heap.size() <= cur_index || binary_heap[cur_index] == NULL)
+      break;
+
+    // If I am the point being searched for
+    float dist = glm::distance( binary_heap[cur_index]->getOldPos()  , p);
+    if(dist < 0.0001 ){
+      return true;
+    }
+
+    // Else just keep iterating down the tree
+    if( d == 0 ){
+      // xs
+      if(p.x < binary_heap[cur_index]->getOldPos().x){
+        cur_index = cur_index * 2 + 1;
+      }else{
+        cur_index = cur_index * 2 + 2;
+      }
+
+    } else if( d == 1) {
+      //ys
+      if(p.y < binary_heap[cur_index]->getOldPos().y){
+        cur_index = cur_index * 2 + 1;
+      }else{
+        cur_index = cur_index * 2 + 2;
+      }
+    
+    }else{
+      //zs
+      if(p.z < binary_heap[cur_index]->getOldPos().z){
+        cur_index = cur_index * 2 + 1;
+      }else{
+        cur_index = cur_index * 2 + 2;
+      }
+    }
+    
+    d = ( d + 1) % 3;
+  
+  }
+
+  return false;
 
 }
 
@@ -260,7 +306,7 @@ void KDTree::GatherParticles( Particle * center_particle, double gather_radius,
       return;
 
     // If you fall inside the sphere
-    bool dist_okay =  glm::distance(center_particle->getPos(),binary_heap[heap_index]->getPos()) < gather_radius;
+    bool dist_okay =  glm::distance(center_particle->getOldPos(),binary_heap[heap_index]->getOldPos()) < gather_radius;
     bool angl_okay =  angleBetweenVectors(center_particle->getDir(), binary_heap[heap_index]->getDir()) < gather_angle;
 
     if( dist_okay  && angl_okay){
@@ -278,7 +324,7 @@ void KDTree::GatherParticles( Particle * center_particle, double gather_radius,
     glm::vec3 minRight;
     glm::vec3 maxRight = maxPt;
 
-    glm::vec3 point = binary_heap[heap_index]->getPos();
+    glm::vec3 point = binary_heap[heap_index]->getOldPos();
 
 
     if(d == 0){
@@ -313,10 +359,10 @@ void KDTree::GatherParticles( Particle * center_particle, double gather_radius,
     
     }
 
-    if(Intersection(minLeft,maxLeft,center_particle->getPos(),gather_radius))
+    if(Intersection(minLeft,maxLeft,center_particle->getOldPos(),gather_radius))
       GatherParticles(center_particle, gather_radius, gather_angle, heap_index*2+1, (d+1)%3, gathered_particles,minLeft,maxLeft);
       
-    if(Intersection(minRight,maxRight,center_particle->getPos(),gather_radius))
+    if(Intersection(minRight,maxRight,center_particle->getOldPos(),gather_radius))
       GatherParticles(center_particle, gather_radius, gather_angle, heap_index*2+2, (d+1)%3, gathered_particles,minRight,maxRight);
 }
 
