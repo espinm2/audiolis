@@ -175,12 +175,19 @@ void ParticleSystem::linearGatherParticles(Particle * center, double r, double a
 
 bool ParticleSystem::linearDuplicateSearch(const glm::vec3 & pos){
    for( Particle * p : particles)
-     if ( glm::distance(p->getOldPos(), pos ) < 0.0001)
+     if ( glm::distance(p->getOldPos(), pos ) < 0.001)
       return true;
   return false;
 }
 
-#define USE_KD_TREE true
+bool ParticleSystem::linearNewDuplicateSearch(const glm::vec3 & pos, const PartPtrVec & newVec ){
+   for( Particle * p : newVec)
+     if ( glm::distance(p->getOldPos(), pos ) < 0.001)
+      return true;
+  return false;
+}
+
+#define USE_KD_TREE false
 
 void ParticleSystem::update(){
   
@@ -192,7 +199,6 @@ void ParticleSystem::update(){
 
   // TODO: Make stabalization happen in createinitwave
   if(args->setupInitParticles){ stabalizeInitalSphere(); return;}
-  
   // Build our binary Tree
   particle_kdtree.update(particles, *bbox);
 
@@ -291,7 +297,7 @@ void ParticleSystem::update(){
       } else{
         if(linearDuplicateSearch(pos)){ continue; }
       }
-
+      linearNewDuplicateSearch(pos, new_particles); // check for doubles
       Particle * s = new Particle(pos, pos, cur->getCenter(),
           cur->getWatt() / (double)(SPLIT_AMOUNT + 1.0),   
           cur->getFreq(), cur->getSplit() + 1);

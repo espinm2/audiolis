@@ -254,7 +254,7 @@ bool KDTree::IdenticalParticle(const glm::vec3 & p){
 
     // If I am the point being searched for
     float dist = glm::distance( binary_heap[cur_index]->getOldPos()  , p);
-    if(dist < 0.0001 ){
+    if(dist < 0.001 ){
       return true;
     }
 
