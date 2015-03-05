@@ -187,7 +187,7 @@ bool ParticleSystem::linearNewDuplicateSearch(const glm::vec3 & pos, const PartP
   return false;
 }
 
-#define USE_KD_TREE true
+#define USE_KD_TREE false
 
 void ParticleSystem::update(){
   
@@ -754,8 +754,6 @@ void ParticleSystem::munkresMatching
   // Get the nearest particle around the center of the mask
   // We will use this particle to orient our delusional particles
   
-
-
   // Where we store the points that represent the hyprotheical mask
   std::vector<glm::vec3> maskPositions; 
   maskPositions.push_back(centerMaskPos); // maskPositions[0] is mask center
@@ -1266,7 +1264,7 @@ void ParticleSystem::delusionalParticleLocations(
   assert(cur_particle == gathered_particles[0]);
 
 
-  // Search
+  // Search for neareast particle
   double dist = RADIUS_PARTICLE_WAVE * 10; // really large number
   unsigned int nearest_part = 0;
 
@@ -1278,12 +1276,21 @@ void ParticleSystem::delusionalParticleLocations(
   }
 
   glm::vec3 nearest_pos = gathered_particles[nearest_part]->getOldPos();
+  
+  // We will adjust the mask size of our particles by a factor of two
+  // If we are within the range of [0, 2*RADIUS_PARTICLE_WAVE]
+  double mask_radius = dist;
+
+  // Cap our distance at 
+  if( mask_radius > 2.2 * RADIUS_PARTICLE_WAVE )
+    mask_radius = 2.2 * RADIUS_PARTICLE_WAVE;
+
 
   circle_points_on_plane_refence(
       cur_particle->getOldPos(),                        // center of mask
       cur_particle->getDir(),                     // direction of plane
       nearest_pos,              // particle using for reference
-      RADIUS_PARTICLE_WAVE,                 // radius of my mask
+      mask_radius,                 // radius of my mask
       6,                                    // number of particles mask has
       output);                       // where I will append my results
 
