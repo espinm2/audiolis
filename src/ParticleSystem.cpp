@@ -181,13 +181,14 @@ bool ParticleSystem::linearDuplicateSearch(const glm::vec3 & pos, double th){
 }
 
 bool ParticleSystem::linearNewDuplicateSearch(const glm::vec3 & pos, const PartPtrVec & newVec , double th){
+
    for( Particle * p : newVec)
      if ( glm::distance(p->getOldPos(), pos ) < th)
       return true;
   return false;
 }
 
-#define USE_KD_TREE false
+#define USE_KD_TREE true
 
 void ParticleSystem::update(){
   
@@ -782,7 +783,7 @@ void ParticleSystem::munkresMatching
       double dist_from_ideal = glm::distance(partPos, maskPositions[j]);
       bool within_angle_constrant = true;
 
-      if( j !=  0 && i != 0 ){
+      if( j !=  0 && i != 0 ){ // maskPos[0]==partVec[0] no angle btw
         glm::vec3 dir_ideal = maskPositions[j] - center->getOldPos();
         glm::vec3 dir_of_partPos = partPos-center->getOldPos();
 
@@ -793,7 +794,6 @@ void ParticleSystem::munkresMatching
 
       }
 
-      
       // Prevent concave shapes
       if( dist_from_ideal <= 1.2*RADIUS_PARTICLE_WAVE && within_angle_constrant  ){ 
     
