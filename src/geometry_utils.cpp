@@ -302,6 +302,7 @@ glm::vec3 CalcRepulsiveForces(const glm::vec3 & p, const glm::vec3 & q,
 }
 
 double angleBetweenVectors(const glm::vec3 & p, const glm::vec3 & q){
+  // robustly made
   return acos( glm::dot( p, q ) / (glm::length(p) * glm::length(q)) );
 }
 

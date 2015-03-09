@@ -188,7 +188,7 @@ bool ParticleSystem::linearNewDuplicateSearch(const glm::vec3 & pos, const PartP
   return false;
 }
 
-#define USE_KD_TREE true
+#define USE_KD_TREE false
 
 void ParticleSystem::update(){
   
@@ -430,6 +430,7 @@ void ParticleSystem::moveCursor( const float & dx,
   // Function called by glCanvas
   
   cursor+= glm::vec3(10*dx,10*dy,10*dz);
+  // std::cout << cursor << std::endl;
 }
 
 void ParticleSystem::particleSplit(Particle * &p,
@@ -517,7 +518,8 @@ void ParticleSystem::calcMeshCollision(Particle * &p){
 void ParticleSystem::createDebugParticle(){
 
   // HARDCODED targetPosition
-  glm::vec3 targetPosition(2.7, 0.324, -2.1);
+  // glm::vec3 targetPosition(2.7, 0.324, -2.1); // for corner room
+  glm::vec3 targetPosition(-5.8, 1.524, -0.2); // for acoustics 
 
   // Direction 
   glm::vec3 directionToTarget = targetPosition - cursor;
@@ -773,6 +775,12 @@ void ParticleSystem::munkresMatching
   // For every point
   for(unsigned int i = 0; i < partVec.size(); i++){
 
+    // Concidering my cur, we should only let it match with itself
+    if(i == 0){
+      matrix[0][0] = 0;
+      continue;
+    }
+
     // For every possible mask postion
     for(unsigned int j = 0; j < maskPositions.size(); j++){
 
@@ -783,9 +791,15 @@ void ParticleSystem::munkresMatching
       double dist_from_ideal = glm::distance(partPos, maskPositions[j]);
       bool within_angle_constrant = true;
 
-      if( j !=  0 && i != 0 ){ // maskPos[0]==partVec[0] no angle btw
-        glm::vec3 dir_ideal = maskPositions[j] - center->getOldPos();
-        glm::vec3 dir_of_partPos = partPos-center->getOldPos();
+      glm::vec3 dir_ideal = 
+        glm::normalize(maskPositions[j] - center->getOldPos());
+
+      glm::vec3 dir_of_partPos = 
+        glm::normalize(partPos-center->getOldPos());
+
+      double direction_dist = glm::distance(dir_of_partPos,dir_ideal);
+
+      if( dist_from_ideal > EPSILON && direction_dist > EPSILON && j != 0){ // conditions that break angle calc
 
         double angle = acos( glm::dot( dir_ideal, dir_of_partPos ) / 
           (glm::length( dir_ideal ) * glm::length( dir_of_partPos)));
@@ -866,6 +880,35 @@ void ParticleSystem::generateMask(
 
   // Calculate the cost and matching matries
   munkresMatching(conciderForMask,matching,cost);
+
+
+  // Uncomment for debugging cost matrix
+  std::cout << "Cost Matrix \n";
+
+  int p_index = 0;
+  for(std::vector<int> v : cost){
+    std::cout << &(*conciderForMask[p_index]) << "\t[ ";
+    for(int c : v){
+      std::cout << c << "\t";
+
+    }
+    std::cout << "]\n";
+    p_index++;
+  }
+
+  std::cout << "Matching Matrix \n";
+
+  p_index = 0;
+  for(std::vector<int> v : matching){
+    std::cout << &(*conciderForMask[p_index]) << "\t[ ";
+    for(int c : v){
+      std::cout << c << "\t";
+
+    }
+    std::cout << "]\n";
+    p_index++;
+  }
+  // Uncomment for debugging cost matrix end
 
   assert(matching.size() == cost.size());
   assert(matching[0].size() == cost[0].size());
