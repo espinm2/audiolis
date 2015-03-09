@@ -603,7 +603,7 @@ void ParticleSystem::setupDelusionalParticles(){
 
   // Properties we will use for gathering 
   float gather_distance = RADIUS_PARTICLE_WAVE * 2.5;
-  float gather_angle    = M_PI / 4.0; 
+  float gather_angle    = M_PI / 16.0; 
 
   // Get the particle I will render for
   int index = args->render_mask;

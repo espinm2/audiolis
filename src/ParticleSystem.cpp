@@ -217,7 +217,7 @@ void ParticleSystem::update(){
 
   // Properties we will use for gathering and merging
   float gather_distance = RADIUS_PARTICLE_WAVE * 2.5;
-  float gather_angle    = M_PI / 4.0; 
+  float gather_angle    = M_PI / 16.0; 
   float merge_distance  = RADIUS_PARTICLE_WAVE * 0.2; 
   
   // Where we will hold new particles
@@ -251,17 +251,20 @@ void ParticleSystem::update(){
       if( pending == cur || pending->isDead()) {continue;}
       float dist = glm::distance(cur->getOldPos(), pending->getOldPos());
       if( dist < merge_distance){
-        merge_pending_particles.push_back(pending);
+        // merge_pending_particles.push_back(pending);
         pending->kill(); merge_count++;
       }
     }
 
-    if(!merge_pending_particles.empty()){
-      // push self into merge mix, merge and get new particle
-      merge_pending_particles.push_back(cur);
-      Particle * mergedPart =  particleVectorMerge(merge_pending_particles);
-      *cur = *mergedPart;
-    }
+
+    // WARNING! WARNING! WARNING! We are not merging particle attr
+    // - We are instead just deleting those near us
+    // if(!merge_pending_particles.empty()){
+    //   // push self into merge mix, merge and get new particle
+    //   merge_pending_particles.push_back(cur);
+    //   Particle * mergedPart =  particleVectorMerge(merge_pending_particles);
+    //   *cur = *mergedPart;
+    // }
 
     // FITMASK to get ready for split operations
     mask_pending_particles.push_back(cur);
@@ -518,8 +521,8 @@ void ParticleSystem::calcMeshCollision(Particle * &p){
 void ParticleSystem::createDebugParticle(){
 
   // HARDCODED targetPosition
-  // glm::vec3 targetPosition(2.7, 0.324, -2.1); // for corner room
-  glm::vec3 targetPosition(-5.8, 1.524, -0.2); // for acoustics 
+  glm::vec3 targetPosition(2.7, 0.324, -2.1); // for corner room
+  // glm::vec3 targetPosition(-5.8, 1.524, -0.2); // for acoustics 
 
   // Direction 
   glm::vec3 directionToTarget = targetPosition - cursor;
@@ -882,7 +885,8 @@ void ParticleSystem::generateMask(
   munkresMatching(conciderForMask,matching,cost);
 
 
-  // Uncomment for debugging cost matrix
+  /*
+  // Uncomment for debugging cost matrix 
   std::cout << "Cost Matrix \n";
 
   int p_index = 0;
@@ -908,7 +912,7 @@ void ParticleSystem::generateMask(
     std::cout << "]\n";
     p_index++;
   }
-  // Uncomment for debugging cost matrix end
+  // Uncomment for debugging cost matrix end */
 
   assert(matching.size() == cost.size());
   assert(matching[0].size() == cost[0].size());
