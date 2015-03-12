@@ -102,6 +102,7 @@ void ParticleSystem::stabalizeInitalSphere(){
 
   for(Particle * p : particles){
 
+    p->setOldPos(p->getPos());
     // Find nearest particle
     float nearest_distance = 1000;
     glm::vec3 nearest_pos = (glm::vec3) NULL;
@@ -188,12 +189,11 @@ bool ParticleSystem::linearNewDuplicateSearch(const glm::vec3 & pos, const PartP
   return false;
 }
 
-#define USE_KD_TREE false
+#define USE_KD_TREE true
 
 void ParticleSystem::update(){
   
   // TODO: Make stabalization happen in createinitwave
-  args->setupInitParticles = false;
   if(args->setupInitParticles){ stabalizeInitalSphere(); return;}
   // Build our binary Tree
 

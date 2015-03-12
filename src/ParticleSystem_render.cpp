@@ -587,7 +587,7 @@ void ParticleSystem::drawHappinessVisual(){
 
 
 
-#define USE_KD_TREE false // See if I can remove this function
+#define USE_KD_TREE true // See if I can remove this function
 
 void ParticleSystem::setupDelusionalParticles(){
   HandleGLError("entering setupDelusionalParticles");
