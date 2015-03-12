@@ -120,7 +120,7 @@ void circle_points_on_plane_refence(
 
 }
 
-void cirlce_point_on_sphere( const glm::vec3 &center, const float radius, 
+void circle_points_on_sphere( const glm::vec3 &center, const float radius, 
   std::vector<glm::vec3> &pts){
 
   // For each pts

@@ -70,6 +70,11 @@ bool Mask::resSpit(std::vector<glm::vec3> & newPartPos){
       glm::vec3 posB = curOuter->getOldPos();
       glm::vec3 posNew = ((float) 0.5 ) * (posA + posB);
 
+      // Project this new particle back onto the sphere
+      float radius = glm::distance(maskCenter->getCenter(), maskCenter->getOldPos());
+      glm::vec3 newDir = glm::normalize(posNew - maskCenter->getCenter());
+      posNew = maskCenter->getCenter() + radius * newDir;
+
       newPartPos.push_back(posNew);
       split_happened = true;
     }

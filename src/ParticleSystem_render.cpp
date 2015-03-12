@@ -615,7 +615,8 @@ void ParticleSystem::setupDelusionalParticles(){
 
   // Use gather our particles
   if(USE_KD_TREE){
-    particle_kdtree.GatherParticles(cur,gather_distance, gather_angle, gathered_particles);
+    particle_kdtree.GatherParticles(
+      cur,gather_distance, gather_angle, gathered_particles);
   }else{
     linearGatherParticles(cur,gather_distance,gather_angle,gathered_particles);
   }

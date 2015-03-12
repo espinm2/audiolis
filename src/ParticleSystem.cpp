@@ -1341,8 +1341,16 @@ void ParticleSystem::delusionalParticleLocations(
       6,                                    // number of particles mask has
       output);                       // where I will append my results
 
-  /*
 
+  // We project there mask particles  on the sphere of the sound source
+  circle_points_on_sphere(
+    cur_particle->getCenter(),                                      // center
+    glm::distance(cur_particle->getCenter(), cur_particle->getOldPos()), // radi
+    output);
+
+
+  /*
+circle_points_on_sphere
   assert(cur_particle == gathered_particles[0]);
   circle_points_on_plane(
       cur_particle->getOldPos(),                        // center of mask

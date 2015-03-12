@@ -54,7 +54,7 @@ void circle_points_on_plane_refence(
 
 // Given points, we project them on a sphere 
 // Modified pts
-void cirlce_point_on_sphere( const glm::vec3 &center, const float radius, 
+void circle_points_on_sphere( const glm::vec3 &center, const float radius, 
   std::vector<glm::vec3> &pts);
 
 // Compute normal given 3 pts
