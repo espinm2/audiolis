@@ -67,9 +67,6 @@ void ParticleSystem::load(){
 
   ITERATION             = 0;
 
-
-
-
   // Profiler stuff
   output_profiler_str.open(args->output_file);
 
