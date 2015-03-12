@@ -20,13 +20,6 @@
 #define RED      getColor(255,30,0,1)
 
 #define OUTLINE_VIZ true
-/*
-#define BLUE     getColor(255,255,178,1)
-#define LITE_BLU getColor(254,204,92,1)
-#define GREEN    getColor(253,141,60,1)
-#define YELLOW   getColor(240,59,31,1)
-#define RED      getColor(189,0,38,1)
-*/
 
 typedef std::vector<std::vector<int>> vMat;
 
@@ -41,7 +34,7 @@ void ParticleSystem::initializeVBOs(){
   glGenBuffers(1,&happyness_verts_VBO);
   glGenBuffers(1,&delusional_verts_VBO);
   glGenBuffers(1,&connection_verts_VBO);
-
+  particle_kdtree.initializeVBOs();
 }
 
 void ParticleSystem::setupVBOs(){
@@ -56,18 +49,24 @@ void ParticleSystem::setupVBOs(){
   happyness_verts.clear();
   delusional_verts.clear();
   connection_verts.clear();
-
+  
   // Setup new Data
+  if(args->kdtree_render)
+    particle_kdtree.setupVBOs();
+
   setupCursorPoint();
-  setupVelocityVisual();
+
+  if(args->direction)
+    setupVelocityVisual();
+
   setupParticles(); 
 
-  setupEdges(); // debug visualization
-
-  setupDelusionalParticles(); // better visualization
+  if(args->render_edges){
+    // setupEdges(); // Dead to me
+    setupDelusionalParticles(); // better visualization
+  }
 
   HandleGLError("leave setup vbos");
-
 }
 
 void ParticleSystem::drawVBOs(){
@@ -75,18 +74,19 @@ void ParticleSystem::drawVBOs(){
 
   drawCursorPoint();
 
-
   if(args->render_edges){
     // drawHappinessVisual();
     drawDelusionalParticles();
     drawDelusionalConnections();
   }
 
+  if(args->direction)
+    drawVelocityVisual();
 
-  drawVelocityVisual();
+  if(args->kdtree_render)
+    particle_kdtree.drawVBOs();
+
   drawParticles();
-
-
 
   HandleGLError("leaving draw vbos");
 
@@ -102,6 +102,14 @@ void ParticleSystem::cleanupVBOs(){
   glDeleteBuffers(1,&happyness_verts_VBO);
   glDeleteBuffers(1,&delusional_verts_VBO);
   glDeleteBuffers(1,&connection_verts_VBO);
+
+
+
+  HandleGLError("kdtree clean enter");
+  particle_kdtree.cleanupVBOs();
+  HandleGLError("kdtree clean leave");
+
+
   HandleGLError("leave clean vbos");
 }
 
@@ -337,7 +345,6 @@ void ParticleSystem::drawParticles(){
   glDisable(GL_BLEND);
 
   HandleGLError("leaving drawParticles");
-
 }
 
 
@@ -357,7 +364,6 @@ void ParticleSystem::setupCursorPoint(){
       sizeof(VBOPosNormalColor)*1,
       &cursor_verts[0],
       GL_STATIC_DRAW); 
-
 }
 
 void ParticleSystem::drawCursorPoint(){
@@ -385,7 +391,6 @@ void ParticleSystem::drawCursorPoint(){
   glDisableVertexAttribArray(2);
 
   HandleGLError("leaving drawCursorPoint");
-
 }
 
 
@@ -435,7 +440,6 @@ void ParticleSystem::setupVelocityVisual(){
   HandleGLError("leave setupVelocityVisual");
 }
 
-
 void ParticleSystem::drawVelocityVisual(){
 
   HandleGLError("enter drawVelocityVisual");
@@ -464,12 +468,12 @@ void ParticleSystem::drawVelocityVisual(){
   }
 
   HandleGLError("leave drawVelocityVisual");
-
-
 }
 
 void ParticleSystem::setupEdges(){
   // This function will setup the outline_vert vector of points
+
+  assert(false); // No longer supported
 
   // If I have nothing to setup don't
   if(particles.size() == 0)
@@ -544,234 +548,9 @@ void ParticleSystem::setupEdges(){
   HandleGLError("leaving setupOutlineVisual");
 }
 
-  /*
-  // Push the line segments into outline_verts
-  for(int i = 0 ; i < particles.size(); i++){
-    Particle * part = particles[i];
-
-    // Setup ==================================================================
-    std::vector<Particle *> conciderForMask;
-    conciderForMask.push_back(part);
-
-    for(Particle* other: particles){
-    
-      if(part == other)
-        continue;
-
-      if(glm::distance(part->getPos(),
-            other->getPos()) <= 1.5*RADIUS_PARTICLE_WAVE){
-        conciderForMask.push_back(other);
-      }
-    }
-  
-    vMat cost;
-    vMat matching;
-
-    // Calculate munkres
-    munkresMatching(conciderForMask,matching,cost);
-
-
-    // Visualization Setup ====================================================
-    
-    // DEBUG DEBUG DEBUG
-    if(particles.size() == 7){
-    }
-
-    int firstMaskPoint = -1;
-    bool savedFirstMaskPoint = false;
-    // Picking random color
-    glm::vec4 color;
-    if(OUTLINE_VIZ)
-      color = glm::vec4(0,0,0, 1); 
-    else
-      color = glm::vec4(args->randomGen.rand(), args->randomGen.rand(), args->randomGen.rand(), 0.5); 
-
-
-    unsigned int number_of_vertex = 0;
-    unsigned int number_pushed_outline = 0;
-    unsigned int number_pushed_happiness= 0;
-
-    if(!OUTLINE_VIZ){
-      outline_verts.push_back(
-          VBOPosNormalColor(
-            part->getPos(),
-            part->getDir(),
-            color));
-      number_pushed_outline++;
-    }
-
-    for(int j = 1; j < matching[0].size(); j++){
-      
-      int particle_index = -1; // index in matching of particle i
-
-      // Go and find what particle matches this
-      for(int i = 0; i < matching.size(); i++){
-        if(matching[i][j] == 1){
-          particle_index =  i;
-          number_of_vertex++;
-          break;
-        }
-      }
-
-      if(particle_index == -1) { // We didn't find a particle to match  this j
-        continue;
-      }
-
-
-      double val= cost[particle_index][j] / (1.6*1000*RADIUS_PARTICLE_WAVE);
-      // std::cout << " Happyness of particle " << cost[particle_index][j]  << std::endl;
-
-      glm::vec4 happyColor =  GiveHeapMapping(val);
-
-
-
-      // Pushing a line segement from this point to center for happyness ////
-       happyness_verts.push_back(
-           VBOPosNormalColor(
-             part->getPos(),
-             part->getDir(),
-             happyColor));
-       happyness_verts.push_back(
-          VBOPosNormalColor(
-            conciderForMask[particle_index]->getPos(),
-            conciderForMask[particle_index]->getDir(),
-            happyColor));
-       number_pushed_happiness += 2;
-      // Done with linesegment ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^
-
-      if (!savedFirstMaskPoint){ // first of the 6 vert that make up a hex 
-      
-        outline_verts.push_back(
-            VBOPosNormalColor(
-              conciderForMask[particle_index]->getPos(),
-              conciderForMask[particle_index]->getDir(),
-              color));
-        number_pushed_outline++;
-
-        firstMaskPoint = particle_index;
-        savedFirstMaskPoint = true;
-
-      }else{ // Other cases
-
-        outline_verts.push_back(
-            VBOPosNormalColor(
-              conciderForMask[particle_index]->getPos(),
-              conciderForMask[particle_index]->getDir(),
-              color));
-        number_pushed_outline++;
-
-
-
-        if(OUTLINE_VIZ){
-         outline_verts.push_back(
-             VBOPosNormalColor(
-               conciderForMask[particle_index]->getPos(),
-               conciderForMask[particle_index]->getDir(),
-               color));
-          number_pushed_outline++;
-
-        }
-      } 
-    } // For every  row
-
-    if(firstMaskPoint != -1){
-    
-      outline_verts.push_back(
-          VBOPosNormalColor(
-            conciderForMask[firstMaskPoint]->getPos(),
-            conciderForMask[firstMaskPoint]->getDir(),
-            color));
-      number_pushed_outline++;
-
-    }
-
-    // This part of the code makes only full hex visable
-    if(number_of_vertex != 6){
-        
-         for(int k = 0; k < number_pushed_outline; k++){
-          outline_verts.pop_back();
-        }
-
-         for(int k = 0; k  < number_pushed_happiness; k++){
-          happyness_verts.pop_back();
-         }
-      
-    
-  
-  }
-
-  }//for each particle in the system
-
-
-
-  // Bind the outline
-  glBindBuffer(GL_ARRAY_BUFFER,outline_verts_VBO); 
-
-    glBufferData(
-        GL_ARRAY_BUFFER,
-        sizeof(VBOPosNormalColor)*outline_verts.size(),
-        &outline_verts[0],
-        GL_DYNAMIC_DRAW); 
-
-  // Bind the happyness
-  glBindBuffer(GL_ARRAY_BUFFER,happyness_verts_VBO); 
-
-    glBufferData(
-        GL_ARRAY_BUFFER,
-        sizeof(VBOPosNormalColor)*happyness_verts.size(),
-        &happyness_verts[0],
-        GL_DYNAMIC_DRAW); 
-  HandleGLError("leaving setupOutlineVisual");
-
-  */
-
-// void ParticleSystem::drawOutlineVisual(){
-// 
-//   HandleGLError("enter drawOutlineVisual");
-// 
-//   glEnable(GL_BLEND);
-//   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-// 
-//   glBindBuffer(GL_ARRAY_BUFFER, outline_verts_VBO);
-// 
-//   glEnableVertexAttribArray(0);
-//   glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,
-//       sizeof(VBOPosNormalColor),(void*)0);
-// 
-//   glEnableVertexAttribArray(1);
-//   glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,
-//       sizeof(VBOPosNormalColor),(void*)sizeof(glm::vec3) );
-// 
-//   glEnableVertexAttribArray(2);
-//   glVertexAttribPointer(2, 4, GL_FLOAT,GL_FALSE,
-//       sizeof(VBOPosNormalColor), (void*)(sizeof(glm::vec3)*2));
-// 
-//   if(OUTLINE_VIZ){
-// 
-//     HandleGLError("enter debugDrawCall");
-//     glDrawArrays(GL_LINES, 0, outline_verts.size());
-//     HandleGLError("leaving debugDrawCall");
-//   
-//   
-//   }else{
-// 
-//     HandleGLError("enter debugDrawCall");
-//     glDrawArrays(GL_TRIANGLE_FAN, 0, outline_verts.size());
-//     HandleGLError("leaving debugDrawCall");
-//   
-//   }
-// 
-//   glDisableVertexAttribArray(0);
-//   glDisableVertexAttribArray(1);
-//   glDisableVertexAttribArray(2);
-// 
-//   glDisable(GL_BLEND);
-//   HandleGLError("leaving drawOutlineVisual");
-// 
-// }
-
 void ParticleSystem::drawHappinessVisual(){
 
+  assert (false); // No longer supported
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -804,10 +583,11 @@ void ParticleSystem::drawHappinessVisual(){
 
   // glLineWidth(3);
   HandleGLError("leaving drawHappyVisual");
-
 }
 
 
+
+#define USE_KD_TREE false // See if I can remove this function
 
 void ParticleSystem::setupDelusionalParticles(){
   HandleGLError("entering setupDelusionalParticles");
@@ -817,95 +597,73 @@ void ParticleSystem::setupDelusionalParticles(){
   if(particles.size() == 0)
     return;
 
-  int index = args->render_mask;
+  // ==========================================================================
+  // Gathering of the particles
+  // ==========================================================================
 
+  // Properties we will use for gathering 
+  float gather_distance = RADIUS_PARTICLE_WAVE * 2.5;
+  float gather_angle    = M_PI / 16.0; 
+
+  // Get the particle I will render for
+  int index = args->render_mask;
   Particle * cur = particles[index];
 
-  // GATHER STEP //////////////////////////////////////////////////////////
+  // We will will put particles we've gathered
+  PartPtrVec gathered_particles;      
+  gathered_particles.push_back(cur);
 
-  float gather_distance = RADIUS_PARTICLE_WAVE * 2.5;
-  float gather_angle    = M_PI / 4.0;
-
-  std::vector<unsigned int> gathered_particles_indices;
-
-  for(int i = 0; i < particles.size(); i++){
-  
-    Particle * other = particles[i];
-
-    if( other == cur ) // dont count self
-      continue;
-    
-
-    float dist = glm::distance(cur->getOldPos(), other->getOldPos());
-
-    // Are we close enough
-    if( dist < gather_distance){
-    
-      float angle = acos( glm::dot( cur->getDir(), other->getDir() ) / 
-          (glm::length(cur->getDir()) * glm::length(other->getDir())));
-      
-      // Are we traveling together
-      if( angle < gather_angle )
-        gathered_particles_indices.push_back(i);
-    
-    }
-  
+  // Use gather our particles
+  if(USE_KD_TREE){
+    particle_kdtree.GatherParticles(cur,gather_distance, gather_angle, gathered_particles);
+  }else{
+    linearGatherParticles(cur,gather_distance,gather_angle,gathered_particles);
   }
 
-  
+
   // ==========================================================================
   // Setup of delusional particle points
   // ==========================================================================
   
-  // Get particles that are alive for mask concideration
-  std::vector < Particle * > particle_for_mask_calc;
-  particle_for_mask_calc.push_back(cur);
- 
-  for( int i = 0; i < gathered_particles_indices.size(); i++)
-    particle_for_mask_calc.push_back(particles[gathered_particles_indices[i]]);
- 
- 
   // Pushing in  center of mask
   delusional_verts.push_back(
       VBOPosNormalColor(cur->getOldPos(),glm::vec3(0,0,0),glm::vec4(1,1,1,1)));
 
 
   std::vector < glm::vec3 > positions;
-  delusionalParticleLocations(cur, particle_for_mask_calc,positions);
+
+  delusionalParticleLocations(cur, gathered_particles,positions);
 
 
   // ==========================================================================
-  // Setup of connecting matching
+  // Setup of the 1 -1 matching between delisional pos and our mask
   // ==========================================================================
 
   Mask mask;
-  generateMask(particle_for_mask_calc, mask);
+
+  generateMask(gathered_particles, mask);
 
   // get particles there
   const std::vector<Particle*> maskParticles = mask.getMaskParticles();
 
+  // Assert 1-1 matching
   assert(maskParticles.size()==positions.size());
 
-  glm::vec4 active_color = GREEN; active_color.a = 0.4;
-
-  glm::vec4 nonactive_color = GREEN; nonactive_color.a = 0.1;
-
   for(int i = 0; i < maskParticles.size(); i++){
-   Particle * cur = maskParticles[i];
 
-   if(cur == NULL){
+   Particle * curMask = maskParticles[i];
+
+   if(curMask == NULL){
     delusional_verts.push_back(
         VBOPosNormalColor(positions[i],glm::vec3(0,0,0),glm::vec4(1,1,1,0.2)));
      continue;
    }
    
-
   glm::vec4 color = GiveHeapMapping( mask.getCost(i)/ (RADIUS_PARTICLE_WAVE * 1000.0));
-
 
   color.a = 0.1;
    connection_verts.push_back(
-       VBOPosNormalColor(cur->getOldPos(), glm::vec3(0,0,0), color));
+       VBOPosNormalColor(curMask->getOldPos(), glm::vec3(0,0,0), color));
 
   color.a = 1;
    connection_verts.push_back(
@@ -914,10 +672,7 @@ void ParticleSystem::setupDelusionalParticles(){
   color.a = 0.5;
   delusional_verts.push_back(
       VBOPosNormalColor(positions[i],glm::vec3(0,0,0),color));
- 
- 
  }
-
 
   // Bind the delusional particles
   glBindBuffer(GL_ARRAY_BUFFER,delusional_verts_VBO); 

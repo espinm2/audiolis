@@ -129,6 +129,8 @@ public:
 
     setupInitParticles = true;
 
+    kdtree_render = false;
+
   }
 
   // ==============
@@ -173,6 +175,8 @@ public:
 
   bool setupInitParticles;
   bool profile;
+
+  bool kdtree_render;
 
   // Material Key
   // wall_material 0 => bricked_wall; 

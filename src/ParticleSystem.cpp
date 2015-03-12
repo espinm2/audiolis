@@ -27,6 +27,9 @@
 
 
 #define EPSILON 0.0001
+typedef unsigned int uint;
+typedef short unsigned int uint8;
+typedef std::vector<Particle *>  PartPtrVec;
 
 // Used for update
 typedef std::vector<Particle *>::iterator ParticleIter;
@@ -75,11 +78,8 @@ void ParticleSystem::load(){
     exit(1);
   }
 
-
-
   // Debug function used to test things upon creations
-  debug();
-
+  // debug();
 }
 
 void ParticleSystem::debug(){
@@ -92,11 +92,115 @@ void ParticleSystem::debug(){
   glm::vec3 force = CalcRepulsiveForces(p,q,5,2);
 
   std::cout << "FORCE "<< force << std::endl;
-  
+}
+
+void ParticleSystem::stabalizeInitalSphere(){
+  // TODO: Test this function
+
+  // Where we store how much force is in the inital system
+  glm::vec3 sumForces(0,0,0);
+
+  for(Particle * p : particles){
+
+    // Find nearest particle
+    float nearest_distance = 1000;
+    glm::vec3 nearest_pos = (glm::vec3) NULL;
+
+    for(Particle * o : particles) {
+
+      if( o == p ) // dont count self
+        continue;
+
+      float dist = glm::distance(p->getOldPos(), o->getOldPos());
+
+      // Are we close enough
+      if( dist < nearest_distance ){
+        nearest_distance = dist;
+        nearest_pos = o->getOldPos();
+      }
+    }
+
+    // Case where no particles are near me 
+    if(nearest_distance == 1000)
+      continue;
+    
+    // Get force
+    glm::vec3 force = CalcRepulsiveForces(
+      p->getOldPos(), nearest_pos, RADIUS_PARTICLE_WAVE, 0.05);
+
+    sumForces += force;
+
+    // Apply force to my particle x0 + 0.5 f t^2
+    glm::vec3 newPos = p->getOldPos()  +  force;
+
+    newPos = glm::normalize(newPos - p->getCenter()) 
+    * (float)RADIUS_INIT_SPHERE + p->getCenter();
+    
+    p->setPos(newPos);
+
+  }
+
+  // Check if we are stabalized enough yet
+  if(glm::length(sumForces) < 0.007){
+    args->setupInitParticles = false;
+    std::cout << "finished stabalizeInitalSphere: " << glm::length(sumForces) << "\n";
+  }
 }
 
 
+void ParticleSystem::linearGatherParticles(Particle * center, double r, double a, PartPtrVec & result){
+
+  // Old Gather code
+  for(int i = 0; i < particles.size(); i++){
+
+    Particle * other = particles[i];
+
+    if(other == center)
+      continue;
+
+    if(other->isDead())
+      continue;
+
+    float dist = glm::distance(center->getOldPos(), other->getOldPos());
+
+    if(dist < r){
+
+      float angle = angleBetweenVectors(center->getDir(), other->getDir());
+
+      if( angle < a)
+        result.push_back(other);
+    }
+  }
+}
+
+bool ParticleSystem::linearDuplicateSearch(const glm::vec3 & pos, double th){
+   for( Particle * p : particles)
+     if ( glm::distance(p->getOldPos(), pos ) < th)
+      return true;
+  return false;
+}
+
+bool ParticleSystem::linearNewDuplicateSearch(const glm::vec3 & pos, const PartPtrVec & newVec , double th){
+
+   for( Particle * p : newVec)
+     if ( glm::distance(p->getOldPos(), pos ) < th)
+      return true;
+  return false;
+}
+
+#define USE_KD_TREE false
+
 void ParticleSystem::update(){
+  
+  // TODO: Make stabalization happen in createinitwave
+  args->setupInitParticles = false;
+  if(args->setupInitParticles){ stabalizeInitalSphere(); return;}
+  // Build our binary Tree
+
+  if(USE_KD_TREE){
+    particle_kdtree.update(particles, *bbox);
+  }
+
   /*
    * Input : None
    * Output: This function will update our particle simuations
@@ -104,252 +208,114 @@ void ParticleSystem::update(){
    * SideEf: Updates postition of particles/ removes particles
    */
 
+  // std::cout << "particles.size() == " << particles.size() << std::endl;
   // Data for output file
   unsigned int iteration = ITERATION;
   unsigned int particle_number = particles.size();
   unsigned int merge_count = 0;
   unsigned int split_count = 0;
 
-  // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEB
-  // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEB
+  // Properties we will use for gathering and merging
+  float gather_distance = RADIUS_PARTICLE_WAVE * 2.5;
+  float gather_angle    = M_PI / 16.0; 
+  float merge_distance  = RADIUS_PARTICLE_WAVE * 0.2; 
   
-  glm::vec3 sumForces(0,0,0);
+  // Where we will hold new particles
+  PartPtrVec new_particles;
+  
+  for( Particle * cur : particles) {
 
-  if(args->setupInitParticles){
-    
-    for(Particle * p : particles){
+    if(cur->isDead()){continue;}   // Skip those dead particles
 
-      // Set OldPos
-      p->setOldPos(p->getPos());
+    PartPtrVec gathered_particles;      // temp particle holders
+    PartPtrVec merge_pending_particles;
+    PartPtrVec mask_pending_particles;
+    std::vector < glm::vec3 > new_positions; // used incase we split
 
+    // Use KDTree or Old Code // DEBUG DEBUG DEBUG
+    if(USE_KD_TREE){
 
-      // Find nearest particle
-      float nearest_distance = 1000;
-      glm::vec3 nearest_pos = (glm::vec3) NULL;
+      // GATHER our particles from our kd tree (will be generious)
+      particle_kdtree.GatherParticles(cur,gather_distance, gather_angle,
+        gathered_particles);
 
-      for(Particle * o : particles) {
+    }else{
 
-        if( o == p ) // dont count self
-          continue;
+      linearGatherParticles(cur,gather_distance,gather_angle,gathered_particles);
 
-        float dist = glm::distance(p->getOldPos(), o->getOldPos());
-
-        // Are we close enough
-        if( dist < nearest_distance ){
-          nearest_distance = dist;
-          nearest_pos = o->getOldPos();
-        }
-      }
-
-
-      // Case where no particles are near me 
-      if(nearest_distance == 1000)
-        continue;
-      
-      
-      // Get force
-      glm::vec3 force = CalcRepulsiveForces(
-        p->getOldPos(), nearest_pos, RADIUS_PARTICLE_WAVE, 1);
-    
-      sumForces += force;
-
-      // Apply force to my particle x0 + 0.5 f t^2
-      glm::vec3 newPos = p->getOldPos()  +  force;
-
-
-      newPos = glm::normalize(newPos - p->getCenter())*(float)RADIUS_INIT_SPHERE 
-        + p->getCenter();
-      
-      p->setPos(newPos);
-
-        
     }
 
-    std::cout << "FORCES : " << glm::length(sumForces) << std::endl;
-    if(glm::length(sumForces) < 0.01){
-      args->setupInitParticles = false;
+
+    // MERGE particles we gathered that are too close
+    for(Particle * pending: gathered_particles) {
+      if( pending == cur || pending->isDead()) {continue;}
+      float dist = glm::distance(cur->getOldPos(), pending->getOldPos());
+      if( dist < merge_distance){
+        // merge_pending_particles.push_back(pending);
+        pending->kill(); merge_count++;
+      }
     }
-    return; // Do no continue
-  }
 
-  // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEB
-  // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEB
 
-  // SETUP ////////////////////////////////////////////////////////////////////
-  
-  // Hold new particles from split
-  std::vector<Particle *> splitParticles;
-  
-  std::vector<int> deleteMask (particles.size(), 0); //1 == delete, 0 == keep
-  
-  for(int index = 0; index < particles.size(); index++){
+    // WARNING! WARNING! WARNING! We are not merging particle attr
+    // - We are instead just deleting those near us
+    // if(!merge_pending_particles.empty()){
+    //   // push self into merge mix, merge and get new particle
+    //   merge_pending_particles.push_back(cur);
+    //   Particle * mergedPart =  particleVectorMerge(merge_pending_particles);
+    //   *cur = *mergedPart;
+    // }
 
-    Particle * cur = particles[index];
+    // FITMASK to get ready for split operations
+    mask_pending_particles.push_back(cur);
 
-    cur->setOldPos(cur->getPos());
-  
-    // Check if we are not to be deleted
-    if(deleteMask[index] == 0){
-    
-      // GATHER STEP //////////////////////////////////////////////////////////
+    for( Particle * pending : gathered_particles ){
+      if(pending->isDead()){ continue; }
+      mask_pending_particles.push_back(pending);
+    }
 
-      float gather_distance = RADIUS_PARTICLE_WAVE * 2.5;
-      float gather_angle    = M_PI / 4.0;
+    // CREATE mask
+    Mask mask;
+    generateMask(mask_pending_particles, mask);
 
-      std::vector<unsigned int> gathered_particles_indices;
+    // SPLITS steps
 
-      for(int i = 0; i < particles.size(); i++){
-      
-        Particle * other = particles[i];
+    if( ! mask.resSpit(new_positions) ){ continue; } // skip no splits occur
+    // args->animate = false; // Freezes the particles
 
-        if( other == cur ) // dont count self
-          continue;
 
-        if( deleteMask[i] == 1 ) // dont count the dead
-          continue;
+    // Create new particles
+    for(glm::vec3 pos : new_positions){
 
-        float dist = glm::distance(cur->getOldPos(), other->getOldPos());
-
-        // Are we close enough
-        if( dist < gather_distance){
-        
-          float angle = acos( glm::dot( cur->getDir(), other->getDir() ) / 
-              (glm::length(cur->getDir()) * glm::length(other->getDir())));
-          
-          // Are we traveling together
-          if( angle < gather_angle )
-            gathered_particles_indices.push_back(i);
-        
-        }
-      
+      // place a check to prevent repeat particles
+      if(USE_KD_TREE){
+        if(particle_kdtree.IdenticalParticle(pos, merge_distance)){ continue; }
+      } else{
+        if(linearDuplicateSearch(pos, merge_distance)){ continue; }
       }
+      linearNewDuplicateSearch(pos, new_particles, merge_distance); // check for doubles
+      Particle * s = new Particle(pos, pos, cur->getCenter(),
+          cur->getWatt() / (double)(SPLIT_AMOUNT + 1.0),   
+          cur->getFreq(), cur->getSplit() + 1);
 
-      // MERGE STEP ///////////////////////////////////////////////////////////
-    
-      std::vector<Particle *> particles_to_merge; //  want to merge
+      calcMeshCollision(s);  // Required for bounces                          
+      split_count++; // Data storeage
+      new_particles.push_back(s);
+    }
 
-      for(int i = 0; i < gathered_particles_indices.size(); i++){
-
-        Particle * other = particles[gathered_particles_indices[i]];
-
-        if( other == cur ) // dont count self
-          continue;
-
-        if( deleteMask[gathered_particles_indices[i]] == 1 ) // dead particle
-          continue;
-
-        float dist = glm::distance(cur->getOldPos(), other->getOldPos());
-
-        float merge_distance = RADIUS_PARTICLE_WAVE * 0.2; // milimetter
-        
-        if( dist < merge_distance){
-          
-          // Store for later merging
-          particles_to_merge.push_back(other);
-
-          // update the delete mask
-          deleteMask[gathered_particles_indices[i]] = 1;
-
-
-          merge_count++;
-      
-        }
-
-      } // merge collection
-
-      // Merge those that require merging
-      if( particles_to_merge.size() > 0){
-
-        // Change that particle to new merged particle
-        particles_to_merge.push_back(cur);
-        Particle * mergedPart =  particleVectorMerge(particles_to_merge);
-        *cur = *mergedPart;
-
-      }
-
-
-      // Get particles that are alive for mask concideration
-      std::vector < Particle * > particle_for_mask_calc;
-      particle_for_mask_calc.push_back(cur);
-
-      for( int i = 0; i < gathered_particles_indices.size(); i++){
-
-        // If dead
-        if( deleteMask[gathered_particles_indices[i]] == 1 )
-          continue;
-      
-        particle_for_mask_calc.push_back(
-            particles[gathered_particles_indices[i]]);
-      
-      }
-      
-      // Find Mask Step ///////////////////////////////////////////////////////
-      
-       
-      Mask mask;
-      generateMask(particle_for_mask_calc, mask);
-
-
-      // Split Step ///////////////////////////////////////////////////////////
-      std::vector<glm::vec3> newPos;
-
-      if( mask.resSpit(newPos) ){
-
-        // args->animate = false; // Freezes the particles
-        
-
-
-        // Create new particles
-        for(glm::vec3 pos : newPos){
-
-          bool repeat_particle = false;
-
-          // We  want to check that we are not recreating particles we already have
-          for(Particle * sp : particles){                                       // DO NOT LIKE
-
-            double dist = glm::distance(sp->getOldPos(), pos);
-            
-            if( dist < RADIUS_PARTICLE_WAVE * 0.2){
-              repeat_particle = true;
-              break;
-            }
-
-          }
-
-          // Do not concider this particle
-          if(repeat_particle)
-            continue;
-
-          Particle * s = new Particle(
-              pos,                                   // Position
-              pos,                                   // OldPosition
-              cur->getCenter(),                               // CenterPos
-              cur->getWatt() / (double)(SPLIT_AMOUNT + 1.0),   // Amp
-              cur->getFreq(),                                 // Freq
-              cur->getSplit() + 1);                           // SplitAmount
-
-          calcMeshCollision(s);                             // Manditory Calc
-          splitParticles.push_back(s);
-          split_count++;
-        } // fornewparticle
-       } // ifwesplit
-
-
-    } // Alive check
   } // for each particle
 
   // Delete + Children Additon  ///////////////////////////////////////////////
-
   for( unsigned int i = 0 ; i < particles.size(); i++){
       // Keep if 0, else delete
-      if(deleteMask[i] == 1){
+      if(particles[i]->isDead()){
 
-          if(!splitParticles.empty()){
+          if(!new_particles.empty()){
 
               // Put in new particle to fill gap
               delete particles[i];
-              particles[i] = splitParticles.back();
-              splitParticles.pop_back();
+              particles[i] = new_particles.back();
+              new_particles.pop_back();
 
           }else{
 
@@ -373,23 +339,17 @@ void ParticleSystem::update(){
   }
 
   // Add into the main vector those new particles yet added
-  for( unsigned int i = 0; i < splitParticles.size(); i++)
-    particles.push_back(splitParticles[i]);
+  for( unsigned int i = 0; i < new_particles.size(); i++)
+    particles.push_back(new_particles[i]);
 
   // Move all particles step //////////////////////////////////////////////////
   for( Particle * cur : particles){
     moveParticle(cur,TIME_STEP);
+    cur->setOldPos(cur->getPos()); // Enforce OldPositions
   }//moveloop
 
-
-  // ooutput
-
-  // unsigned int iteration = ITERATION;
-  // unsigned int particle_number = particles.size();
-  // unsigned int merge_count = 0;
-  // unsigned int split_count = 0;
-  //
-
+  // Used to output to the profiler to see how many times we have to call
+  // Specific functions 
   if(args->profile){
     if(particle_number != 0){
       output_profiler_str << iteration << " " << particle_number 
@@ -398,9 +358,7 @@ void ParticleSystem::update(){
   }
 
   ITERATION ++;
-
 } // end func
-
 
 
 bool ParticleSystem::moveParticle(Particle * p, double timestep){
@@ -475,6 +433,7 @@ void ParticleSystem::moveCursor( const float & dx,
   // Function called by glCanvas
   
   cursor+= glm::vec3(10*dx,10*dy,10*dz);
+  // std::cout << cursor << std::endl;
 }
 
 void ParticleSystem::particleSplit(Particle * &p,
@@ -562,7 +521,8 @@ void ParticleSystem::calcMeshCollision(Particle * &p){
 void ParticleSystem::createDebugParticle(){
 
   // HARDCODED targetPosition
-  glm::vec3 targetPosition(2.7, 0.324, -2.1);
+  glm::vec3 targetPosition(2.7, 0.324, -2.1); // for corner room
+  // glm::vec3 targetPosition(-5.8, 1.524, -0.2); // for acoustics 
 
   // Direction 
   glm::vec3 directionToTarget = targetPosition - cursor;
@@ -570,7 +530,7 @@ void ParticleSystem::createDebugParticle(){
 
   // Create a ray to move up a little
   glm::vec3 newPos = 
-    cursor + ( (float) RADIUS_INIT_SPHERE  ) * directionToTarget;
+    cursor + ( (float) RADIUS_INIT_SPHERE * 2  ) * directionToTarget;
 
 
 
@@ -627,15 +587,17 @@ void ParticleSystem::createDebugParticle(){
 
 
   // Get new particles to be made and toss in split particles
-  std::vector<Particle *> splitParticles;
-  particleSplit(p, splitParticles);
-  splitParticles.push_back(p);
+  std::vector<Particle *> new_particles;
+  particleSplit(p, new_particles);
+  new_particles.push_back(p);
 
   // change cur particle watts
   p->setWatt(p->getWatt() / (double)(SPLIT_AMOUNT + 1.0));
   
-  for(Particle * sp: splitParticles)
+  for(Particle * sp: new_particles)
     particles.push_back(sp);
+
+  particle_kdtree.update(particles,*bbox);
 
 
 }
@@ -720,6 +682,9 @@ void ParticleSystem::createInitWave(){
     particles.push_back(p);
   
   }
+
+
+  particle_kdtree.update(particles, *bbox);
 }
 
 
@@ -795,8 +760,6 @@ void ParticleSystem::munkresMatching
   // Get the nearest particle around the center of the mask
   // We will use this particle to orient our delusional particles
   
-
-
   // Where we store the points that represent the hyprotheical mask
   std::vector<glm::vec3> maskPositions; 
   maskPositions.push_back(centerMaskPos); // maskPositions[0] is mask center
@@ -815,6 +778,12 @@ void ParticleSystem::munkresMatching
   // For every point
   for(unsigned int i = 0; i < partVec.size(); i++){
 
+    // Concidering my cur, we should only let it match with itself
+    if(i == 0){
+      matrix[0][0] = 0;
+      continue;
+    }
+
     // For every possible mask postion
     for(unsigned int j = 0; j < maskPositions.size(); j++){
 
@@ -825,9 +794,15 @@ void ParticleSystem::munkresMatching
       double dist_from_ideal = glm::distance(partPos, maskPositions[j]);
       bool within_angle_constrant = true;
 
-      if( j !=  0 && i != 0 ){
-        glm::vec3 dir_ideal = maskPositions[j] - center->getOldPos();
-        glm::vec3 dir_of_partPos = partPos-center->getOldPos();
+      glm::vec3 dir_ideal = 
+        glm::normalize(maskPositions[j] - center->getOldPos());
+
+      glm::vec3 dir_of_partPos = 
+        glm::normalize(partPos-center->getOldPos());
+
+      double direction_dist = glm::distance(dir_of_partPos,dir_ideal);
+
+      if( dist_from_ideal > EPSILON && direction_dist > EPSILON && j != 0){ // conditions that break angle calc
 
         double angle = acos( glm::dot( dir_ideal, dir_of_partPos ) / 
           (glm::length( dir_ideal ) * glm::length( dir_of_partPos)));
@@ -836,7 +811,6 @@ void ParticleSystem::munkresMatching
 
       }
 
-      
       // Prevent concave shapes
       if( dist_from_ideal <= 1.2*RADIUS_PARTICLE_WAVE && within_angle_constrant  ){ 
     
@@ -909,6 +883,36 @@ void ParticleSystem::generateMask(
 
   // Calculate the cost and matching matries
   munkresMatching(conciderForMask,matching,cost);
+
+
+  /*
+  // Uncomment for debugging cost matrix 
+  std::cout << "Cost Matrix \n";
+
+  int p_index = 0;
+  for(std::vector<int> v : cost){
+    std::cout << &(*conciderForMask[p_index]) << "\t[ ";
+    for(int c : v){
+      std::cout << c << "\t";
+
+    }
+    std::cout << "]\n";
+    p_index++;
+  }
+
+  std::cout << "Matching Matrix \n";
+
+  p_index = 0;
+  for(std::vector<int> v : matching){
+    std::cout << &(*conciderForMask[p_index]) << "\t[ ";
+    for(int c : v){
+      std::cout << c << "\t";
+
+    }
+    std::cout << "]\n";
+    p_index++;
+  }
+  // Uncomment for debugging cost matrix end */
 
   assert(matching.size() == cost.size());
   assert(matching[0].size() == cost[0].size());
@@ -1307,7 +1311,7 @@ void ParticleSystem::delusionalParticleLocations(
   assert(cur_particle == gathered_particles[0]);
 
 
-  // Search
+  // Search for neareast particle
   double dist = RADIUS_PARTICLE_WAVE * 10; // really large number
   unsigned int nearest_part = 0;
 
@@ -1319,12 +1323,21 @@ void ParticleSystem::delusionalParticleLocations(
   }
 
   glm::vec3 nearest_pos = gathered_particles[nearest_part]->getOldPos();
+  
+  // We will adjust the mask size of our particles by a factor of two
+  // If we are within the range of [0, 2*RADIUS_PARTICLE_WAVE]
+  double mask_radius = dist;
+
+  // Cap our distance at 
+  if( mask_radius > 2.2 * RADIUS_PARTICLE_WAVE )
+    mask_radius = 2.2 * RADIUS_PARTICLE_WAVE;
+
 
   circle_points_on_plane_refence(
       cur_particle->getOldPos(),                        // center of mask
       cur_particle->getDir(),                     // direction of plane
       nearest_pos,              // particle using for reference
-      RADIUS_PARTICLE_WAVE,                 // radius of my mask
+      mask_radius,                 // radius of my mask
       6,                                    // number of particles mask has
       output);                       // where I will append my results
 

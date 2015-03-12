@@ -95,4 +95,11 @@ glm::vec3 ClosestPoint(const glm::vec3 & point, const std::vector<glm::vec3>  & 
 // Returns vector of repulive forces
 glm::vec3 CalcRepulsiveForces(const glm::vec3 & p, const glm::vec3 & q, 
     float r, float k);
+
+// Used to compute the angle between vectors
+double angleBetweenVectors(const glm::vec3 & p, const glm::vec3 & q);
+
+
+
+
 #endif
