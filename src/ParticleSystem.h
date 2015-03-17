@@ -53,45 +53,59 @@ class ParticleSystem {
     // Getter
     unsigned int numParticles(){ return particles.size();}
 
-    // Simulation functions
+    // Main Simulation Functions
     void load();  // load inital values from args file and meshes
-    void debug(); // just used to test stuff out
     void update(); // moves, splits, and merges particle in a timestep
-    bool moveParticle(Particle * p, double timestep); // moves a particle
-    void calcMeshCollision(Particle * &p); //finds when a particle hits mesh
+
+    // Events human trigger in simulation
     void createInitWave(); // Creates a sphere of particles
-    void particleSplit(Particle * &p, std::vector<Particle *> &vec); // splits 
-    bool shouldSplit(Particle * &p); // do conditions mean to split particles
-
+    void stabalizeInitalSphere(); // Reconfigures sound source
     
-
-    // Experimental
-    // void particleSplitCheckAndMerger(Particle *&p, std::vector<int> &deleteMask);
+    // Debug Functions
     void createDebugParticle(); // used for debugging in testing_chamber_1.obj
-    void munkresMatching (std::vector<Particle*> & partVec, vMat & matchingMat, vMat & costMat);
-    void generateMask(std::vector <Particle*> & conciderForMask, Mask &m );
-    void delusionalParticleLocations(Particle * &cur_particle,
-        std::vector<Particle *> &gathered_particles,
-        std::vector<glm::vec3> & output);
-    void stabalizeInitalSphere();
 
-    void linearGatherParticles(Particle * center, double r, double a, PartPtrVec & result);
+    // Kuhn–Munkres algorithm based matching
+    void munkresMatching (PartPtrVec & partVec,
+     vMat & matchingMat, vMat & costMat);
+    void generateMask(PartPtrVec & conciderForMask, Mask &m );
+
+    // Getting delusional particle locations
+    void delusionalParticleLocations(Particle * &cur,
+        PartPtrVec &gathered, std::vector<glm::vec3> & output);
+
+    // Particle Search Functions KD and linear
+    void linearGatherParticles(Particle * center, double r, double a, 
+        PartPtrVec & result);
     bool linearDuplicateSearch(const glm::vec3 & pos, double th);
-    bool linearNewDuplicateSearch(const glm::vec3 & pos, const PartPtrVec & newVec , double th);
+    bool linearNewDuplicateSearch(const glm::vec3 & pos, 
+        const PartPtrVec & newVec , double th);
 
-    void closeProfiler(){
-      output_profiler_str.close();
-    }
+    // Mesh Search functions
+    // TODO
 
-    // Two merge particles functions //////////////////////////////////////////
+    // Miscellaneous <I coulnd't find a group>
+    void closeProfiler(){output_profiler_str.close(); }
+
+
+    // New Update Function Code (untested)
+    void generateResSplits(Particle * &cur);
+    void mergeSimilarParticles(Particle * &cur);
+    void resolveCollisions(Particle * &cur);
+    void removeDeadParticles();
+
+    // New Update Function Code (tested)
+    void moveParticle(Particle * & cur); // moves a particle
+    void calcMeshCollision(Particle * &p); //finds when a particle hits mesh
+
+
+    // Merge helper functions
     Particle * particlePairMerge(Particle * &a, Particle * &b); 
     Particle * particleVectorMerge(std::vector<Particle *> &vec);
 
-    // Math function
+    // Audio based functions
     double absorbFunc(const std::string & materialName, const double freq);
     
-    
-    // located in ParticleSystem_render.cpp
+    // Public render functions
     void initializeVBOs();
     void setupVBOs();
     void drawVBOs();
@@ -117,8 +131,6 @@ class ParticleSystem {
     void setupDelusionalParticles();
     void drawDelusionalParticles();
     void drawDelusionalConnections();
-
-
 
 
     // Memebers

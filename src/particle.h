@@ -17,17 +17,14 @@ public:
     position     = (glm::vec3) NULL; 
     oldPosition  = (glm::vec3) NULL; 
     center       = (glm::vec3) NULL; 
-    hitNorm      = (glm::vec3) NULL;
 
     wattage      = 0;
     freqency     = 0;
     splits       = 0;
 
-    timeLeft     = 0;
     iterations   = 0;
     _isDead      = false;
 
-    materialHit =  "";
   }
 
   Particle(const glm::vec3 & pos, const glm::vec3 & old, 
@@ -42,51 +39,38 @@ public:
       freqency    = freq;
       splits      = s;
 
-      timeLeft    = 0;
       iterations  = 0;
       _isDead      = false;
 
-      materialHit =  "";
   }
 
-  // Accessors ////////////////////////////////////////////////////////////////
+  // Accessors /////////////////////n///////////////////////////////////////////
   const   glm::vec3 & getPos()        const { return position; }
   const   glm::vec3 & getOldPos()     const { return oldPosition;}
   const   glm::vec3 & getCenter()     const { return center; }
-  const   glm::vec3 & getHitNorm()    const { return hitNorm; }
 
-  double  getWatt()     const { return wattage; }
-  double  getFreq()     const { return freqency; }
-  int     getSplit()    const { return splits; }
+  double  getWatt()                   const { return wattage; }
+  double  getFreq()                   const { return freqency; }
 
-
-  double  getTimeLeft() const { return timeLeft; }
-  int     getIter()     const { return iterations; }
-  bool    isDead()      const { return _isDead; }
-
-  glm::vec3 getDir() const { return glm::normalize(oldPosition-center); }
-
-  std::string     getMaterialHit(){ return materialHit; }
+  int     getIter()                   const { return iterations; }
+  int     getSplit()                  const { return splits; }
+  bool    isDead()                    const { return _isDead; }
+  bool    isAlive()                   const { return !_isDead; }
+  
 
   // Modifiers ////////////////////////////////////////////////////////////////
   void setPos     (const glm::vec3 & pos) { position = pos; }
   void setOldPos  (const glm::vec3 & pos) { oldPosition = pos; }
   void setCenter  (const glm::vec3 & pos) { center = pos; }
-  void setHitNorm (const glm::vec3 & pos) { hitNorm = pos; }
 
   void setWatt    (const double & a)  { wattage = a; }
   void setFreq    (const double & f)   {freqency = f;}
 
-  void setSplit   (const int    & s)  { splits = s; }
-
-  void setTime    (const double  & t)  { timeLeft = t ; }
-  void decTime    (const double  & t)  { timeLeft = timeLeft - t; }
   void setIter    (const int & i)      { iterations = i; }
-  
   void incIter    () { iterations++; }
+  void setSplit   (const int    & s)  { splits = s; }
   void kill       () { _isDead = true; }
-
-  void setMaterial (const std::string & name ) { materialHit = name; } 
+  
 
   // Debugging Functions //////////////////////////////////////////////////////
   friend std::ostream& operator<<(std::ostream &, const Particle &);
@@ -97,19 +81,15 @@ private:
   glm::vec3 position;       // Position to use for rendering
   glm::vec3 oldPosition;    // Position before rendering
   glm::vec3 center;         // Where the epi-center is
-  glm::vec3 hitNorm;        // Angle in which we hit the mesh
-  
-  // Rep Sound ////////////////////////////////////////////////////////////////
-  double    wattage;         // Used to calc Power of wave
-  double    freqency;       // What freqency this particle represents
+    
+  // In Simulation ////////////////////////////////////////////////////////////
   int       splits;         // How many times our particle split
-
-  double    timeLeft;       // How much time left until you hit wall
   int       iterations;     // How many iterations have I been around for
   bool      _isDead;        // Replacement for the delete mask
 
-  std::string materialHit;  // Name of the material I will hit next
-
+  // Rep Sound ////////////////////////////////////////////////////////////////
+  double    wattage;         // Used to calc Power of wave
+  double    freqency;       // What freqency this particle represents
 
 };
 
@@ -132,14 +112,9 @@ inline std::ostream & operator<<(std::ostream & leftOp,
     leftOp << "cen(" << rightOp.center.x    << 
       ", " << rightOp.center.y    << ", " <<  rightOp.center.z    << ") ";
 
-    leftOp << "hitNorm(" << rightOp.hitNorm.x << 
-      ", " << rightOp.hitNorm.y << ", " << rightOp.hitNorm.z << ") ";
-
     leftOp << "amp " << rightOp.wattage << " ";
 
     leftOp << "spl " << rightOp.splits << " ";
-
-    leftOp << "stp " << rightOp.timeLeft << " ";
 
     leftOp << "itr " << rightOp.iterations;
 
