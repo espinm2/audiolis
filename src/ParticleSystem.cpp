@@ -137,7 +137,7 @@ void ParticleSystem::resolveCollisions(Particle* &p){
 
   // Create a ray & hit class
   Ray r(p->getOldPos(), p->getDir());
-  Hit h; bool hitTriangle; bool backface = false;
+  Hit h; bool hitTriangle = false; bool backface = false;
 
   // For each triangle we will check which we hit
   for (triangleshashtype::iterator iter = mesh->triangles.begin();
@@ -158,7 +158,7 @@ void ParticleSystem::resolveCollisions(Particle* &p){
   if(!hitTriangle){ std::cout << "PS: ERROR_OUT_OF_BOUNDS\n"; return; } 
 
   // If we hit do not hit within our timestep
-  if(h.getT() + EPSILON > TIME_STEP){ return; }
+  if( h.getT()  > 0.01 ){ return; } // Centimeter accuracy
 
   // Gareneteee that we hit just this timestep
   // Change the direction of our particle & backstep to hitting wall
@@ -174,10 +174,6 @@ void ParticleSystem::resolveCollisions(Particle* &p){
 
   // Mirror the center to reflect our new direction
   p->setCenter(impactPos + mir_dir * radius);
-
-  // stick directly into the wall (max loosing 1mm)
-  p->setPos(impactPos);
-
 
 }
 
