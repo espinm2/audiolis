@@ -99,9 +99,9 @@ void ParticleSystem::update(){
   // for(Particle * np : newParticles)
   //   particles.push_back(np);
 
-  // // Merge particles that are the same
-  // for(Particle * cur : particles)
-  //   mergeSimilarParticles(cur);
+  // Merge particles that are the same
+  for(Particle * cur : particles)
+    mergeSimilarParticles(cur);
 
   // Resolve all collision that occur
   for(Particle * cur: particles)
@@ -224,8 +224,7 @@ void ParticleSystem::generateResSplits(Particle * &cur){
 }
 
 void ParticleSystem::mergeSimilarParticles(Particle * &cur){
-  // Implement
-  assert(false);
+
 }
 
 void ParticleSystem::stabalizeInitalSphere(){
