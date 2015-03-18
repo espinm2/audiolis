@@ -175,6 +175,11 @@ void ParticleSystem::resolveCollisions(Particle* &p){
   // Mirror the center to reflect our new direction
   p->setCenter(impactPos + mir_dir * radius);
 
+  double absorb_ratio = absorbFunc(h.getMaterial(), p->getFreq());
+  assert( absorb_ratio < 1);                                                  // Sanity Check
+  p->setWatt( (1 - absorb_ratio ) * p->getWatt() );                           // Math Review Required
+  p->incIter();
+
 }
 
 void ParticleSystem::generateResSplits(Particle * &cur){
