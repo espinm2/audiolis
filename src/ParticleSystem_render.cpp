@@ -294,10 +294,6 @@ void ParticleSystem::setupParticles(){
     // DEBUG///////////////////////////////////////////////////////////////////
     // This code causes the animation to stop if we encounter a "free-particle"
     // a particle without having to hit any surface in the open.
-    if(part->getMaterialHit() == "none"){
-      color = glm::vec4(1,0,0,1);
-      // args->animate = false;
-    }
     // DEBUG///////////////////////////////////////////////////////////////////
     
     particle_verts.push_back(VBOPosNormalColor(pos,normal,color));

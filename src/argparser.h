@@ -23,7 +23,7 @@ inline void separatePathAndFile(const std::string &input, std::string &path, std
       continue;
     }
     next = input.find('\\',last+1);
-    if (next != std::string::npos) { 
+    if (next != std::string::npos) {
       last = next;
       continue;
     }
@@ -101,7 +101,7 @@ public:
     gouraud_normals = false;
 
     timer = 0.0;
-    timestep = 0.000001;
+    timestep = -1;
     num_init_particles = 1000;
     
     animate = false;

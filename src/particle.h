@@ -57,6 +57,7 @@ public:
   bool    isDead()                    const { return _isDead; }
   bool    isAlive()                   const { return !_isDead; }
   
+  glm::vec3 getDir() const { return glm::normalize(oldPosition-center); }
 
   // Modifiers ////////////////////////////////////////////////////////////////
   void setPos     (const glm::vec3 & pos) { position = pos; }

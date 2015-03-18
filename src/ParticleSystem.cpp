@@ -37,7 +37,7 @@ typedef std::vector<std::vector<int>> vMat;
 
 ParticleSystem::~ParticleSystem(){
   // Just delete all the particles we made
-  for(int i = 0; i < particles.size(); i++)
+  for(unsigned int i = 0; i < particles.size(); i++)
     delete particles[i];
 }
 
@@ -52,8 +52,11 @@ void ParticleSystem::load(){
   cursor = glm::vec3(centerScene.x, centerScene.y, centerScene.z);
 
   // Initalize simulation variables
-  TIME_STEP             = args->timestep; // imported from args file
   VELOCITY_OF_MEDIUM    = 340; //implement to sound speed in m/s
+  if(args->timestep != -1 )
+    TIME_STEP = args->timestep ;
+  else
+    TIME_STEP = 0.001 / VELOCITY_OF_MEDIUM; // Centemimer accruacy
 
   // simuation var init
   RADIUS_INIT_SPHERE    = 0.7; // Doesnt get changed to ofte
@@ -77,6 +80,12 @@ void ParticleSystem::load(){
 }
 
 void ParticleSystem::update(){
+
+  // Clear the new positions
+  for(Particle * cur : particles){
+    cur->setOldPos(cur->getPos());
+    cur->setPos((glm::vec3)NULL);
+  }
 
   // Move all the partilces in the system up a timestep
   for(Particle * cur : particles)
@@ -117,7 +126,6 @@ void ParticleSystem::moveParticle(Particle* &p){
 
   // Calculate new position
   glm::vec3 oldPos = p->getOldPos();
-  glm::vec3 oldCen = p->getCenter();
   glm::vec3 dir = p->getDir();
   glm::vec3 newPos( oldPos + dir * (float)TIME_STEP * VELOCITY_OF_MEDIUM );
 
@@ -125,8 +133,52 @@ void ParticleSystem::moveParticle(Particle* &p){
   p->setPos(newPos); p->incIter();
 }
 
-
 void ParticleSystem::resolveCollisions(Particle* &p){
+
+  // Create a ray & hit class
+  Ray r(p->getOldPos(), p->getDir());
+  Hit h; bool hitTriangle; bool backface = false;
+
+  // For each triangle we will check which we hit
+  for (triangleshashtype::iterator iter = mesh->triangles.begin();
+       iter != mesh->triangles.end(); iter++) {
+
+    Triangle *t = iter->second;
+    glm::vec3 a = (*t)[0]->getPos();
+    glm::vec3 b = (*t)[1]->getPos();
+    glm::vec3 c = (*t)[2]->getPos();    
+
+    if(triangle_intersect(r,h,a,b,c,backface)){
+      hitTriangle = true;
+      h.setMaterial(t->getMaterial());
+    }
+  }
+
+  // If we hit nothing, we are out in the open
+  if(!hitTriangle){ std::cout << "PS: ERROR_OUT_OF_BOUNDS\n"; return; } 
+
+  // If we hit do not hit within our timestep
+  if(h.getT() + EPSILON > TIME_STEP){ return; }
+
+  // Gareneteee that we hit just this timestep
+  // Change the direction of our particle & backstep to hitting wall
+  double time_until_impact = h.getT();
+  glm::vec3 old = p->getOldPos();
+  glm::vec3 dir = p->getDir();
+  glm::vec3 impactPos(old+(dir*(float)time_until_impact)*VELOCITY_OF_MEDIUM);
+
+  // Get the new center to change direction
+  glm::vec3 mir_dir = MirrorDirection( h.getNormal() , p->getDir() );
+  mir_dir = mir_dir * (float)(-1.0);
+  float radius = glm::distance(p->getCenter(), impactPos);
+
+  // Mirror the center to reflect our new direction
+  p->setCenter(impactPos + mir_dir * radius);
+
+  // stick directly into the wall (max loosing 1mm)
+  p->setPos(impactPos);
+
+
 }
 
 void ParticleSystem::generateResSplits(Particle * &cur){
@@ -135,7 +187,6 @@ void ParticleSystem::generateResSplits(Particle * &cur){
   * Asumpt: That particle exisit
   * SideEf: Adds to new particle vector
   */
-  .
   assert(cur!= NULL && cur->isAlive());
 
   // Properties we will use for gathering and merging
@@ -161,9 +212,6 @@ void ParticleSystem::generateResSplits(Particle * &cur){
 
   // Create new particles
   for(glm::vec3 pos : new_positions){
-
-    // place a check to prevent repeat particles
-    if(particle_kdtree.IdenticalParticle(pos, merge_distance)){ continue; }
 
     Particle * s = new Particle(
       pos,  // WARNING THIS MIGHT NEED TO CHANGE
@@ -241,7 +289,7 @@ void ParticleSystem::stabalizeInitalSphere(){
 void ParticleSystem::linearGatherParticles(Particle * center, double r, double a, PartPtrVec & result){
 
   // Old Gather code
-  for(int i = 0; i < particles.size(); i++){
+  for(unsigned int i = 0; i < particles.size(); i++){
 
     Particle * other = particles[i];
 
@@ -285,52 +333,6 @@ void ParticleSystem::moveCursor( const float & dx,
   
   cursor+= glm::vec3(10*dx,10*dy,10*dz);
   // std::cout << cursor << std::endl;
-}
-
-void ParticleSystem::calcMeshCollision(Particle * &p){
-  // Input  :  Give a particle
-  // Output :  None
-  // Assumpt:  That direction and center are setup
-  // SideEff:  Sets timeLeft until collision
-  // SideEff:  Sets materialHit
-  // SideEff:  Sets hitNormal
-  
-  // Create a ray
-  Ray r(p->getOldPos(), p->getDir());
-  Hit h;
-  bool hitTriangle;
-  bool backface = false;
-
-
-  // For each triangle we will check which we hit
-  for (triangleshashtype::iterator iter = mesh->triangles.begin();
-       iter != mesh->triangles.end(); iter++) {
-
-    Triangle *t = iter->second;
-    glm::vec3 a = (*t)[0]->getPos();
-    glm::vec3 b = (*t)[1]->getPos();
-    glm::vec3 c = (*t)[2]->getPos();    
-
-    if(triangle_intersect(r,h,a,b,c,backface)){
-      hitTriangle = true;
-      h.setMaterial(t->getMaterial());
-    }
-  }
-
-  // Get the closest  hit
-  if(hitTriangle){
-
-    p->setTime(h.getT()/ VELOCITY_OF_MEDIUM);
-    p->setHitNorm(h.getNormal());
-    p->setMaterial(h.getMaterial());
-
-  }else{
-
-    // We don't hit any triangles, we most likey are a corner
-    p->setTime(10000000); 
-    p->setMaterial("none");
-
-  }
 }
 
 void ParticleSystem::createDebugParticle(){
@@ -397,10 +399,6 @@ void ParticleSystem::createDebugParticle(){
 
   }
 
-  // Find out when it hits our mesh
-  calcMeshCollision(p);
-
-
   // Get new particles to be made and toss in split particles
   std::vector<Particle *> new_particles;
   particleSplit(p, new_particles);
@@ -413,7 +411,44 @@ void ParticleSystem::createDebugParticle(){
     particles.push_back(sp);
 
   particle_kdtree.update(particles,*bbox);
+
 }
+
+void ParticleSystem::particleSplit(Particle * &p,
+ std::vector<Particle *> &vec){
+  // Side effects: fills vec with new particles
+  // Note: Particles are not updated at this step
+
+    // Where I will store new particles
+    std::vector< glm::vec3> newPart;
+    
+    // Get hex shape on plane
+    circle_points_on_plane(p->getOldPos(), 
+        p->getDir(), RADIUS_PARTICLE_WAVE, SPLIT_AMOUNT, newPart);
+
+ 
+    // Project back on sphere // When particles should die
+
+    // cirlce_point_on_sphere(p->getCenter(),
+    //    glm::distance( p->getOldPos(), p->getCenter()),newPart);
+
+    // For each calculated pos, make particle
+    for(unsigned int i = 0; i < newPart.size(); i++){
+    
+      Particle * s = new Particle(
+          newPart[i],                                   // Position
+          newPart[i],                                   // OldPosition
+          p->getCenter(),                               // CenterPos
+          p->getWatt() / (double)(SPLIT_AMOUNT + 1.0),   // Amp
+          p->getFreq(),                                 // Freq
+          p->getSplit() + 1);                           // SplitAmount
+
+    
+      // put particle there to be "moved" when its their turn
+      vec.push_back(s);
+    }// for
+}
+
 
 void ParticleSystem::createInitWave(){
   // Testing function to create circle in 3d space
@@ -422,7 +457,7 @@ void ParticleSystem::createInitWave(){
   double s = RADIUS_INIT_SPHERE;
   
   // Create Box of ranodm points
-  for( int i = 0; i < NUM_INIT_PARTICLES; i++){
+  for(unsigned int i = 0; i < NUM_INIT_PARTICLES; i++){
     // Find x,y,z
     float x = cursor.x - s/2.0 + (float) args->randomGen.rand(s);
     float y = cursor.y - s/2.0 + (float) args->randomGen.rand(s);
@@ -488,9 +523,6 @@ void ParticleSystem::createInitWave(){
 
     }
   
-    // Find out when it hits our mesh
-    calcMeshCollision(p);
-
     // put particle there
     particles.push_back(p);
   
@@ -557,11 +589,11 @@ void ParticleSystem::munkresMatching
 
   // Create a square matrix and initiate all of it with infinate values
   int ** matrix = new int*[maxtrix_dimension];
-  for(int i = 0; i < maxtrix_dimension; i++){
+  for(unsigned int i = 0; i < maxtrix_dimension; i++){
      // create a new row
      matrix[i] = new int[maxtrix_dimension];
      // fill in with super large value
-     for( int j = 0; j < maxtrix_dimension; j++){
+     for(unsigned int j = 0; j < maxtrix_dimension; j++){
        matrix[i][j] = 1000; // This is an entire 1000mm = 1m 
      }
   }
@@ -637,11 +669,11 @@ void ParticleSystem::munkresMatching
 
 
   // Conversion from 2d array to 2d vector
-  for(int i = 0; i < partVec.size(); i++){
+  for(unsigned int i = 0; i < partVec.size(); i++){
 
     std::vector<int> temp;
 
-    for(int j = 0; j < maskPositions.size(); j++)
+    for(unsigned int j = 0; j < maskPositions.size(); j++)
 
       temp.push_back(matrix[i][j]);
 
@@ -659,11 +691,11 @@ void ParticleSystem::munkresMatching
   // ==========================================================================
   // Save the result
   // ==========================================================================
-  for(int i = 0; i < partVec.size(); i++){
+  for(unsigned int i = 0; i < partVec.size(); i++){
 
     std::vector<int> temp;
 
-    for(int j = 0; j < maskPositions.size(); j++)
+    for(unsigned int j = 0; j < maskPositions.size(); j++)
       temp.push_back(matrix[i][j]);
 
     matchingMat.push_back(temp);
@@ -674,7 +706,7 @@ void ParticleSystem::munkresMatching
   // deallocation of created array in matrix **
   // ==========================================================================
   
-  for(int i = 0; i < maxtrix_dimension; i++)
+  for(unsigned int i = 0; i < maxtrix_dimension; i++)
     delete [] matrix[i];
   delete [] matrix;
 }
@@ -739,12 +771,12 @@ void ParticleSystem::generateMask(
 
 
   // For each column in the matching matrix push back the matching particle 
-  for(int j = 1; j < matching[0].size(); j++){
+  for(unsigned int j = 1; j < matching[0].size(); j++){
     
     bool found = false;
 
     // Go and find what particle matches this
-    for(int i = 1; i < matching.size(); i++){
+    for(unsigned int i = 1; i < matching.size(); i++){
 
       if(matching[i][j] == 1 && cost[i][j] < 1000){ // second part is because this makes arb matches
 
@@ -808,7 +840,7 @@ Particle * ParticleSystem::particleVectorMerge(std::vector<Particle *> &vec){
   double mergeSplit = 0;
   int    mergeIter = 0;
 
-  for( int i = 0;  i <  vec.size();  i++ ){
+  for(unsigned int i = 0;  i <  vec.size();  i++ ){
 
     const glm::vec3 oldPos = vec[i]->getOldPos();
     const glm::vec3 cen = vec[i]->getCenter();
@@ -846,8 +878,6 @@ Particle * ParticleSystem::particleVectorMerge(std::vector<Particle *> &vec){
       mergedPos,mergedPos,mergedCen, mergeWatt, mergeFreq, mergeSplit);
   newPart->setIter(mergeIter);
 
-  // Calc where I will hit next
-  calcMeshCollision(newPart);
 
 
   return newPart;
@@ -1076,7 +1106,6 @@ double ParticleSystem::absorbFunc(const std::string & mtlName,
   }
 }
 
-
 void ParticleSystem::delusionalParticleLocations(
     Particle * &cur_particle,
     std::vector<Particle *> &gathered_particles,
@@ -1094,7 +1123,7 @@ void ParticleSystem::delusionalParticleLocations(
   double dist = RADIUS_PARTICLE_WAVE * 10; // really large number
   unsigned int nearest_part = 0;
 
-  for(int i = 1; i < gathered_particles.size(); i++){
+  for(unsigned int i = 1; i < gathered_particles.size(); i++){
     float  curDist = glm::distance(gathered_particles[i]->getOldPos(), cur_particle->getOldPos());
     if( curDist < dist  ){
         dist = curDist; nearest_part = i;

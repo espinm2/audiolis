@@ -141,9 +141,9 @@ void GLCanvas::animate(){
 
 
     // print every millisecond we pass in the 
-    if(GLCanvas::iteration % (int)(.001/ args->timestep) == 0){ 
+    if(GLCanvas::iteration % (int)(.001/ particleSystem->getTimeStep()) == 0){
     
-      std::cout << "Time: "<<  GLCanvas::iteration / (int)(.001/ args->timestep) <<" ms" << std::endl;
+      std::cout << "Time: "<<  GLCanvas::iteration / (int)(.001/ particleSystem->getTimeStep()) <<" ms" << std::endl;
       std::cout << "Particles: " << particleSystem->numParticles() << std::endl;
     
     }

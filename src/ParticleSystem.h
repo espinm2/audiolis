@@ -52,6 +52,7 @@ class ParticleSystem {
 
     // Getter
     unsigned int numParticles(){ return particles.size();}
+    double getTimeStep(){ return TIME_STEP;}
 
     // Main Simulation Functions
     void load();  // load inital values from args file and meshes
@@ -63,6 +64,7 @@ class ParticleSystem {
     
     // Debug Functions
     void createDebugParticle(); // used for debugging in testing_chamber_1.obj
+    void particleSplit(Particle * &p, std::vector<Particle *> &vec);
 
     // Kuhn–Munkres algorithm based matching
     void munkresMatching (PartPtrVec & partVec,
@@ -95,7 +97,6 @@ class ParticleSystem {
 
     // New Update Function Code (tested)
     void moveParticle(Particle * & cur); // moves a particle
-    void calcMeshCollision(Particle * &p); //finds when a particle hits mesh
 
 
     // Merge helper functions
