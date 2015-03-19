@@ -19,6 +19,7 @@
 #include "vbo_structs.h"
 #include "mask.h"
 #include "KDTree.h"
+#include "UniformGrid.h"
 
 typedef std::vector<std::vector<int>> vMat;
 typedef std::vector<Particle *> PartPtrVec;
@@ -39,7 +40,8 @@ class ParticleSystem {
     ParticleSystem(ArgParser *_args, Mesh * _mesh, BoundingBox * _bbox) { 
       args = _args; 
       mesh = _mesh;
-      bbox = _bbox; }
+      bbox = _bbox; 
+    }
 
     ~ParticleSystem();
 
@@ -134,12 +136,18 @@ class ParticleSystem {
     void drawDelusionalConnections();
 
 
-    // Memebers
+    // Memebers Borrowed from GLCanvas
     ArgParser * args;
     BoundingBox * bbox;
     Mesh * mesh;
-    
 
+    // Memebers unique to this class
+    std::vector<Particle *> particles; // Where we store partilces in current iterations
+    std::vector<Particle *> newParticles; // Where we put split particles 
+    glm::vec3 cursor; // Where the cursor is in world space
+    KDTree particle_kdtree; // Where we store particles in a td tre
+    UniformGrid uniform_grid; // Where we store our mesh object fo easy access
+    
 
     // Simuation Important Varibles
     double            TIME_STEP;  // how much time is passed in seconds
@@ -156,11 +164,6 @@ class ParticleSystem {
     
     unsigned int      ITERATION;
 
-    std::vector<Particle *> particles; // Where we store partilces in current iterations
-    std::vector<Particle *> newParticles; // Where we put split particles 
-    KDTree particle_kdtree; // Where we store particles in a td tre
-
-    glm::vec3 cursor; // Where the cursor is in world space
 
 
     // Used to save profiling output
@@ -173,11 +176,10 @@ class ParticleSystem {
     GLuint velocity_verts_VBO;
     GLuint velocity_tri_indices_VBO;
     GLuint outline_verts_VBO;                                                   // unused 
-    GLuint happyness_verts_VBO; 
+    GLuint happyness_verts_VBO;                                                 // unused
 
-    GLuint delusional_verts_VBO; // TODO
-    GLuint connection_verts_VBO; // TODO
-
+    GLuint delusional_verts_VBO; 
+    GLuint connection_verts_VBO; 
 
     // Vertices for VBOs
     std::vector<VBOPosNormalColor> particle_verts;
@@ -186,7 +188,6 @@ class ParticleSystem {
     std::vector<VBOIndexedTri> velocity_tri_indices;
     std::vector<VBOPosNormalColor> outline_verts;
     std::vector<VBOPosNormalColor> happyness_verts;
-
 
     // Experimental
     std::vector<VBOPosNormalColor> delusional_verts; // TODO

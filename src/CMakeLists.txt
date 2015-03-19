@@ -18,6 +18,7 @@ add_executable(audiolis
   ParticleSystem_render.cpp
   munkers.cpp
   KDTree.cpp
+  UniformGrid.cpp
 )
 
 

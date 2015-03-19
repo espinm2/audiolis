@@ -69,6 +69,10 @@ public:
         i++; assert (i < argc); 
         width = height = atoi(argv[i]);
 
+      } else if (!strcmp(argv[i],"-division")) {
+        i++; assert (i < argc); 
+        division = atoi(argv[i]);
+
       } else if (!strcmp(argv[i],"-init_particles")) {
         i++; assert (i < argc); 
         num_init_particles = atoi(argv[i]);
@@ -117,19 +121,17 @@ public:
     absorber = false;
 
     printcusorpos = true;
-
     render_outline = false;
     render_edges = false;
-
     render_mask = 0;
 
     output_file = "merge_profiling_data.txt";
-
     profile = false;
-
     setupInitParticles = true;
-
     kdtree_render = false;
+
+    division = 20;
+
 
   }
 
@@ -177,6 +179,8 @@ public:
   bool profile;
 
   bool kdtree_render;
+
+  int division;
 
   // Material Key
   // wall_material 0 => bricked_wall; 

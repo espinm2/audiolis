@@ -8,13 +8,19 @@
 #include "hit.h"
 #include <vector>
 
-// Constructor
-UniformGrid::UniformGrid( uint d , const  BoundingBox * bbox){
+typedef unsigned int uint;
+
+void UniformGrid::loadMesh( Mesh * mesh , uint d){
+
+  std::cout << "Loading Mesh into uniform grid" << std::endl;
+
+  // get bbox
+  const BoundingBox bbox = mesh->getBoundingBox();
 
   // Settting things inside out box
-	double x_range = bbox->getMax().x - bbox->getMin().x;
-	double y_range = bbox->getMax().y - bbox->getMin().y;
-	double z_range = bbox->getMax().z - bbox->getMin().z;
+	double x_range = bbox.getMax().x - bbox.getMin().x;
+	double y_range = bbox.getMax().y - bbox.getMin().y;
+	double z_range = bbox.getMax().z - bbox.getMin().z;
 
 	dx = x_range / d;
 	dy = y_range / d;
@@ -22,10 +28,10 @@ UniformGrid::UniformGrid( uint d , const  BoundingBox * bbox){
 
 	division = d;
 
-}
-
-void UniformGrid::loadMesh( Mesh * mesh ){
-
+  // Create the cells where we will store
+  for(uint i = d; i < d*d*d; i++)
+    uniformCells.push_back(new UniformCell());
+  
 	// Iterate through all triangles to add them to our mesh
   for ( triangleshashtype::iterator iter = mesh->triangles.begin();
         iter != mesh->triangles.end(); iter++) {
@@ -34,6 +40,22 @@ void UniformGrid::loadMesh( Mesh * mesh ){
       insertTriangle( t );
 
   }
+
+}
+
+
+void UniformGrid::averageDensity(){
+
+  double sum = 0;
+  int n = 0;
+  for( UniformCell * cell: uniformCells ){
+    if (cell->size() != 0){
+      n++; sum += cell->size(); }
+  }
+
+
+  std::cout << "Density of mesh grid object with " 
+    << division << " divisions: " << sum / n << std::endl;
 
 }
 

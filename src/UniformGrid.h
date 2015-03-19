@@ -28,8 +28,11 @@ class UniformGrid {
 
 	public:
 
-		// Given a mesh will break apart the scene into grids
-		UniformGrid(uint division, const BoundingBox * bbox);
+    // Default constructor, requires load to be called
+    UniformGrid(){}
+
+		// Load a mesh into our uniform grid
+		void loadMesh( Mesh * mesh, uint division );
 
 		// Used to aid in rendering the mesh for debugging
 		void renderGrid( std::vector<VBOPosNormalColor> & buffer);
@@ -37,11 +40,12 @@ class UniformGrid {
 		// Used to get hit object of where a particle hit our mesh
 		void collisionDetected( const Particle * p, Hit * h );
 
+    // Prints out the average density  of the mesh to cout
+    void averageDensity();
+
 
 	private:
 
-		// Load a mesh into our uniform grid
-		void loadMesh( Mesh * mesh );
 
 		// Given a point in the space, return a cell
 		UniformCell * getCell(const glm::vec3 & position);

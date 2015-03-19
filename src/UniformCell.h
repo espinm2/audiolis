@@ -13,10 +13,10 @@ class Hit;
 
 class UniformCell {
 
-  // Default Constructor
-  UniformCell(){}
-
 	public:
+
+    UniformCell(){}
+    int size(){ return triangles.size();}
 		// Where we will store our triangles contained in a cell
 		std::vector < Triangle * > triangles;
 

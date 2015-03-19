@@ -42,6 +42,13 @@ ParticleSystem::~ParticleSystem(){
 }
 
 void ParticleSystem::load(){
+
+
+  // Create my uniform grid mesh
+  uniform_grid.loadMesh(mesh,args->division);
+
+  uniform_grid.averageDensity();
+
   // Initaite the cursor 
   glm::vec3 centerScene;
 
