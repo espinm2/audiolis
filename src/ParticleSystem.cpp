@@ -147,7 +147,7 @@ void ParticleSystem::resolveCollisions(Particle* &p){
 
   // Get the cell where are particle is
   std::vector<Triangle *> tri = uniform_grid.getTriangles(p->getPos());
-  std::cout << "Gathered" << tri.size() << std::endl;
+
 
   // Create a ray & hit class
   Ray r(p->getOldPos(), p->getDir());

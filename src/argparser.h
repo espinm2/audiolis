@@ -46,7 +46,6 @@ inline void separatePathAndFile(const std::string &input, std::string &path, std
 // ======================================================================
 
 
-
 class ArgParser {
 
 public:
@@ -69,7 +68,7 @@ public:
         i++; assert (i < argc); 
         width = height = atoi(argv[i]);
 
-      } else if (!strcmp(argv[i],"-division")) {
+      } else if (!strcmp(argv[i],"-d")) {
         i++; assert (i < argc); 
         division = atoi(argv[i]);
 
@@ -130,7 +129,7 @@ public:
     setupInitParticles = true;
     kdtree_render = false;
 
-    division = 20;
+    division = 10;
 
 
   }

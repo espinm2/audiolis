@@ -19,8 +19,6 @@ class Mesh;
 class UniformCell;
 class BoundingBox;
 class Triangle;
-class Particle;
-class Hit;
 
 
 
@@ -37,36 +35,31 @@ class UniformGrid {
 		// Used to aid in rendering the mesh for debugging
 		void renderGrid( std::vector<VBOPosNormalColor> & buffer);
 
-		// Used to get hit object of where a particle hit our mesh
-		void collisionDetected( const Particle * p, Hit * h );
+	    // Prints out the average density  of the mesh to cout
+	    void averageDensity();
 
-    // Prints out the average density  of the mesh to cout
-    void averageDensity();
-
-    // Get the vector of triangles
-    std::vector<Triangle *> & getTriangles(const glm::vec3 & position);
+	    // Get the vector of triangles
+	    std::vector<Triangle *> & getTriangles(const glm::vec3 & position);
 
 	private:
 
 		// Given a point in the space, return a cell
 		UniformCell * getCell(const glm::vec3 & position);
 
-    // Given the i,j,k return a cell
-    UniformCell * getCell(uint i, uint j, uint k);
+	    // Given the i,j,k return a cell
+	    UniformCell * getCell(uint i, uint j, uint k);
 
-    // Add Triangle to uniform grid data structure in cell
-    void addTriangleToCell(uint i , uint j, uint k, Triangle * triangle);
+	    // Add Triangle to uniform grid data structure in cell
+	    void addTriangleToCell(uint i , uint j, uint k, Triangle * triangle);
 
 		// You will you this to insert all triangles into our UG
 		void insertTriangle(Triangle * t);
-    // Reprsentation
-    
-		// Where are store our UniformCells;
-		std::vector < UniformCell * > uniformCells;
 
-		// Size our cells
-		double dx,dy,dz;
+    	// Reprsentation
+		std::vector < UniformCell * > uniformCells; // where our cells are
+		double dx,dy,dz; // size our cells
 		uint division;
+		BoundingBox bbox;
 
 };
 
