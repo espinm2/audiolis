@@ -73,6 +73,10 @@ void UniformGrid::collisionDetected( const Particle * p, Hit * h ){
 	assert(false);
 }
 
+// Get the vector of triangles
+std::vector<Triangle * > & UniformGrid::getTriangles(const glm::vec3 & pos){
+  return getCell(pos)->read();
+}
 // Given a point in the space, return a cell
 UniformCell * UniformGrid::getCell(const glm::vec3 & position){
   // TODO make this function

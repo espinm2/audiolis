@@ -107,8 +107,8 @@ void ParticleSystem::update(){
   //   particles.push_back(np);
 
   // Merge particles that are the same
-  for(Particle * cur : particles)
-    mergeSimilarParticles(cur);
+  // for(Particle * cur : particles)
+  //   mergeSimilarParticles(cur);
 
   // Resolve all collision that occur
   for(Particle * cur: particles)
@@ -140,17 +140,23 @@ void ParticleSystem::moveParticle(Particle* &p){
   p->setPos(newPos); p->incIter();
 }
 
+
+
+
 void ParticleSystem::resolveCollisions(Particle* &p){
+
+  // Get the cell where are particle is
+  std::vector<Triangle *> tri = uniform_grid.getTriangles(p->getPos());
+  std::cout << "Gathered" << tri.size() << std::endl;
 
   // Create a ray & hit class
   Ray r(p->getOldPos(), p->getDir());
   Hit h; bool hitTriangle = false; bool backface = false;
 
-  // For each triangle we will check which we hit
-  for (triangleshashtype::iterator iter = mesh->triangles.begin();
-       iter != mesh->triangles.end(); iter++) {
+  for(uint i = 0; i < tri.size();i++){
+  
+    Triangle *t = tri[i];
 
-    Triangle *t = iter->second;
     glm::vec3 a = (*t)[0]->getPos();
     glm::vec3 b = (*t)[1]->getPos();
     glm::vec3 c = (*t)[2]->getPos();    
@@ -161,8 +167,8 @@ void ParticleSystem::resolveCollisions(Particle* &p){
     }
   }
 
-  // If we hit nothing, we are out in the open
-  if(!hitTriangle){ std::cout << "PS: ERROR_OUT_OF_BOUNDS\n"; return; } 
+  // We didnt hit anything
+  if(!hitTriangle){ return; } 
 
   // If we hit do not hit within our timestep
   if( h.getT()  > 0.01 ){ return; } // Centimeter accuracy

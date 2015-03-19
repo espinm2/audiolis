@@ -43,9 +43,10 @@ class UniformGrid {
     // Prints out the average density  of the mesh to cout
     void averageDensity();
 
+    // Get the vector of triangles
+    std::vector<Triangle *> & getTriangles(const glm::vec3 & position);
 
 	private:
-
 
 		// Given a point in the space, return a cell
 		UniformCell * getCell(const glm::vec3 & position);
