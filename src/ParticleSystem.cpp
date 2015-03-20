@@ -25,7 +25,6 @@
 #include "mask.h"
 #include <algorithm>
 
-
 #define EPSILON 0.0001
 typedef unsigned int uint;
 typedef short unsigned int uint8;
@@ -43,10 +42,10 @@ ParticleSystem::~ParticleSystem(){
 
 void ParticleSystem::load(){
 
-
   // Create my uniform grid mesh
   uniform_grid.loadMesh(mesh,args->division);
 
+  // AverageDensity
   uniform_grid.averageDensity();
 
   // Initaite the cursor 
@@ -140,14 +139,10 @@ void ParticleSystem::moveParticle(Particle* &p){
   p->setPos(newPos); p->incIter();
 }
 
-
-
-
 void ParticleSystem::resolveCollisions(Particle* &p){
 
   // Get the cell where are particle is
   std::vector<Triangle *> tri = uniform_grid.getTriangles(p->getPos());
-
 
   // Create a ray & hit class
   Ray r(p->getOldPos(), p->getDir());
@@ -192,15 +187,16 @@ void ParticleSystem::resolveCollisions(Particle* &p){
   assert( absorb_ratio < 1);                                                  // Sanity Check
   p->setWatt( (1 - absorb_ratio ) * p->getWatt() );                           // Math Review Required
   p->incIter();
-
 }
 
 void ParticleSystem::generateResSplits(Particle * &cur){
+
  /* Input : Particle ptr
   * Output: None
   * Asumpt: That particle exisit
   * SideEf: Adds to new particle vector
   */
+
   assert(cur!= NULL && cur->isAlive());
 
   // Properties we will use for gathering and merging
@@ -242,7 +238,6 @@ void ParticleSystem::generateResSplits(Particle * &cur){
 }
 
 void ParticleSystem::mergeSimilarParticles(Particle * &cur){
-
 }
 
 void ParticleSystem::stabalizeInitalSphere(){
@@ -339,13 +334,12 @@ bool ParticleSystem::linearNewDuplicateSearch(const glm::vec3 & pos, const PartP
   return false;
 }
 
-
 void ParticleSystem::moveCursor( const float & dx, 
     const float & dy, const float & dz ){
   // Function called by glCanvas
   
   cursor+= glm::vec3(10*dx,10*dy,10*dz);
-  // std::cout << cursor << std::endl;
+  std::cout << cursor << std::endl;
 }
 
 void ParticleSystem::createDebugParticle(){
@@ -424,7 +418,6 @@ void ParticleSystem::createDebugParticle(){
     particles.push_back(sp);
 
   particle_kdtree.update(particles,*bbox);
-
 }
 
 void ParticleSystem::particleSplit(Particle * &p,
@@ -461,7 +454,6 @@ void ParticleSystem::particleSplit(Particle * &p,
       vec.push_back(s);
     }// for
 }
-
 
 void ParticleSystem::createInitWave(){
   // Testing function to create circle in 3d space
@@ -544,7 +536,6 @@ void ParticleSystem::createInitWave(){
 
   particle_kdtree.update(particles, *bbox);
 }
-
 
 void ParticleSystem::munkresMatching 
   (std::vector<Particle*> & partVec, vMat & matchingMat, vMat & costMat){
@@ -723,7 +714,6 @@ void ParticleSystem::munkresMatching
     delete [] matrix[i];
   delete [] matrix;
 }
-
 
 void ParticleSystem::generateMask(
     std::vector <Particle*> & conciderForMask, Mask &m ){
@@ -1184,3 +1174,13 @@ circle_points_on_sphere
 
   */
 }
+
+void ParticleSystem::colorCursorTri(){
+
+  std::vector <Triangle*> tri = 
+    uniform_grid.getTriangles(cursor);
+
+  for(uint i = 0; i < tri.size();i++)
+    tri[i]->setMaterial("DEBUG");
+}
+

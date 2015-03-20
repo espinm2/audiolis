@@ -55,6 +55,8 @@ class ParticleSystem {
     // Getter
     unsigned int numParticles(){ return particles.size();}
     double getTimeStep(){ return TIME_STEP;}
+    glm::vec3 getCursor(){ return cursor; }
+    UniformGrid * getUniformGrid(){ return &uniform_grid; }
 
     // Main Simulation Functions
     void load();  // load inital values from args file and meshes
@@ -67,6 +69,7 @@ class ParticleSystem {
     // Debug Functions
     void createDebugParticle(); // used for debugging in testing_chamber_1.obj
     void particleSplit(Particle * &p, std::vector<Particle *> &vec);
+    void colorCursorTri();
 
     // Kuhn–Munkres algorithm based matching
     void munkresMatching (PartPtrVec & partVec,

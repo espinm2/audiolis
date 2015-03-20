@@ -26,8 +26,8 @@ class UniformGrid {
 
 	public:
 
-    // Default constructor, requires load to be called
-    UniformGrid(){}
+	    // Default constructor, requires load to be called
+	    UniformGrid(){}
 
 		// Load a mesh into our uniform grid
 		void loadMesh( Mesh * mesh, uint division );
@@ -40,6 +40,15 @@ class UniformGrid {
 
 	    // Get the vector of triangles
 	    std::vector<Triangle *> & getTriangles(const glm::vec3 & position);
+
+	    // Rendering functions
+	    void initializeVBOs();
+
+	    void setupVBOs();
+
+	    void drawVBOs();
+
+	    void cleanupVBOs();
 
 	private:
 
@@ -57,9 +66,14 @@ class UniformGrid {
 
     	// Reprsentation
 		std::vector < UniformCell * > uniformCells; // where our cells are
-		double dx,dy,dz; // size our cells
-		uint division;
+		double dx,dy,dz; unsigned int division;
 		BoundingBox bbox;
+
+		// Bufffers for rendering
+	    GLuint uni_verts_VBO;						
+	    GLuint uni_tri_indices_VBO;
+	    std::vector<VBOPosNormalColor> uni_verts;
+	    std::vector<VBOIndexedTri> uni_tri_indices;
 
 };
 

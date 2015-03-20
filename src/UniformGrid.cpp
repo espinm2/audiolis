@@ -61,9 +61,44 @@ void UniformGrid::averageDensity(){
 
 // Used to aid in rendering the mesh for debugging
 void UniformGrid::renderGrid( std::vector<VBOPosNormalColor> & buffer){
-  // TODO make this function
-  // Public function
-	assert(false);
+
+  for(uint i = 0; i < division; i++ )
+    for(uint j = 0; j < division; j++ )
+      for(uint k = 0; k < division; k++ )
+
+}
+
+// Rendering functions 
+void UniformGrid::initializeVBOs(){
+  glGenBuffers(1, &uni_verts_VBO);
+  glGenBuffers(1, &uni_tri_indices_VBO);
+}
+
+void UniformGrid::setupVBOs(){
+
+}
+
+void UniformGrid::drawVBOs(){
+
+  glBindBuffer(GL_ARRAY_BUFFER, uni_verts_VBO);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,sizeof(VBOPosNormalColor),(void*)0);
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,sizeof(VBOPosNormalColor),(void*)sizeof(glm::vec3) );
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(2, 3, GL_FLOAT,GL_FALSE,sizeof(VBOPosNormalColor), (void*)(sizeof(glm::vec3)*2));
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, uni_tri_indices_VBO);
+  glDrawElements(GL_TRIANGLES,
+                 uni_tri_indices.size()*3,
+                 GL_UNSIGNED_INT, 0);
+  glDisableVertexAttribArray(0);
+  glDisableVertexAttribArray(1);
+  glDisableVertexAttribArray(2);
+
+}
+
+void UniformGrid::cleanupVBOs(){
+
 }
 
 // Easy to use function that gives you triangles based on cell
@@ -144,8 +179,3 @@ void UniformGrid::addTriangleToCell(uint i , uint j, uint k, Triangle * t){
 
   getCell(i,j,k)->triangles.push_back(t);
 }
-
-
-
-
-

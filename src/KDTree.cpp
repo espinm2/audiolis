@@ -477,3 +477,4 @@ void KDTree::cleanupVBOs(){
   glDeleteBuffers(1, &tree_tri_indices_VBO);
 
 }
+

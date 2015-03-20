@@ -332,6 +332,10 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       args->timer += 0.1;
       mesh->setupVBOs();
       break;
+    case 'u': case 'U':
+      particleSystem->colorCursorTri();
+      mesh->setupVBOs();
+      break;
     case 'n': case 'N':
       args->gouraud_normals = !args->gouraud_normals;
       mesh->setupVBOs();
@@ -413,7 +417,7 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       // quit
       glfwSetWindowShouldClose(GLCanvas::window, GL_TRUE);
       break;
-    // Naviation of cursor //////////////////////////
+    // Navigation of cursor //////////////////////////
     case 'h' : case 'H':
       particleSystem->moveCursor(-1*SCALE,0,0);
       particleSystem->setupVBOs();

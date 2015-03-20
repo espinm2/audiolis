@@ -19,10 +19,8 @@
 // Predefined colors to use
 glm::vec4 mesh_color(0.8,0.8,0.8,1);
 
-
 // =======================================================================
 // =======================================================================
-
 
 // the light position can be animated
 glm::vec3 Mesh::LightPosition() const {
@@ -60,7 +58,6 @@ glm::vec3 Mesh::LightPosition() const {
   return t;
 }
 
-
 void Mesh::initializeVBOs() {
 
   // Regular mesh buffer
@@ -91,9 +88,7 @@ void Mesh::SetupLight(const glm::vec3 &light_position) {
   glBindBuffer(GL_ARRAY_BUFFER,light_vert_VBO); 
 
   glBufferData(GL_ARRAY_BUFFER,sizeof(VBOPosNormalColor)*1,&light_vert[0],GL_STATIC_DRAW); 
-
 }
-
 
 void Mesh::SetupMesh() {
   for (triangleshashtype::iterator iter = triangles.begin();
@@ -196,6 +191,10 @@ void Mesh::SetupMesh() {
     
     }
 
+    else if( mtl.compare(0,5,"DEBUG") == 0 ){
+          center_color = getColor(0,255,0,1);
+    }
+
     else{
       // Assume ceiling
       // center_color = getColor(255,255,51,1);
@@ -225,10 +224,7 @@ void Mesh::SetupMesh() {
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
 	       sizeof(VBOIndexedTri) * mesh_tri_indices.size(),
 	       &mesh_tri_indices[0], GL_STATIC_DRAW);
-
 }
-
-
 
 // ================================================================================
 // ================================================================================
@@ -406,6 +402,4 @@ void Mesh::TriVBOHelper(std::vector<VBOPosNormalColor> &mesh_tri_verts,
     mesh_tri_indices.push_back(VBOIndexedTri(start,start+1,start+2));
 
   }
-
-
 }
