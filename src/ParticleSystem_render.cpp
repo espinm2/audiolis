@@ -35,6 +35,7 @@ void ParticleSystem::initializeVBOs(){
   glGenBuffers(1,&delusional_verts_VBO);
   glGenBuffers(1,&connection_verts_VBO);
   particle_kdtree.initializeVBOs();
+  uniform_grid.initializeVBOs(); 
 }
 
 void ParticleSystem::setupVBOs(){
@@ -53,6 +54,9 @@ void ParticleSystem::setupVBOs(){
   // Setup new Data
   if(args->kdtree_render)
     particle_kdtree.setupVBOs();
+
+  if(args->ugrid_render)
+    uniform_grid.setupVBOs();
 
   setupCursorPoint();
 
@@ -86,6 +90,9 @@ void ParticleSystem::drawVBOs(){
   if(args->kdtree_render)
     particle_kdtree.drawVBOs();
 
+  if(args->ugrid_render)
+    uniform_grid.drawVBOs();
+
   drawParticles();
 
   HandleGLError("leaving draw vbos");
@@ -105,9 +112,10 @@ void ParticleSystem::cleanupVBOs(){
 
 
 
-  HandleGLError("kdtree clean enter");
+  HandleGLError("Space clean enter");
   particle_kdtree.cleanupVBOs();
-  HandleGLError("kdtree clean leave");
+  uniform_grid.cleanupVBOs();
+  HandleGLError("space clean leave");
 
 
   HandleGLError("leave clean vbos");

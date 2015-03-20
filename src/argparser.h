@@ -128,6 +128,7 @@ public:
     profile = false;
     setupInitParticles = true;
     kdtree_render = false;
+    ugrid_render = false;
 
     division = 10;
 
@@ -178,6 +179,7 @@ public:
   bool profile;
 
   bool kdtree_render;
+  bool ugrid_render;
 
   int division;
 

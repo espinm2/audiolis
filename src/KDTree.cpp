@@ -425,7 +425,7 @@ void KDTree::initializeVBOs(){
 void KDTree::setupVBOs(){
 
   // std::cout << "Setup Buffer " << (int)tree_verts_VBO  << std::endl;
-
+  
   tree_verts.clear();
   tree_tri_indices.clear();
   

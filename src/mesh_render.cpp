@@ -118,7 +118,7 @@ void Mesh::SetupMesh() {
 
     // Color of triangle
     glm::vec4 center_color;
-    glm::vec4 wire_color;
+    glm::vec4 wire_color(0,0,0,1);
 
     std::string mtl = t->getMaterial();
 
@@ -201,7 +201,7 @@ void Mesh::SetupMesh() {
       center_color = mesh_color;
     }
 
-    wire_color = center_color; // <------------------------------------------------- Recall we killed the wiremesh
+    // wire_color = center_color; // <------------------------------------------------- Recall we killed the wiremesh
 
     // Sending color
     TriVBOHelper(mesh_tri_verts,mesh_tri_indices,

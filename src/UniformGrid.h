@@ -43,11 +43,8 @@ class UniformGrid {
 
 	    // Rendering functions
 	    void initializeVBOs();
-
 	    void setupVBOs();
-
 	    void drawVBOs();
-
 	    void cleanupVBOs();
 
 	private:
@@ -60,20 +57,24 @@ class UniformGrid {
 
 	    // Add Triangle to uniform grid data structure in cell
 	    void addTriangleToCell(uint i , uint j, uint k, Triangle * triangle);
+		void getIndex(const glm::vec3 & pos, int &i, int&j, int& k);
 
 		// You will you this to insert all triangles into our UG
 		void insertTriangle(Triangle * t);
 
+		// Rendering
+		void renderBBox(const glm::vec3 &A, const glm::vec3 &B);
+	
     	// Reprsentation
 		std::vector < UniformCell * > uniformCells; // where our cells are
 		double dx,dy,dz; unsigned int division;
 		BoundingBox bbox;
 
 		// Bufffers for rendering
-	    GLuint uni_verts_VBO;						
-	    GLuint uni_tri_indices_VBO;
-	    std::vector<VBOPosNormalColor> uni_verts;
-	    std::vector<VBOIndexedTri> uni_tri_indices;
+	    GLuint grid_verts_VBO;						
+	    GLuint grid_tri_indices_VBO;
+	    std::vector<VBOPosNormalColor> grid_verts;
+	    std::vector<VBOIndexedTri> grid_tri_indices;
 
 };
 

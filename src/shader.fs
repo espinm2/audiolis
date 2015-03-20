@@ -32,6 +32,26 @@ void main(){
   if ( whichshader == 0)
   { 
 
+    /*
+    // REMOVE ME IF YOU DO NOT WANT WIREFRAME
+    // Material properties
+      vec3 MaterialDiffuseColor;
+      if ( (wireframe == 0) ||
+           ( myColor.x > 0.1 &&
+             myColor.y > 0.1 &&
+             myColor.z > 0.1) ) {
+        MaterialDiffuseColor = 0.7 * vec3(1,1,1);
+      } else {
+        MaterialDiffuseColor = mycolor;
+        if (mycolor.x < 0.1 &&
+            mycolor.y < 0.1 &&
+            mycolor.z < 0.1) {
+          MaterialDiffuseColor *= 7.0; 
+        }
+      }
+      // End wireframe
+      */
+
       MaterialDiffuseColor.r = myColor.r;
       MaterialDiffuseColor.g = myColor.g;
       MaterialDiffuseColor.b = myColor.b;
@@ -51,6 +71,7 @@ void main(){
       float distanceToLight = length( dirToLight );
       dirToLight = normalize(dirToLight);
       
+
       // Cosine of the angle between the normal and the light direction, 
       // clamped above 0
       //  - light is at the vertical of the triangle -> 1
