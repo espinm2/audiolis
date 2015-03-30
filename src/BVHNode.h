@@ -49,6 +49,8 @@ class  BVHNode {
 
       } else { // Not a leaf, I am a node
 
+
+        tri_leaf = NULL;
         // Find bounding box of tv
         BoundingBox b;
 
@@ -139,7 +141,7 @@ class  BVHNode {
       
       }
 
-      
+
       // Z's
       a = 1.0 / d.z;
       if(a >= 0 ){
@@ -154,22 +156,18 @@ class  BVHNode {
       
       }
 
+      // Final Check (if there is overlap with our timestep)
+      bool x_inter, y_inter, z_inter;
+      x_inter = tx_min <= time_step && 0 <= tx_max;
+      y_inter = ty_min <= time_step && 0 <= ty_max;
+      z_inter = tz_min <= time_step && 0 <= tz_max;
 
-      // Final Check
-      bool x_y_inter, y_z_inter, z_x_inter;
-
-      // TODO Incoperate timestep taken into this
-
-      x_y_inter = tx_min <= ty_max && ty_min <= tx_max;
-      y_z_inter = ty_min <= tz_max && tz_min <= ty_max;
-      z_x_inter = tz_min <= tx_max && tx_min <= tz_max;
-
-      if(tx_max < 0 ){ return; }
-      if(ty_max < 0 ){ return; }
-      if(tz_max < 0 ){ return; }
+      // bool x_sat = tx_min <= time_step && time_step <= tx_max;
+      // bool y_sat = ty_min <= time_step && time_step <= ty_max;
+      // bool z_sat = tz_min <= time_step && time_step <= tz_max;
 
 
-      if(x_y_inter && y_z_inter && z_x_inter){
+      if(x_inter && y_inter && z_inter){
 
         if(isLeaf()){
 

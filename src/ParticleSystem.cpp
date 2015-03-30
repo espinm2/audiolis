@@ -68,12 +68,12 @@ void ParticleSystem::debug(){
   BVHNode * r = new BVHNode(tv,0);
 
   glm::vec3 ray_start(0.1,0.1,1); 
-  glm::vec3 ray_dir(0,0,-1); // Given this setup the bbox (b,d)
+  glm::vec3 ray_dir(0,0,1); // Given this setup the bbox (b,d)
 
   Ray ray(ray_start, ray_dir);
 
   std::vector < Triangle *> hits;
-  r->getTriangles(ray,0.01,hits);
+  r->getTriangles(ray,2.0,hits);
 
   std::cout << "DEBUG HIT SHOULD RETURN 0: " << hits.size() << std::endl;
 
@@ -106,7 +106,7 @@ void ParticleSystem::debug(){
 void ParticleSystem::load(){
 
   // Debug phase
-  debug();
+  // debug();
 
 
   // SETUP CURSOR ______________________________________________
@@ -218,9 +218,12 @@ void ParticleSystem::resolveCollisions(Particle* &p){
   Ray r(p->getOldPos(), p->getDir());
   Hit h; bool hitTriangle = false; bool backface = false;
 
-  // Get all triangles I collide with 
+  // Get all triangles I collide with , 
+  // These are promised such that the movement from old->newpos triggers impact
   std::vector<Triangle *> tri;
-  root->getTriangles(r,TIME_STEP,tri);
+  root->getTriangles(r,10*TIME_STEP,tri);
+
+  std::cout << "Triangles collected " << tri.size() << std::endl;
 
   for(uint i = 0; i < tri.size();i++){
   
@@ -238,12 +241,14 @@ void ParticleSystem::resolveCollisions(Particle* &p){
   }
 
   // We didnt hit anything
-  if(!hitTriangle){ return; } 
+  if(!hitTriangle){return; }
 
+  std::cout << "HIT TRIANGLE IN THIS ITERATION" << std::endl;
+  args->animate = false;
   // assert(false);
 
   // If we hit do not hit within our timestep
-  if( h.getT()  > TIME_STEP + EPSILON ){ return; } // Centimeter accuracy
+  if( h.getT()  > TIME_STEP ){ return; } // Centimeter accuracy
 
   // Gareneteee that we hit just this timestep
   // Change the direction of our particle & backstep to hitting wall
