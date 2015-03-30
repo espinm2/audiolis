@@ -28,15 +28,24 @@ class  BVHNode {
     BVHNode(){}
 
     // Nodes will build self
-    BVHNode(TriangleVec tv, int axis){
+    BVHNode(TriangleVec & triVec, int axis){
 
+      TriangleVec tv = triVec; // forceful copy
       // Sanity check
       assert(tv.size() != 0);
 
       if(tv.size() == 1){ // Am I a leaf
 
+
+        // Set my triangle
         tri_leaf = tv[0];
         left_volume = right_volume = NULL;
+
+        BoundingBox b;
+        b.Extend((*tri_leaf)[0]->getPos());
+        b.Extend((*tri_leaf)[1]->getPos());
+        b.Extend((*tri_leaf)[2]->getPos());
+        bbox = b;
 
       } else { // Not a leaf, I am a node
 
@@ -89,9 +98,8 @@ class  BVHNode {
 
     // Collision with ray function
     void getTriangles(Ray & r,  double time_step, TriangleVec & tv ){
-
-        // If I am a leaf take me into being concidered for intersection
-      if( isLeaf() ) { tv.push_back(getTriangle()); return; } 
+      // If I am a leaf take me into being concidered for intersection
+      // if( isLeaf() ) { tv.push_back(getTriangle()); return; } 
 
       // Check to see if this ray hits me
       glm::vec3 d = r.getDirection();
@@ -155,12 +163,25 @@ class  BVHNode {
       x_y_inter = tx_min <= ty_max && ty_min <= tx_max;
       y_z_inter = ty_min <= tz_max && tz_min <= ty_max;
       z_x_inter = tz_min <= tx_max && tx_min <= tz_max;
-           
+
+      if(tx_max < 0 ){ return; }
+      if(ty_max < 0 ){ return; }
+      if(tz_max < 0 ){ return; }
+
 
       if(x_y_inter && y_z_inter && z_x_inter){
-        // Try to iterate through my children
-        right_volume->getTriangles(r, time_step, tv);
-        left_volume->getTriangles(r, time_step, tv);
+
+        if(isLeaf()){
+
+          tv.push_back(getTriangle());
+
+        }else{
+
+          // Try to iterate through my children
+          right_volume->getTriangles(r, time_step, tv);
+          left_volume->getTriangles(r, time_step, tv);
+
+        }
       
       }//if
         

@@ -103,19 +103,21 @@ void UniformGrid::insertTriangle(Triangle * t){
   glm::vec3 n = t->getNormal();
 
   // Adding padding if axis aligned
+  /*
   glm::vec3 x_axis(1,0,0); glm::vec3 y_axis(0,1,0); glm::vec3 z_axis(0,0,1);
   if( n == x_axis ){min.x -= PADDING; max.x += PADDING; }
   if( n == y_axis ){min.y -= PADDING; max.y += PADDING; }
   if( n == z_axis ){min.z -= PADDING; max.z += PADDING; }
+  */
 
   // Change max and min from world coordinates to our bin space
   int i_0,j_0,k_0,i_f,j_f,k_f;
   getIndex(min,i_0,j_0,k_0); getIndex(max,i_f,j_f,k_f);
 
   // For this range of blocks add in our triangle
-  for(int i =  i_0; i < i_f; i++)
-    for(int j =  j_0; j < j_f; j++)
-      for(int k =  k_0; k < k_f; k++)
+  for(int i =  i_0; i <= i_f; i++)
+    for(int j =  j_0; j <= j_f; j++)
+      for(int k =  k_0; k <= k_f; k++)
         addTriangleToCell(i,j,k,t);
 }
 

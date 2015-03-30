@@ -68,7 +68,7 @@ void ParticleSystem::debug(){
   BVHNode * r = new BVHNode(tv,0);
 
   glm::vec3 ray_start(0.1,0.1,1); 
-  glm::vec3 ray_dir(0,0,1); // Given this setup the bbox (b,d)
+  glm::vec3 ray_dir(0,0,-1); // Given this setup the bbox (b,d)
 
   Ray ray(ray_start, ray_dir);
 
@@ -222,7 +222,6 @@ void ParticleSystem::resolveCollisions(Particle* &p){
   std::vector<Triangle *> tri;
   root->getTriangles(r,TIME_STEP,tri);
 
-
   for(uint i = 0; i < tri.size();i++){
   
     Triangle *t = tri[i];
@@ -241,10 +240,10 @@ void ParticleSystem::resolveCollisions(Particle* &p){
   // We didnt hit anything
   if(!hitTriangle){ return; } 
 
-  assert(false);
+  // assert(false);
 
   // If we hit do not hit within our timestep
-  if( h.getT()  > 0.01 ){ return; } // Centimeter accuracy
+  if( h.getT()  > TIME_STEP + EPSILON ){ return; } // Centimeter accuracy
 
   // Gareneteee that we hit just this timestep
   // Change the direction of our particle & backstep to hitting wall
