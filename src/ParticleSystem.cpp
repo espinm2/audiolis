@@ -21,8 +21,8 @@
 #include "render_utils.h"
 #include "munkers.h"
 #include "mask.h"
-#include "BVHNode.h"
 #include <algorithm>
+#include "BVHNode.h"
 
 #include "ParticleSystem.h"
 
@@ -41,7 +41,73 @@ ParticleSystem::~ParticleSystem(){
     delete particles[i];
 }
 
+void ParticleSystem::debug(){
+
+  glm::vec3 a(0,1,0);
+  glm::vec3 b(0,0,0);
+  glm::vec3 c(1,0,0);
+  glm::vec3 d(1,1,0);
+  
+  // Create a fake mesh to work on
+  Mesh * debug = new Mesh(args);
+  
+  Vertex * va = debug->addVertex(a);
+  Vertex * vb = debug->addVertex(b);
+  Vertex * vc = debug->addVertex(c);
+  Vertex * vd = debug->addVertex(d);
+
+  debug->addTriangle("DEBUG",va,vb,vc);
+  debug->addTriangle("DEBUG",vc,vd,va);
+
+  std::vector < Triangle *> tv;
+  for ( triangleshashtype::iterator iter = debug->triangles.begin();
+        iter != debug->triangles.end(); iter++) {
+      tv.push_back( iter->second );
+  }
+
+  BVHNode * r = new BVHNode(tv,0);
+
+  glm::vec3 ray_start(0.1,0.1,1); 
+  glm::vec3 ray_dir(0,0,1); // Given this setup the bbox (b,d)
+
+  Ray ray(ray_start, ray_dir);
+
+  std::vector < Triangle *> hits;
+  r->getTriangles(ray,0.01,hits);
+
+  std::cout << "DEBUG HIT SHOULD RETURN 0: " << hits.size() << std::endl;
+
+  // I should hit this triangle
+  Hit h; bool hitTriangle = false; bool backface = false;
+  
+  for(uint i = 0; i < hits.size();i++){
+  
+    Triangle *t = hits[i];
+
+    glm::vec3 a = (*t)[0]->getPos();
+    glm::vec3 b = (*t)[1]->getPos();
+    glm::vec3 c = (*t)[2]->getPos();    
+
+
+    if(triangle_intersect(ray,h,a,b,c,backface)){
+      hitTriangle = true;
+      h.setMaterial(t->getMaterial());
+    }
+  }
+
+  // We didnt hit anything
+  if(hitTriangle == true)
+    std::cout << "We hit our goal" << std::endl;
+  else
+    std::cout << "We missed our goal" << std::endl;
+
+}
+
 void ParticleSystem::load(){
+
+  // Debug phase
+  debug();
+
 
   // SETUP CURSOR ______________________________________________
   glm::vec3 centerScene;
@@ -67,7 +133,7 @@ void ParticleSystem::load(){
   if(args->timestep != -1 )
     TIME_STEP = args->timestep ;
   else
-    TIME_STEP = 0.001 / VELOCITY_OF_MEDIUM; // Centemimer accruacy
+    TIME_STEP = 0.01 / VELOCITY_OF_MEDIUM; // Centemimer accruacy
 
   // simuation var init
   RADIUS_INIT_SPHERE    = 0.7; // Doesnt get changed to ofte
@@ -124,6 +190,7 @@ void ParticleSystem::update(){
 
   // Remakes the kd tree
   // particle_kdtree.update(particles, *bbox);
+
 }
 
 void ParticleSystem::moveParticle(Particle* &p){
@@ -142,56 +209,62 @@ void ParticleSystem::moveParticle(Particle* &p){
 
   // Update the particle
   p->setPos(newPos); p->incIter();
+
 }
 
 void ParticleSystem::resolveCollisions(Particle* &p){
 
- // // Get the cell where are particle is
- // std::vector<Triangle *> tri = uniform_grid.getTriangles(p->getPos());
+  // Create a ray & hit class
+  Ray r(p->getOldPos(), p->getDir());
+  Hit h; bool hitTriangle = false; bool backface = false;
 
- // // Create a ray & hit class
- // Ray r(p->getOldPos(), p->getDir());
- // Hit h; bool hitTriangle = false; bool backface = false;
+  // Get all triangles I collide with 
+  std::vector<Triangle *> tri;
+  root->getTriangles(r,TIME_STEP,tri);
 
- // for(uint i = 0; i < tri.size();i++){
- // 
- //   Triangle *t = tri[i];
 
- //   glm::vec3 a = (*t)[0]->getPos();
- //   glm::vec3 b = (*t)[1]->getPos();
- //   glm::vec3 c = (*t)[2]->getPos();    
+  for(uint i = 0; i < tri.size();i++){
+  
+    Triangle *t = tri[i];
 
- //   if(triangle_intersect(r,h,a,b,c,backface)){
- //     hitTriangle = true;
- //     h.setMaterial(t->getMaterial());
- //   }
- // }
+    glm::vec3 a = (*t)[0]->getPos();
+    glm::vec3 b = (*t)[1]->getPos();
+    glm::vec3 c = (*t)[2]->getPos();    
 
- // // We didnt hit anything
- // if(!hitTriangle){ return; } 
 
- // // If we hit do not hit within our timestep
- // if( h.getT()  > 0.01 ){ return; } // Centimeter accuracy
+    if(triangle_intersect(r,h,a,b,c,backface)){
+      hitTriangle = true;
+      h.setMaterial(t->getMaterial());
+    }
+  }
 
- // // Gareneteee that we hit just this timestep
- // // Change the direction of our particle & backstep to hitting wall
- // double time_until_impact = h.getT();
- // glm::vec3 old = p->getOldPos();
- // glm::vec3 dir = p->getDir();
- // glm::vec3 impactPos(old+(dir*(float)time_until_impact)*VELOCITY_OF_MEDIUM);
+  // We didnt hit anything
+  if(!hitTriangle){ return; } 
 
- // // Get the new center to change direction
- // glm::vec3 mir_dir = MirrorDirection( h.getNormal() , p->getDir() );
- // mir_dir = mir_dir * (float)(-1.0);
- // float radius = glm::distance(p->getCenter(), impactPos);
+  assert(false);
 
- // // Mirror the center to reflect our new direction
- // p->setCenter(impactPos + mir_dir * radius);
+  // If we hit do not hit within our timestep
+  if( h.getT()  > 0.01 ){ return; } // Centimeter accuracy
 
- // double absorb_ratio = absorbFunc(h.getMaterial(), p->getFreq());
- // assert( absorb_ratio < 1);                                                  // Sanity Check
- // p->setWatt( (1 - absorb_ratio ) * p->getWatt() );                           // Math Review Required
- // p->incIter();
+  // Gareneteee that we hit just this timestep
+  // Change the direction of our particle & backstep to hitting wall
+  double time_until_impact = h.getT();
+  glm::vec3 old = p->getOldPos();
+  glm::vec3 dir = p->getDir();
+  glm::vec3 impactPos(old+(dir*(float)time_until_impact)*VELOCITY_OF_MEDIUM);
+
+  // Get the new center to change direction
+  glm::vec3 mir_dir = MirrorDirection( h.getNormal() , p->getDir() );
+  mir_dir = mir_dir * (float)(-1.0);
+  float radius = glm::distance(p->getCenter(), impactPos);
+
+  // Mirror the center to reflect our new direction
+  p->setCenter(impactPos + mir_dir * radius);
+
+  double absorb_ratio = absorbFunc(h.getMaterial(), p->getFreq());
+  assert( absorb_ratio < 1);                                                  // Sanity Check
+  p->setWatt( (1 - absorb_ratio ) * p->getWatt() );                           // Math Review Required
+  p->incIter();
  
 }
 

@@ -71,6 +71,7 @@ class ParticleSystem {
     void createDebugParticle(); // used for debugging in testing_chamber_1.obj
     void particleSplit(Particle * &p, std::vector<Particle *> &vec);
     void colorCursorTri();
+    void debug();
 
     // Kuhn–Munkres algorithm based matching
     void munkresMatching (PartPtrVec & partVec,

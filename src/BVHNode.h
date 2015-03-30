@@ -19,7 +19,6 @@ bool compare_z_pos(Triangle * a, Triangle * b){
   return a->getCenter().z < b->getCenter().z; }
 
 
-bool hitBoundingBox(const BoundingBox  & bbox,  )
 
 class  BVHNode {
 
@@ -95,8 +94,8 @@ class  BVHNode {
       if( isLeaf() ) { tv.push_back(getTriangle()); return; } 
 
       // Check to see if this ray hits me
-      glm::vec3 d = ray.getDirection();
-      glm::vec3 e = ray.getOrigin();
+      glm::vec3 d = r.getDirection();
+      glm::vec3 e = r.getOrigin();
 
       // Intersection calculations
       double tx_min, tx_max, // Assign of these
@@ -147,8 +146,11 @@ class  BVHNode {
       
       }
 
+
       // Final Check
       bool x_y_inter, y_z_inter, z_x_inter;
+
+      // TODO Incoperate timestep taken into this
 
       x_y_inter = tx_min <= ty_max && ty_min <= tx_max;
       y_z_inter = ty_min <= tz_max && tz_min <= ty_max;
@@ -157,8 +159,8 @@ class  BVHNode {
 
       if(x_y_inter && y_z_inter && z_x_inter){
         // Try to iterate through my children
-        right_volume->getTriangle(r, time_step, tv);
-        left_volume->getTriangle(r, time_step, tv);
+        right_volume->getTriangles(r, time_step, tv);
+        left_volume->getTriangles(r, time_step, tv);
       
       }//if
         
