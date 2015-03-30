@@ -29,6 +29,7 @@ class ArgParser;
 class Particle;
 class BoundingBox;
 class Mesh;
+class BVHNode;
 
 class ParticleSystem {
 
@@ -56,7 +57,7 @@ class ParticleSystem {
     unsigned int numParticles(){ return particles.size();}
     double getTimeStep(){ return TIME_STEP;}
     glm::vec3 getCursor(){ return cursor; }
-    UniformGrid * getUniformGrid(){ return &uniform_grid; }
+    // UniformGrid * getUniformGrid(){ return &uniform_grid; }
 
     // Main Simulation Functions
     void load();  // load inital values from args file and meshes
@@ -149,8 +150,9 @@ class ParticleSystem {
     std::vector<Particle *> newParticles; // Where we put split particles 
     glm::vec3 cursor; // Where the cursor is in world space
     KDTree particle_kdtree; // Where we store particles in a td tre
+    BVHNode * root; // We we will store our mesh for fast accesses
     UniformGrid uniform_grid; // Where we store our mesh object fo easy access
-    
+
 
     // Simuation Important Varibles
     double            TIME_STEP;  // how much time is passed in seconds

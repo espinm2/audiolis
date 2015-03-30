@@ -1,5 +1,3 @@
-#include "ParticleSystem.h"
-
 #include <glm/glm.hpp>
 #include <glm/gtx/vector_angle.hpp>
 #include <iostream>
@@ -23,7 +21,10 @@
 #include "render_utils.h"
 #include "munkers.h"
 #include "mask.h"
+#include "BVHNode.h"
 #include <algorithm>
+
+#include "ParticleSystem.h"
 
 #define EPSILON 0.0001
 typedef unsigned int uint;
@@ -42,21 +43,25 @@ ParticleSystem::~ParticleSystem(){
 
 void ParticleSystem::load(){
 
-  // Create my uniform grid mesh
-  uniform_grid.loadMesh(mesh,args->division);
-
-  // AverageDensity
-  uniform_grid.averageDensity();
-
-  // Initaite the cursor 
+  // SETUP CURSOR ______________________________________________
   glm::vec3 centerScene;
-
-  // Initiate bounding box
   bbox->getCenter(centerScene);
-
-  // put  cursor in center of scene
   cursor = glm::vec3(centerScene.x, centerScene.y, centerScene.z);
 
+  // SETUP MESH DS _____________________________________________
+  std::vector < Triangle *> tv;
+  for ( triangleshashtype::iterator iter = mesh->triangles.begin();
+        iter != mesh->triangles.end(); iter++) {
+      tv.push_back( iter->second );
+  }
+
+  root = new BVHNode(tv,0);
+
+  // SETUP UNIFORM GRID (REMOVE)________________________________
+  uniform_grid.loadMesh(mesh,args->division);
+
+
+  // SETUP PSUDO GLOBALS _______________________________________
   // Initalize simulation variables
   VELOCITY_OF_MEDIUM    = 340; //implement to sound speed in m/s
   if(args->timestep != -1 )
@@ -141,52 +146,53 @@ void ParticleSystem::moveParticle(Particle* &p){
 
 void ParticleSystem::resolveCollisions(Particle* &p){
 
-  // Get the cell where are particle is
-  std::vector<Triangle *> tri = uniform_grid.getTriangles(p->getPos());
+ // // Get the cell where are particle is
+ // std::vector<Triangle *> tri = uniform_grid.getTriangles(p->getPos());
 
-  // Create a ray & hit class
-  Ray r(p->getOldPos(), p->getDir());
-  Hit h; bool hitTriangle = false; bool backface = false;
+ // // Create a ray & hit class
+ // Ray r(p->getOldPos(), p->getDir());
+ // Hit h; bool hitTriangle = false; bool backface = false;
 
-  for(uint i = 0; i < tri.size();i++){
-  
-    Triangle *t = tri[i];
+ // for(uint i = 0; i < tri.size();i++){
+ // 
+ //   Triangle *t = tri[i];
 
-    glm::vec3 a = (*t)[0]->getPos();
-    glm::vec3 b = (*t)[1]->getPos();
-    glm::vec3 c = (*t)[2]->getPos();    
+ //   glm::vec3 a = (*t)[0]->getPos();
+ //   glm::vec3 b = (*t)[1]->getPos();
+ //   glm::vec3 c = (*t)[2]->getPos();    
 
-    if(triangle_intersect(r,h,a,b,c,backface)){
-      hitTriangle = true;
-      h.setMaterial(t->getMaterial());
-    }
-  }
+ //   if(triangle_intersect(r,h,a,b,c,backface)){
+ //     hitTriangle = true;
+ //     h.setMaterial(t->getMaterial());
+ //   }
+ // }
 
-  // We didnt hit anything
-  if(!hitTriangle){ return; } 
+ // // We didnt hit anything
+ // if(!hitTriangle){ return; } 
 
-  // If we hit do not hit within our timestep
-  if( h.getT()  > 0.01 ){ return; } // Centimeter accuracy
+ // // If we hit do not hit within our timestep
+ // if( h.getT()  > 0.01 ){ return; } // Centimeter accuracy
 
-  // Gareneteee that we hit just this timestep
-  // Change the direction of our particle & backstep to hitting wall
-  double time_until_impact = h.getT();
-  glm::vec3 old = p->getOldPos();
-  glm::vec3 dir = p->getDir();
-  glm::vec3 impactPos(old+(dir*(float)time_until_impact)*VELOCITY_OF_MEDIUM);
+ // // Gareneteee that we hit just this timestep
+ // // Change the direction of our particle & backstep to hitting wall
+ // double time_until_impact = h.getT();
+ // glm::vec3 old = p->getOldPos();
+ // glm::vec3 dir = p->getDir();
+ // glm::vec3 impactPos(old+(dir*(float)time_until_impact)*VELOCITY_OF_MEDIUM);
 
-  // Get the new center to change direction
-  glm::vec3 mir_dir = MirrorDirection( h.getNormal() , p->getDir() );
-  mir_dir = mir_dir * (float)(-1.0);
-  float radius = glm::distance(p->getCenter(), impactPos);
+ // // Get the new center to change direction
+ // glm::vec3 mir_dir = MirrorDirection( h.getNormal() , p->getDir() );
+ // mir_dir = mir_dir * (float)(-1.0);
+ // float radius = glm::distance(p->getCenter(), impactPos);
 
-  // Mirror the center to reflect our new direction
-  p->setCenter(impactPos + mir_dir * radius);
+ // // Mirror the center to reflect our new direction
+ // p->setCenter(impactPos + mir_dir * radius);
 
-  double absorb_ratio = absorbFunc(h.getMaterial(), p->getFreq());
-  assert( absorb_ratio < 1);                                                  // Sanity Check
-  p->setWatt( (1 - absorb_ratio ) * p->getWatt() );                           // Math Review Required
-  p->incIter();
+ // double absorb_ratio = absorbFunc(h.getMaterial(), p->getFreq());
+ // assert( absorb_ratio < 1);                                                  // Sanity Check
+ // p->setWatt( (1 - absorb_ratio ) * p->getWatt() );                           // Math Review Required
+ // p->incIter();
+ 
 }
 
 void ParticleSystem::generateResSplits(Particle * &cur){
@@ -1177,10 +1183,11 @@ circle_points_on_sphere
 
 void ParticleSystem::colorCursorTri(){
 
-  std::vector <Triangle*> tri = 
-    uniform_grid.getTriangles(cursor);
+//   std::vector <Triangle*> tri = 
+//     uniform_grid.getTriangles(cursor);
+// 
+//   for(uint i = 0; i < tri.size();i++)
+//     tri[i]->setMaterial("DEBUG");
 
-  for(uint i = 0; i < tri.size();i++)
-    tri[i]->setMaterial("DEBUG");
 }
 
