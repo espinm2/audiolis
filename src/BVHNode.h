@@ -98,6 +98,14 @@ class  BVHNode {
     bool isLeaf(){ return tri_leaf != NULL; }
     Triangle * getTriangle(){ assert(isLeaf()); return tri_leaf; }
 
+    int leafCount(){
+
+      if( isLeaf() ) { return 1; }
+
+      return right_volume->leafCount() + left_volume->leafCount();
+      
+    }
+
     // Collision with ray function
     void getTriangles(Ray & r,  double time_step, TriangleVec & tv ){
       // If I am a leaf take me into being concidered for intersection
@@ -156,18 +164,29 @@ class  BVHNode {
       
       }
 
+      // Want the exact intersection
+
+
       // Final Check (if there is overlap with our timestep)
-      bool x_inter, y_inter, z_inter;
-      x_inter = tx_min <= time_step && 0 <= tx_max;
-      y_inter = ty_min <= time_step && 0 <= ty_max;
-      z_inter = tz_min <= time_step && 0 <= tz_max;
+      bool x_y_inter, y_z_inter, z_x_inter;
+      x_y_inter = tx_min <= ty_max  && ty_min <= tx_max;
+      y_z_inter = ty_min <= tz_max  && tz_min <= ty_max;
+      z_x_inter = tz_min <= tx_max  && tx_min <= tz_max;
 
       // bool x_sat = tx_min <= time_step && time_step <= tx_max;
       // bool y_sat = ty_min <= time_step && time_step <= ty_max;
       // bool z_sat = tz_min <= time_step && time_step <= tz_max;
 
+      // If we do not share a common interval, no collision ever
+      if(!x_y_inter || !y_z_inter || !z_x_inter){
+        return;
+      }
 
-      if(x_inter && y_inter && z_inter){
+      // find exactly when we hit our box
+      double t_hitbox = std::max( std::max( tx_min, ty_min), tz_min );
+
+      // If we hit it in this timestep
+      if ( 0 <= t_hitbox && t_hitbox <= time_step){
 
         if(isLeaf()){
 

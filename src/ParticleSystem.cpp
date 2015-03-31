@@ -123,6 +123,15 @@ void ParticleSystem::load(){
 
   root = new BVHNode(tv,0);
 
+  // Testing
+  int trinum = mesh->numTriangles();
+
+  int leafs  = root->leafCount();
+
+  std::cout <<  "Leafs " << leafs << std::endl;
+  std::cout <<  "Tris "  << trinum << std::endl;
+  
+
   // SETUP UNIFORM GRID (REMOVE)________________________________
   uniform_grid.loadMesh(mesh,args->division);
 
@@ -221,7 +230,7 @@ void ParticleSystem::resolveCollisions(Particle* &p){
   // Get all triangles I collide with , 
   // These are promised such that the movement from old->newpos triggers impact
   std::vector<Triangle *> tri;
-  root->getTriangles(r,10*TIME_STEP,tri);
+  root->getTriangles(r,10*TnteIME_STEP,tri);
 
   std::cout << "Triangles collected " << tri.size() << std::endl;
 
