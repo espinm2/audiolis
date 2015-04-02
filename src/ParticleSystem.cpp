@@ -68,7 +68,7 @@ void ParticleSystem::debug(){
   BVHNode * r = new BVHNode(tv,0);
 
   glm::vec3 ray_start(0.1,0.1,1); 
-  glm::vec3 ray_dir(0,0,1); // Given this setup the bbox (b,d)
+  glm::vec3 ray_dir(0,0,-1); // Given this setup the bbox (b,d)
 
   Ray ray(ray_start, ray_dir);
 
@@ -106,7 +106,7 @@ void ParticleSystem::debug(){
 void ParticleSystem::load(){
 
   // Debug phase
-  // debug();
+  debug();
 
 
   // SETUP CURSOR ______________________________________________
@@ -230,13 +230,14 @@ void ParticleSystem::resolveCollisions(Particle* &p){
   // Get all triangles I collide with , 
   // These are promised such that the movement from old->newpos triggers impact
   std::vector<Triangle *> tri;
-  root->getTriangles(r,10*TnteIME_STEP,tri);
+  root->getTriangles(r,10,tri); // TIME_STEP = 10 really long reach
 
-  std::cout << "Triangles collected " << tri.size() << std::endl;
+  std::cout << "Triangles condidates: " << tri.size() << std::endl;
 
   for(uint i = 0; i < tri.size();i++){
   
     Triangle *t = tri[i];
+    t->setMaterial("DEBUG");
 
     glm::vec3 a = (*t)[0]->getPos();
     glm::vec3 b = (*t)[1]->getPos();
@@ -252,7 +253,7 @@ void ParticleSystem::resolveCollisions(Particle* &p){
   // We didnt hit anything
   if(!hitTriangle){return; }
 
-  std::cout << "HIT TRIANGLE IN THIS ITERATION" << std::endl;
+std::cout << "Confirmed Impact from one of candinates triangles" << std::endl;
   args->animate = false;
   // assert(false);
 

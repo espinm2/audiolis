@@ -185,8 +185,11 @@ class  BVHNode {
       // find exactly when we hit our box
       double t_hitbox = std::max( std::max( tx_min, ty_min), tz_min );
 
+      // it is already behind us, no need to count
+      // if( t_hitbox < 0 ){ return; }
+
       // If we hit it in this timestep
-      if ( 0 <= t_hitbox && t_hitbox <= time_step){
+      // if (  0 <= t_hitbox &&  t_hitbox <= time_step){
 
         if(isLeaf()){
 
@@ -200,7 +203,7 @@ class  BVHNode {
 
         }
       
-      }//if
+      // }//if
         
     }//end
 

@@ -333,7 +333,6 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       mesh->setupVBOs();
       break;
     case 'u': case 'U':
-      particleSystem->colorCursorTri();
       mesh->setupVBOs();
       break;
     case 'n': case 'N':
