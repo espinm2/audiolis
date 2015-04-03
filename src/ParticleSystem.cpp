@@ -59,54 +59,92 @@ void ParticleSystem::debug(){
   debug->addTriangle("DEBUG",va,vb,vc);
   debug->addTriangle("DEBUG",vc,vd,va);
 
-  std::vector < Triangle *> tv;
-  for ( triangleshashtype::iterator iter = debug->triangles.begin();
-        iter != debug->triangles.end(); iter++) {
-      tv.push_back( iter->second );
-  }
+  glm::vec3 ray_start(0.2,0.2,1); 
+  glm::vec3 ray_dir(0,0,-1); 
 
-  BVHNode * r = new BVHNode(tv,0);
-
-  glm::vec3 ray_start(0.1,0.1,1); 
-  glm::vec3 ray_dir(0,0,-1); // Given this setup the bbox (b,d)
-
-  Ray ray(ray_start, ray_dir);
-
-  std::vector < Triangle *> hits;
-  r->getTriangles(ray,2.0,hits);
-
-  std::cout << "DEBUG HIT SHOULD RETURN 0: " << hits.size() << std::endl;
-
-  // I should hit this triangle
+  Ray ray(ray_start, ray_dir, 340);
   Hit h; bool hitTriangle = false; bool backface = false;
-  
-  for(uint i = 0; i < hits.size();i++){
-  
-    Triangle *t = hits[i];
-
-    glm::vec3 a = (*t)[0]->getPos();
-    glm::vec3 b = (*t)[1]->getPos();
-    glm::vec3 c = (*t)[2]->getPos();    
 
 
-    if(triangle_intersect(ray,h,a,b,c,backface)){
-      hitTriangle = true;
-      h.setMaterial(t->getMaterial());
-    }
+  BoundingBox box(glm::vec3(0,0,-1), glm::vec3(1,1,0));
+
+  // When i should hit about
+  double t = 1 / VELOCITY_OF_MEDIUM;
+
+  double steps = t / TIME_STEP;
+
+  std::cout << "steps:" << steps << std::endl;
+
+  double stepOneBefore = (int)steps-1;
+  double stepOneAfter = (int)steps + 1;
+
+  hitTriangle =  box.hitbox(ray,0,TIME_STEP*stepOneBefore);
+
+  std::cout << " one before Should miss " <<  std::endl;
+
+  if(hitTriangle){
+
+    std::cout << "Hit"  << std::endl;
+
+  }else{
+
+    std::cout << "Missed" << std::endl;
+
   }
 
-  // We didnt hit anything
-  if(hitTriangle == true)
-    std::cout << "We hit our goal" << std::endl;
-  else
-    std::cout << "We missed our goal" << std::endl;
+  hitTriangle =  box.hitbox(ray,0,TIME_STEP*stepOneAfter);
+
+  std::cout << "one after Should hit " <<  std::endl;
+
+  if(hitTriangle){
+
+    std::cout << "Hit"  << std::endl;
+
+  }else{
+
+    std::cout << "Missed" << std::endl;
+
+  }
+
+  // BVHNode * r = new BVHNode(tv,0);
+
+  // glm::vec3 ray_start(0.1,0.1,1); 
+  // glm::vec3 ray_dir(0,0,-1); // Given this setup the bbox (b,d)
+
+
+  // std::vector < Triangle *> hits;
+  // r->getTriangles(ray,2.0,hits);
+
+  // std::cout << "DEBUG HIT SHOULD RETURN 0: " << hits.size() << std::endl;
+
+  // // I should hit this triangle
+  // Hit h; bool hitTriangle = false; bool backface = false;
+  
+  // for(uint i = 0; i < hits.size();i++){
+  
+  //   Triangle *t = hits[i];
+
+  //   glm::vec3 a = (*t)[0]->getPos();
+  //   glm::vec3 b = (*t)[1]->getPos();
+  //   glm::vec3 c = (*t)[2]->getPos();    
+
+
+  //   if(triangle_intersect(ray,h,a,b,c,backface)){
+  //     hitTriangle = true;
+  //     h.setMaterial(t->getMaterial());
+  //   }
+  // }
+
+  // // We didnt hit anything
+  // if(hitTriangle == true)
+  //   std::cout << "We hit our goal" << std::endl;
+  // else
+  //   std::cout << "We missed our goal" << std::endl;
 
 }
 
 void ParticleSystem::load(){
 
-  // Debug phase
-  debug();
 
 
   // SETUP CURSOR ______________________________________________
@@ -155,6 +193,9 @@ void ParticleSystem::load(){
   SPLIT_AMOUNT          = 6; // Will be later removed for better split
 
   ITERATION             = 0;
+
+  // Debug phase
+  // debug();
 
   // Profiler stuff
   if(args->profile){
@@ -224,41 +265,23 @@ void ParticleSystem::moveParticle(Particle* &p){
 void ParticleSystem::resolveCollisions(Particle* &p){
 
   // Create a ray & hit class
-  Ray r(p->getOldPos(), p->getDir());
-  Hit h; bool hitTriangle = false; bool backface = false;
+  Ray r(p->getOldPos(), p->getDir(), VELOCITY_OF_MEDIUM); Hit h;
 
-  // Get all triangles I collide with , 
-  // These are promised such that the movement from old->newpos triggers impact
-  std::vector<Triangle *> tri;
-  root->getTriangles(r,10,tri); // TIME_STEP = 10 really long reach
+  // Check if we hit our mesh
+  bool hitTriangle = root->rayHit(r,0,10,h);
 
-  std::cout << "Triangles condidates: " << tri.size() << std::endl;
-
-  for(uint i = 0; i < tri.size();i++){
-  
-    Triangle *t = tri[i];
-    t->setMaterial("DEBUG");
-
-    glm::vec3 a = (*t)[0]->getPos();
-    glm::vec3 b = (*t)[1]->getPos();
-    glm::vec3 c = (*t)[2]->getPos();    
-
-
-    if(triangle_intersect(r,h,a,b,c,backface)){
-      hitTriangle = true;
-      h.setMaterial(t->getMaterial());
-    }
-  }
 
   // We didnt hit anything
   if(!hitTriangle){return; }
 
-std::cout << "Confirmed Impact from one of candinates triangles" << std::endl;
-  args->animate = false;
-  // assert(false);
+  double distance_till_wall = h.getT()*(double)VELOCITY_OF_MEDIUM;
 
-  // If we hit do not hit within our timestep
-  if( h.getT()  > TIME_STEP ){ return; } // Centimeter accuracy
+  if( distance_till_wall > 0.05   ){  // 5 centimeters
+
+    return; 
+
+  } // Centimeter accuracy
+
 
   // Gareneteee that we hit just this timestep
   // Change the direction of our particle & backstep to hitting wall

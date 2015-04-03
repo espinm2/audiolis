@@ -15,6 +15,8 @@
 // ====================================================================
 // ====================================================================
 
+class Ray;
+
 class BoundingBox {
 
 public:
@@ -30,17 +32,22 @@ public:
 
   // =========
   // ACCESSORS
+
   void Get(glm::vec3 &_minimum, glm::vec3 &_maximum) const {
     _minimum = minimum;
     _maximum = maximum; }
+
   const glm::vec3& getMin() const { return minimum; }
+
   const glm::vec3& getMax() const { return maximum; }
+
   void getCenter(glm::vec3 &c) const {
     c = maximum; 
     c -= minimum;
     c *= 0.5f;
     c += minimum;
   }
+
   float maxDim() const {
     float x = maximum.x - minimum.x;
     float y = maximum.y - minimum.y;
@@ -48,17 +55,22 @@ public:
     return std::max(x,std::max(y,z));
   }
 
+  // Given a ray will return true or false if bbox was hit
+  bool hitbox(const Ray &ray, double t1, double t2);
+
   // =========
   // MODIFIERS
   void Set(const BoundingBox &bb) {
     minimum = bb.minimum;
     maximum = bb.maximum; }
+
   void Set(const glm::vec3 &_minimum, const glm::vec3 &_maximum) {
     assert (minimum.x <= maximum.x &&
 	    minimum.y <= maximum.y &&
 	    minimum.z <= maximum.z);
     minimum = _minimum;
     maximum = _maximum; }
+
   void Extend(const glm::vec3 v) {
     minimum = glm::vec3(std::min(minimum.x,v.x),
                         std::min(minimum.y,v.y),
@@ -67,9 +79,12 @@ public:
                         std::max(maximum.y,v.y),
                         std::max(maximum.z,v.z)); 
   }
+
   void Extend(const BoundingBox &bb) {
+
     Extend(bb.minimum);
     Extend(bb.maximum); 
+
   }
 
   void initializeVBOs();

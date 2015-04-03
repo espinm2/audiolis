@@ -3,9 +3,100 @@
 #include "boundingbox.h"
 #include "vbo_structs.h"
 #include "render_utils.h"
+#include "ray.h"
 
 // ====================================================================
 // ====================================================================
+
+// Given a ray will return true or false if bbox was hit
+bool BoundingBox::hitbox(const Ray &r, double t1, double t2){
+
+  // Check to see if this ray hits me
+  glm::vec3 d = r.getDirection();
+  glm::vec3 e = r.getOrigin();
+  double velocity = r.getVelocity();
+
+  // Intersection calculations
+  double tx_min, tx_max, // Assign of these
+         ty_min, ty_max,
+         tz_min, tz_max,
+         a;
+
+  // X's
+  a = 1.0 / (d.x * velocity) ;
+  if(a >= 0 ){
+
+    tx_min =  a * ( getMin().x - e.x );
+    tx_max =  a * ( getMax().x - e.x );
+
+  }else{
+
+    tx_min =  a * ( getMax().x - e.x );
+    tx_max =  a * ( getMin().x - e.x );
+  
+  }
+
+  // Y's
+  a = 1.0 / ( d.y * velocity );
+  if(a >= 0 ){
+
+    ty_min =  a * ( getMin().y - e.y );
+    ty_max =  a * ( getMax().y - e.y );
+
+  }else{
+
+    ty_min =  a * ( getMax().y - e.y );
+    ty_max =  a * ( getMin().y - e.y );
+  
+  }
+
+
+  // Z's
+  a = 1.0 / ( d.z * velocity );
+  if(a >= 0 ){
+
+    tz_min =  a * ( getMin().z - e.z );
+    tz_max =  a * ( getMax().z - e.z );
+
+  }else{
+
+    tz_min =  a * ( getMax().z - e.z );
+    tz_max =  a * ( getMin().z - e.z );
+  
+  }
+
+  // Check for overlap
+  bool x_y_inter, y_z_inter, z_x_inter;
+  x_y_inter = tx_min <= ty_max  && ty_min <= tx_max;
+  y_z_inter = ty_min <= tz_max  && tz_min <= ty_max;
+  z_x_inter = tz_min <= tx_max  && tx_min <= tz_max;
+
+  // bool x_sat = tx_min <= time_step && time_step <= tx_max;
+  // bool y_sat = ty_min <= time_step && time_step <= ty_max;
+  // bool z_sat = tz_min <= time_step && time_step <= tz_max;
+
+  // If we do not share a common interval, no collision ever
+  if(!x_y_inter || !y_z_inter || !z_x_inter){
+    return false;
+  }
+
+  // find exactly when we hit our box
+  double t_in = std::max( std::max( tx_min, ty_min), tz_min );
+  double t_out = std::min( std::min( tx_max, ty_max), tz_max );
+
+
+
+  // Assert this ordering
+  assert(t_in <= t_out);
+
+  // Do we hit in our timestep?
+  bool collision = t_in <= t2  &&  t1 <= t_out;
+
+  return collision;
+    
+}//end
+
+
 
 void BoundingBox::initializeVBOs() {
   glGenBuffers(1, &bb_verts_VBO);

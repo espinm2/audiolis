@@ -190,7 +190,7 @@ bool plane_intersect(
   if (!intersect_backfacing && glm::dot(normal,r.getDirection()) >= 0) 
     return 0; // hit the backside
 
-  double t = numer / denom;
+  double t = numer / ( denom * r.getVelocity());
 
   if (t > EPSILON && t < h.getT()) {
     h.set(t,normal);

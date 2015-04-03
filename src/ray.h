@@ -15,10 +15,17 @@ public:
   // CONSTRUCTOR & DESTRUCTOR
   Ray (const glm::vec3 &orig, const glm::vec3 &dir) {
     origin = orig; 
-    direction = dir; }
+    direction = dir;
+    velocity = 1.0; }
+
+  Ray (const glm::vec3 &orig, const glm::vec3 &dir, double v) {
+    origin = orig; 
+    direction = dir;
+    velocity = v; }
 
   // ACCESSORS
   const glm::vec3& getOrigin() const { return origin; }
+  double getVelocity() const { return velocity; }
   const glm::vec3& getDirection() const { return direction; }
   glm::vec3 pointAtParameter(float t) const {
     return origin+direction*t; }
@@ -29,6 +36,7 @@ private:
   // REPRESENTATION
   glm::vec3 origin;
   glm::vec3 direction;
+  double velocity;
 };
 
 inline std::ostream &operator<<(std::ostream &os, const Ray &r) {

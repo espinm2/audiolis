@@ -7,6 +7,7 @@
 #include <algorithm>
 #include "triangle.h"
 #include "ray.h"
+#include "hit.h"
 
 typedef std::vector<Triangle*> TriangleVec;
 
@@ -91,121 +92,88 @@ class  BVHNode {
       }//else
     }//end
 
-    // Accessors
+    // Basic Accessors
     BVHNode * getRightVolume(){ return right_volume; }
     BVHNode * getLeftVolume(){ return left_volume; }
     BoundingBox getBoundingBox(){ return bbox; }
     bool isLeaf(){ return tri_leaf != NULL; }
     Triangle * getTriangle(){ assert(isLeaf()); return tri_leaf; }
 
+    // Will count how many leaves I have, should match mesh triangles
     int leafCount(){
 
       if( isLeaf() ) { return 1; }
 
-      return right_volume->leafCount() + left_volume->leafCount();
-      
-    }
+      return right_volume->leafCount() + left_volume->leafCount(); }
 
     // Collision with ray function
-    void getTriangles(Ray & r,  double time_step, TriangleVec & tv ){
-      // If I am a leaf take me into being concidered for intersection
-      // if( isLeaf() ) { tv.push_back(getTriangle()); return; } 
+    bool rayHit(const Ray & r, double t1, double t2, Hit & h){
+      /*std::cout << "========================================\n";
+      std::cout << r  << std::endl;
+      std::cout << "Interval "  << t1 << ", " << t2 << std::endl;
+      std::cout << h << std::endl;*/
 
-      // Check to see if this ray hits me
-      glm::vec3 d = r.getDirection();
-      glm::vec3 e = r.getOrigin();
-
-      // Intersection calculations
-      double tx_min, tx_max, // Assign of these
-             ty_min, ty_max,
-             tz_min, tz_max,
-             a;
-
-      // X's
-      a = 1.0 / d.x;
-      if(a >= 0 ){
-
-        tx_min =  a * ( bbox.getMin().x - e.x );
-        tx_max =  a * ( bbox.getMax().x - e.x );
+      if(isLeaf()){
+          // Check for triangle collision
+          Hit tHit;
+          if(getTriangle()->rayIntersection(r,t1,t2,tHit)){
+            h = tHit;
+            return true;
+          }else{
+            return false;
+          }
 
       }else{
 
-        tx_min =  a * ( bbox.getMax().x - e.x );
-        tx_max =  a * ( bbox.getMin().x - e.x );
-      
-      }
+        if(bbox.hitbox(r,t1,t2)){
 
-      // Y's
-      a = 1.0 / d.y;
-      if(a >= 0 ){
+          Hit lHit,rHit;
+          bool leftHit,rightHit;
 
-        ty_min =  a * ( bbox.getMin().y - e.y );
-        ty_max =  a * ( bbox.getMax().y - e.y );
+          // I know for a fact that i have a left and right
+          leftHit  = left_volume->rayHit(r,t1,t2,lHit);
+          rightHit = right_volume->rayHit(r,t1,t2,rHit);
 
-      }else{
+          if(leftHit && rightHit){
 
-        ty_min =  a * ( bbox.getMax().y - e.y );
-        ty_max =  a * ( bbox.getMin().y - e.y );
-      
-      }
+            // Hit my left before my right
+            if(lHit.getT() < rHit.getT()){
 
+              h = lHit;
 
-      // Z's
-      a = 1.0 / d.z;
-      if(a >= 0 ){
+            }else{
 
-        tz_min =  a * ( bbox.getMin().z - e.z );
-        tz_max =  a * ( bbox.getMax().z - e.z );
+              h = rHit;
 
-      }else{
+            }
 
-        tz_min =  a * ( bbox.getMax().z - e.z );
-        tz_max =  a * ( bbox.getMin().z - e.z );
-      
-      }
+            return true;
 
-      // Want the exact intersection
+          }else if(leftHit){
+
+            h = lHit;
+            return true;
 
 
-      // Final Check (if there is overlap with our timestep)
-      bool x_y_inter, y_z_inter, z_x_inter;
-      x_y_inter = tx_min <= ty_max  && ty_min <= tx_max;
-      y_z_inter = ty_min <= tz_max  && tz_min <= ty_max;
-      z_x_inter = tz_min <= tx_max  && tx_min <= tz_max;
+          }else if(rightHit){
 
-      // bool x_sat = tx_min <= time_step && time_step <= tx_max;
-      // bool y_sat = ty_min <= time_step && time_step <= ty_max;
-      // bool z_sat = tz_min <= time_step && time_step <= tz_max;
+            h = rHit;
+            return true;
 
-      // If we do not share a common interval, no collision ever
-      if(!x_y_inter || !y_z_inter || !z_x_inter){
-        return;
-      }
+          }else{
 
-      // find exactly when we hit our box
-      double t_hitbox = std::max( std::max( tx_min, ty_min), tz_min );
+            return false;
+          }
 
-      // it is already behind us, no need to count
-      // if( t_hitbox < 0 ){ return; }
+        }//if hit
 
-      // If we hit it in this timestep
-      // if (  0 <= t_hitbox &&  t_hitbox <= time_step){
+        return false;
 
-        if(isLeaf()){
+    }//isleaf
 
-          tv.push_back(getTriangle());
 
-        }else{
 
-          // Try to iterate through my children
-          right_volume->getTriangles(r, time_step, tv);
-          left_volume->getTriangles(r, time_step, tv);
-
-        }
-      
-      // }//if
-        
-    }//end
+    }//getTriangles
 
 
 

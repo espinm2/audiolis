@@ -6,6 +6,9 @@
 #include <glm/glm.hpp>
 #include <string>
 #include "vertex.h"
+#include "ray.h"
+#include "hit.h"
+#include "geometry_utils.h"
 
 // ===========================================================
 // Simple half-edge data structure representation for a triangle mesh
@@ -93,6 +96,35 @@ public:
   void setMaterial(const std::string& m){
     // Copy material
     mtl = m;
+  }
+
+  bool rayIntersection(const Ray &r, double t1, double t2, Hit & h){
+
+    // Modifies Hit h if collsion occurs
+
+    Hit h2;
+    glm::vec3  a= edge->getStartVertex()->getPos();
+    glm::vec3  b= edge->getNext()->getStartVertex()->getPos();              
+    glm::vec3  c= edge->getNext()->getNext()->getStartVertex()->getPos();   
+
+    // Call to our geometry util function
+    bool hit_triangle = triangle_intersect(r,h2,a,b,c,false);
+
+    // If we miss totally
+    if(!hit_triangle){ return false; }
+
+    // If we hit, we check the time
+    double t = h2.getT();
+
+    // std::cout << "We are on collision course with triangle " << id << " in " << t << std::endl;
+
+    if ( t1 <= t && t <= t2 ){
+      h = h2;
+      h.setMaterial(getMaterial());
+      return true;
+    }else{
+      return false;
+    }
   }
 
 protected:
