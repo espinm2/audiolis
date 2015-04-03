@@ -262,26 +262,58 @@ void ParticleSystem::moveParticle(Particle* &p){
 
 }
 
+#define USE_BVH true
 void ParticleSystem::resolveCollisions(Particle* &p){
 
-  // Create a ray & hit class
   Ray r(p->getOldPos(), p->getDir(), VELOCITY_OF_MEDIUM); Hit h;
+  bool hitTriangle = false;
 
-  // Check if we hit our mesh
-  bool hitTriangle = root->rayHit(r,0,10,h);
+  if(USE_BVH){
+
+    // Create a ray & hit class
+
+    // Check if we hit our mesh
+    hitTriangle = root->rayHit(r,0,TIME_STEP*10,h);
+
+    // We didnt hit anything
+    if(!hitTriangle){return; }
+
+    double distance_till_wall = h.getT()*(double)VELOCITY_OF_MEDIUM;
+
+    if( distance_till_wall > 0.05   ){  // 5 centimeters
+
+      return; 
+
+    } // Centimeter accuracy
+
+  }else{
 
 
-  // We didnt hit anything
-  if(!hitTriangle){return; }
+    for (triangleshashtype::iterator iter = mesh->triangles.begin();
+       iter != mesh->triangles.end(); iter++) {
 
-  double distance_till_wall = h.getT()*(double)VELOCITY_OF_MEDIUM;
+      Triangle *t = iter->second;
+      glm::vec3 a = (*t)[0]->getPos();
+      glm::vec3 b = (*t)[1]->getPos();
+      glm::vec3 c = (*t)[2]->getPos();    
 
-  if( distance_till_wall > 0.05   ){  // 5 centimeters
+      if(triangle_intersect(r,h,a,b,c,false)){
+        hitTriangle = true;
+        h.setMaterial(t->getMaterial());
+      }
+    }
 
-    return; 
+  }
 
-  } // Centimeter accuracy
+    if(!hitTriangle){return; }
 
+    double distance_till_wall = h.getT()*(double)VELOCITY_OF_MEDIUM;
+
+    if( distance_till_wall > 0.05   ){  // 5 centimeters
+
+      return; 
+
+    } // Centimeter accuracy
 
   // Gareneteee that we hit just this timestep
   // Change the direction of our particle & backstep to hitting wall
