@@ -347,12 +347,8 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       args->render_edges = !args->render_edges;
       particleSystem->setupVBOs();
       break;
-    case 't':
+    case 't': case 'T':
       args->kdtree_render = !args->kdtree_render;
-      particleSystem->setupVBOs();
-      break;
-    case 'T':
-      args->ugrid_render = !args->ugrid_render; // Rendering the particle tree
       particleSystem->setupVBOs();
       break;
     case 'p': case 'P':

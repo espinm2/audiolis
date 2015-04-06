@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 3.2.1, 2015-04-03T14:28:34. -->
+<!-- Written by QtCreator 3.2.1, 2015-04-06T11:27:37. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -155,7 +155,7 @@
      <value type="int">14</value>
     </valuelist>
     <value type="QString" key="CMakeProjectManager.CMakeRunConfiguation.Title">audiolis</value>
-    <value type="QString" key="CMakeProjectManager.CMakeRunConfiguration.Arguments">-input ../objfiles/testing_chamber_4.obj -size 800 -init_particles 1 -d 2</value>
+    <value type="QString" key="CMakeProjectManager.CMakeRunConfiguration.Arguments">-input ../objfiles/testing_chamber_1.obj -size 800 -init_particles 2000 -d 2</value>
     <value type="bool" key="CMakeProjectManager.CMakeRunConfiguration.UseTerminal">false</value>
     <value type="QString" key="CMakeProjectManager.CMakeRunConfiguration.UserWorkingDirectory">/home/espinm2/Code/audiolis/src</value>
     <value type="int" key="PE.EnvironmentAspect.Base">2</value>

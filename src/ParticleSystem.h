@@ -100,6 +100,7 @@ class ParticleSystem {
     void mergeSimilarParticles(Particle * &cur);
     void resolveCollisions(Particle * &cur);
     void removeDeadParticles();
+    void addNewParticles(); // adds new particles to main vector
 
     // New Update Function Code (tested)
     void moveParticle(Particle * & cur); // moves a particle

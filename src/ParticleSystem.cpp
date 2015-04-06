@@ -26,7 +26,11 @@
 
 #include "ParticleSystem.h"
 
-#define EPSILON 0.0001
+#define DECIMETER   0.1
+#define CENTIMETER  0.01
+#define MILLIMETER  0.001
+#define EPSILON     0.0001
+
 #define USE_BVH true
 typedef unsigned int uint;
 typedef short unsigned int uint8;
@@ -130,21 +134,29 @@ void ParticleSystem::update(){
   // for(Particle * np : newParticles)
   //   particles.push_back(np);
 
-  // Merge particles that are the same
-  // for(Particle * cur : particles)
-  //   mergeSimilarParticles(cur);
-
   // Resolve all collision that occur
   for(Particle * cur: particles)
     if(cur->getCollisionSteps() < 10)
       resolveCollisions(cur);
 
-  // // Cleans our particles vector and our newParticles
-  // removeDeadParticles();
-  // newParticles.clear();
+  // Merge particles that are the same
+  for(Particle * cur : particles)
+    mergeSimilarParticles(cur);
+
+  // removal of dead particles & adding new
+  removeDeadParticles(); //<--------------------------------- Is not working correctly
+
+  // DBUG CHECK
+  for(Particle * cur : particles)
+    assert(cur->isAlive());
+
+
+
+  addNewParticles();
 
   // Remakes the kd tree
-  // particle_kdtree.update(particles, *bbox);
+  particle_kdtree.update(particles, *bbox);
+
 }
 
 void ParticleSystem::moveCursor( const float & dx, 
@@ -235,6 +247,7 @@ void ParticleSystem::createInitWave(){
 
 
   particle_kdtree.update(particles, *bbox);
+
 }
 
 Particle *  ParticleSystem::createParticle(
@@ -273,6 +286,63 @@ void ParticleSystem::collisionDetection(Particle * p){
   int steps = (int) (time_until_collision / TIME_STEP);
 
   p->setCollisionSteps(steps);
+}
+
+void ParticleSystem::addNewParticles(){
+
+  // Add into the main vector those new particles yet added
+  for( unsigned int i = 0; i < newParticles.size(); i++)
+    particles.push_back(newParticles[i]);
+
+  // Clear for next iteration
+  newParticles.clear();
+
+}
+
+void ParticleSystem::removeDeadParticles(){
+
+  int removed = 0;
+
+  // Removes dead particles from our main vector
+  for( unsigned int i = 0 ; i < particles.size(); i++){
+      // Keep if 0, else delete
+      if(particles[i]->isDead()){
+
+        removed++;
+
+          if(!newParticles.empty()){
+
+              // Put in new particle to fill gap
+              delete particles[i];
+              particles[i] = newParticles.back();
+              newParticles.pop_back();
+
+          }else{
+
+              // there is stuff to push off
+              if(i != particles.size()-1){
+
+                // Pop off back of vector to fill the gap
+                delete particles[i];
+                particles[i] = particles.back();
+                particles.pop_back();
+                // No garentee that this isnt dead
+                i--;
+
+              }else{
+
+                // Just delete the last element, nothing need be poped
+                delete particles[i];
+                particles.pop_back();
+
+              }
+          }
+      }
+  }
+
+  if( removed > 0)
+    std::cout << "Removed " << removed << " Particles this iteration\n";
+
 }
 
 // ╔═╗╔═╗╦═╗╔╦╗╦╔═╗╦  ╔═╗  ╔╦╗╔═╗╦  ╦╔═╗╔╦╗╔═╗╔╗╔╔╦╗
@@ -609,8 +679,33 @@ Particle * ParticleSystem::particleVectorMerge(std::vector<Particle *> &vec){
 }
 
 void ParticleSystem::mergeSimilarParticles(Particle * &cur){
-}
+  // This function will handle all the merging code
 
+  if(cur->isDead()) { return; }
+
+  // Paramaters that I will use for the gathering of particles
+  float gather_distance = CENTIMETER;
+  float gather_angle    = M_PI / 16.0; 
+
+  // Gather Particles around cur from our kd_tree 
+  PartPtrVec merge_pending_particles;
+
+  // GATHER our particles from our kd tree
+  particle_kdtree.GatherParticles(cur,gather_distance, gather_angle,
+    merge_pending_particles);
+
+  // Kill all gathered particles
+  for(Particle * pending: merge_pending_particles) {
+
+    pending->kill();  // Remove it because we already have a similar particle
+
+    // DEBUG CHECK ___________________________________________________________
+    float dist = glm::distance(cur->getOldPos(), pending->getOldPos());
+    assert( dist <=  gather_distance );
+
+  }
+
+}
 
 // ╔╦╗╦ ╦╔╗╔╦╔═╦═╗╔═╗╔═╗  ╔╦╗╔═╗╔╦╗╔═╗╦ ╦╦╔╗╔╔═╗
 // ║║║║ ║║║║╠╩╗╠╦╝║╣ ╚═╗  ║║║╠═╣ ║ ║  ╠═╣║║║║║ ╦
