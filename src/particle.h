@@ -8,6 +8,8 @@
 #include <cmath>
 #include <string>
 
+typedef unsigned int uint;
+
 class Particle {
 
 public:
@@ -24,23 +26,23 @@ public:
 
     iterations   = 0;
     _isDead      = false;
+    collisionSteps = 0; 
 
   }
 
   Particle(const glm::vec3 & pos, const glm::vec3 & old, 
       const glm::vec3 cen, double watts, double freq, int s){
 
-      // Remember you should set stepsLeft + iterations
-      position    = pos;
-      oldPosition = old;
-      center      = cen;
-
-      wattage      = watts;
-      freqency    = freq;
-      splits      = s;
-
-      iterations  = 0;
-      _isDead      = false;
+    // Remember you should set stepsLeft + iterations
+    position    = pos;
+    oldPosition = old;
+    center      = cen;
+    wattage      = watts;
+    freqency    = freq;
+    splits      = s;
+    iterations  = 0;
+    _isDead      = false;
+    collisionSteps = 0; 
 
   }
 
@@ -54,8 +56,12 @@ public:
 
   int     getIter()                   const { return iterations; }
   int     getSplit()                  const { return splits; }
+
   bool    isDead()                    const { return _isDead; }
   bool    isAlive()                   const { return !_isDead; }
+
+  uint    getCollisionSteps()            const { return collisionSteps; }
+
   
   glm::vec3 getDir() const { return glm::normalize(oldPosition-center); }
 
@@ -71,7 +77,7 @@ public:
   void incIter    () { iterations++; }
   void setSplit   (const int    & s)  { splits = s; }
   void kill       () { _isDead = true; }
-  
+  void setCollisionSteps( uint i){ assert( i >= 0 ); collisionSteps = i; }
 
   // Debugging Functions //////////////////////////////////////////////////////
   friend std::ostream& operator<<(std::ostream &, const Particle &);
@@ -87,12 +93,14 @@ private:
   int       splits;         // How many times our particle split
   int       iterations;     // How many iterations have I been around for
   bool      _isDead;        // Replacement for the delete mask
+  uint      collisionSteps; // Steps before we encounter collision
 
   // Rep Sound ////////////////////////////////////////////////////////////////
   double    wattage;         // Used to calc Power of wave
   double    freqency;       // What freqency this particle represents
 
 };
+
 
 
 // Printing particle inline

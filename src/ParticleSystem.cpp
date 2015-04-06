@@ -27,6 +27,7 @@
 #include "ParticleSystem.h"
 
 #define EPSILON 0.0001
+#define USE_BVH true
 typedef unsigned int uint;
 typedef short unsigned int uint8;
 typedef std::vector<Particle *>  PartPtrVec;
@@ -35,112 +36,15 @@ typedef std::vector<Particle *>  PartPtrVec;
 typedef std::vector<Particle *>::iterator ParticleIter;
 typedef std::vector<std::vector<int>> vMat;
 
+
+// ╔═╗╦╔╦╗╦ ╦╦  ╔═╗╔╦╗╦╔═╗╔╗╔  ╦  ╔═╗╔═╗╔═╗
+// ╚═╗║║║║║ ║║  ╠═╣ ║ ║║ ║║║║  ║  ║ ║║ ║╠═╝
+// ╚═╝╩╩ ╩╚═╝╩═╝╩ ╩ ╩ ╩╚═╝╝╚╝  ╩═╝╚═╝╚═╝╩  
+
 ParticleSystem::~ParticleSystem(){
   // Just delete all the particles we made
   for(unsigned int i = 0; i < particles.size(); i++)
     delete particles[i];
-}
-
-void ParticleSystem::debug(){
-
-  glm::vec3 a(0,1,0);
-  glm::vec3 b(0,0,0);
-  glm::vec3 c(1,0,0);
-  glm::vec3 d(1,1,0);
-  
-  // Create a fake mesh to work on
-  Mesh * debug = new Mesh(args);
-  
-  Vertex * va = debug->addVertex(a);
-  Vertex * vb = debug->addVertex(b);
-  Vertex * vc = debug->addVertex(c);
-  Vertex * vd = debug->addVertex(d);
-
-  debug->addTriangle("DEBUG",va,vb,vc);
-  debug->addTriangle("DEBUG",vc,vd,va);
-
-  glm::vec3 ray_start(0.2,0.2,1); 
-  glm::vec3 ray_dir(0,0,-1); 
-
-  Ray ray(ray_start, ray_dir, 340);
-  Hit h; bool hitTriangle = false; bool backface = false;
-
-
-  BoundingBox box(glm::vec3(0,0,-1), glm::vec3(1,1,0));
-
-  // When i should hit about
-  double t = 1 / VELOCITY_OF_MEDIUM;
-
-  double steps = t / TIME_STEP;
-
-  std::cout << "steps:" << steps << std::endl;
-
-  double stepOneBefore = (int)steps-1;
-  double stepOneAfter = (int)steps + 1;
-
-  hitTriangle =  box.hitbox(ray,0,TIME_STEP*stepOneBefore);
-
-  std::cout << " one before Should miss " <<  std::endl;
-
-  if(hitTriangle){
-
-    std::cout << "Hit"  << std::endl;
-
-  }else{
-
-    std::cout << "Missed" << std::endl;
-
-  }
-
-  hitTriangle =  box.hitbox(ray,0,TIME_STEP*stepOneAfter);
-
-  std::cout << "one after Should hit " <<  std::endl;
-
-  if(hitTriangle){
-
-    std::cout << "Hit"  << std::endl;
-
-  }else{
-
-    std::cout << "Missed" << std::endl;
-
-  }
-
-  // BVHNode * r = new BVHNode(tv,0);
-
-  // glm::vec3 ray_start(0.1,0.1,1); 
-  // glm::vec3 ray_dir(0,0,-1); // Given this setup the bbox (b,d)
-
-
-  // std::vector < Triangle *> hits;
-  // r->getTriangles(ray,2.0,hits);
-
-  // std::cout << "DEBUG HIT SHOULD RETURN 0: " << hits.size() << std::endl;
-
-  // // I should hit this triangle
-  // Hit h; bool hitTriangle = false; bool backface = false;
-  
-  // for(uint i = 0; i < hits.size();i++){
-  
-  //   Triangle *t = hits[i];
-
-  //   glm::vec3 a = (*t)[0]->getPos();
-  //   glm::vec3 b = (*t)[1]->getPos();
-  //   glm::vec3 c = (*t)[2]->getPos();    
-
-
-  //   if(triangle_intersect(ray,h,a,b,c,backface)){
-  //     hitTriangle = true;
-  //     h.setMaterial(t->getMaterial());
-  //   }
-  // }
-
-  // // We didnt hit anything
-  // if(hitTriangle == true)
-  //   std::cout << "We hit our goal" << std::endl;
-  // else
-  //   std::cout << "We missed our goal" << std::endl;
-
 }
 
 void ParticleSystem::load(){
@@ -232,7 +136,8 @@ void ParticleSystem::update(){
 
   // Resolve all collision that occur
   for(Particle * cur: particles)
-    resolveCollisions(cur);
+    if(cur->getCollisionSteps() < 10)
+      resolveCollisions(cur);
 
   // // Cleans our particles vector and our newParticles
   // removeDeadParticles();
@@ -240,8 +145,136 @@ void ParticleSystem::update(){
 
   // Remakes the kd tree
   // particle_kdtree.update(particles, *bbox);
-
 }
+
+void ParticleSystem::moveCursor( const float & dx, 
+    const float & dy, const float & dz ){
+  // Function called by glCanvas
+  
+  cursor+= glm::vec3(10*dx,10*dy,10*dz);
+  std::cout << cursor << std::endl;
+}
+
+void ParticleSystem::createInitWave(){
+  // Testing function to create circle in 3d space
+
+  // Using cursor
+  double s = RADIUS_INIT_SPHERE;
+  
+  // Create Box of ranodm points
+  for(unsigned int i = 0; i < NUM_INIT_PARTICLES; i++){
+    // Find x,y,z
+    float x = cursor.x - s/2.0 + (float) args->randomGen.rand(s);
+    float y = cursor.y - s/2.0 + (float) args->randomGen.rand(s);
+    float z = cursor.z - s/2.0 + (float) args->randomGen.rand(s);
+  
+    glm::vec3 pos(x,y,z);
+  
+    // Project into a circle
+    float radius = s;
+    
+    glm::vec3 dir = pos - cursor;
+  
+    dir = glm::normalize(dir);
+  
+    pos = cursor + dir * radius;
+
+    // default constructor
+
+    Particle * p = createParticle(
+        pos,                     // Position     
+        pos,                     // OldPosition
+        cursor,                  // CenterPos
+        0,                       // Wattage
+        0,                       // Freq
+        0);                      // SplitAmount
+  
+    // For each given source type we will generate a diffrerent distrubution
+    // of freq to represent
+    
+    if( args-> source_type == 1){
+
+      // Low Freq Noise  AC unit
+      // Not very powerfull
+
+      p->setWatt(0.00001); // 70dBs about vacuum cleaner loudness
+      p->setFreq(args->randomGen.randInt(80) + 20); // Freq [20Hz-100Hz]
+
+
+    } else if (args-> source_type == 2 ){
+
+      // Assume Talking Range
+      // For speach we are using the fundmental, aka lowest freq
+      
+      p->setWatt(0.000001); // 60dBs about people talking loud
+      p->setFreq(args->randomGen.randInt(150) + 100); // Freq [100Hz-250Hz]
+
+
+    } else if( args-> source_type == 3 ){
+      // Assume higher pitched noise
+      // Assume you have a CRT mointor
+
+      p->setWatt(0.0000001); // 40dDbs soft conversation level
+      p->setFreq(16744); // Freq of CRT mointor running
+
+
+    } else {
+
+      // White noise there is total random distrubtion in frequency
+      // Assume power of rock concert at 110 dBs
+
+      p->setWatt(0.1); // Power of loud concert
+      p->setFreq(args->randomGen.randInt(20000-20) + 20); // Freq random
+
+    }
+  
+    // put particle there
+    particles.push_back(p);
+  
+  }
+
+
+  particle_kdtree.update(particles, *bbox);
+}
+
+Particle *  ParticleSystem::createParticle(
+
+  const glm::vec3 & pos, const glm::vec3 & old, 
+  const glm::vec3 cen, double watts, double freq, int s){
+
+  // Will create particle and setup it's collision time with mesh
+  Particle * p = new Particle(pos,old,cen,watts,freq,s);
+  collisionDetection(p);
+
+  return p;
+}
+
+void ParticleSystem::collisionDetection(Particle * p){
+  // returns true if hit object found
+  // false otherwise
+
+  // Finding when we would collide with geometery
+  Ray r(p->getOldPos(), p->getDir(), VELOCITY_OF_MEDIUM); 
+  Hit h; bool hitTriangle = false;
+
+  // Setting up collision time with mesh
+  hitTriangle = root->rayHit(r,0,1000,h);
+
+  // We didnt hit anything in the scene ( travel forever)
+  if(!hitTriangle)
+    assert(false);
+
+  // We hit something, 
+  double time_until_collision = h.getT();
+
+  int steps = (int) (time_until_collision / TIME_STEP);
+
+  p->setCollisionSteps(steps);
+}
+
+// ╔═╗╔═╗╦═╗╔╦╗╦╔═╗╦  ╔═╗  ╔╦╗╔═╗╦  ╦╔═╗╔╦╗╔═╗╔╗╔╔╦╗
+// ╠═╝╠═╣╠╦╝ ║ ║║  ║  ║╣   ║║║║ ║╚╗╔╝║╣ ║║║║╣ ║║║ ║ 
+// ╩  ╩ ╩╩╚═ ╩ ╩╚═╝╩═╝╚═╝  ╩ ╩╚═╝ ╚╝ ╚═╝╩ ╩╚═╝╝╚╝ ╩ 
 
 void ParticleSystem::moveParticle(Particle* &p){
  /* Input : Particle ptr
@@ -259,10 +292,11 @@ void ParticleSystem::moveParticle(Particle* &p){
 
   // Update the particle
   p->setPos(newPos); p->incIter();
+  p->setCollisionSteps( p->getCollisionSteps() - 1);
 
+  // std::cout << "Time until collision " << p->getCollisionSteps() << std::endl;
 }
 
-#define USE_BVH true
 void ParticleSystem::resolveCollisions(Particle* &p){
 
   Ray r(p->getOldPos(), p->getDir(), VELOCITY_OF_MEDIUM); Hit h;
@@ -302,7 +336,6 @@ void ParticleSystem::resolveCollisions(Particle* &p){
         h.setMaterial(t->getMaterial());
       }
     }
-
   }
 
     if(!hitTriangle){return; }
@@ -317,25 +350,38 @@ void ParticleSystem::resolveCollisions(Particle* &p){
 
   // Gareneteee that we hit just this timestep
   // Change the direction of our particle & backstep to hitting wall
+
+  // Debug _________________________________
   double time_until_impact = h.getT();
+  assert(time_until_impact >= 0);
+  time_until_impact = -1 * TIME_STEP;
+  // _______________________________________
+
   glm::vec3 old = p->getOldPos();
   glm::vec3 dir = p->getDir();
   glm::vec3 impactPos(old+(dir*(float)time_until_impact)*VELOCITY_OF_MEDIUM);
-
-  // Get the new center to change direction
   glm::vec3 mir_dir = MirrorDirection( h.getNormal() , p->getDir() );
   mir_dir = mir_dir * (float)(-1.0);
   float radius = glm::distance(p->getCenter(), impactPos);
-
-  // Mirror the center to reflect our new direction
   p->setCenter(impactPos + mir_dir * radius);
 
+  // Setting sound properties
   double absorb_ratio = absorbFunc(h.getMaterial(), p->getFreq());
-  assert( absorb_ratio < 1);                                                  // Sanity Check
+  assert( absorb_ratio < 1);                                                  
+
+  // Sanity Check
   p->setWatt( (1 - absorb_ratio ) * p->getWatt() );                           // Math Review Required
   p->incIter();
- 
+
+  // Finding new collision
+  collisionDetection(p);
+
 }
+
+// ╦═╗╔═╗╔═╗╔═╗╦  ╦ ╦╔╦╗╦╔═╗╔╗╔  ╔═╗╔═╗╦╔╦╗╔═╗
+// ╠╦╝║╣ ╚═╗║ ║║  ║ ║ ║ ║║ ║║║║  ╚═╗╠═╝║ ║ ╚═╗
+// ╩╚═╚═╝╚═╝╚═╝╩═╝╚═╝ ╩ ╩╚═╝╝╚╝  ╚═╝╩  ╩ ╩ ╚═╝
+
 
 void ParticleSystem::generateResSplits(Particle * &cur){
 
@@ -385,7 +431,39 @@ void ParticleSystem::generateResSplits(Particle * &cur){
   }
 }
 
-void ParticleSystem::mergeSimilarParticles(Particle * &cur){
+void ParticleSystem::particleSplit(Particle * &p,
+ std::vector<Particle *> &vec){
+  // Side effects: fills vec with new particles
+  // Note: Particles are not updated at this step
+
+    // Where I will store new particles
+    std::vector< glm::vec3> newPart;
+    
+    // Get hex shape on plane
+    circle_points_on_plane(p->getOldPos(), 
+        p->getDir(), RADIUS_PARTICLE_WAVE, SPLIT_AMOUNT, newPart);
+
+ 
+    // Project back on sphere // When particles should die
+
+    // cirlce_point_on_sphere(p->getCenter(),
+    //    glm::distance( p->getOldPos(), p->getCenter()),newPart);
+
+    // For each calculated pos, make particle
+    for(unsigned int i = 0; i < newPart.size(); i++){
+    
+      Particle * s = new Particle(
+          newPart[i],                                   // Position
+          newPart[i],                                   // OldPosition
+          p->getCenter(),                               // CenterPos
+          p->getWatt() / (double)(SPLIT_AMOUNT + 1.0),   // Amp
+          p->getFreq(),                                 // Freq
+          p->getSplit() + 1);                           // SplitAmount
+
+    
+      // put particle there to be "moved" when its their turn
+      vec.push_back(s);
+    }// for
 }
 
 void ParticleSystem::stabalizeInitalSphere(){
@@ -442,248 +520,97 @@ void ParticleSystem::stabalizeInitalSphere(){
   }
 }
 
-void ParticleSystem::linearGatherParticles(Particle * center, double r, double a, PartPtrVec & result){
 
-  // Old Gather code
-  for(unsigned int i = 0; i < particles.size(); i++){
+// ╔═╗╔═╗╦═╗╔╦╗╦╔═╗╦  ╔═╗  ╔╦╗╔═╗╦═╗╔═╗╔═╗
+// ╠═╝╠═╣╠╦╝ ║ ║║  ║  ║╣   ║║║║╣ ╠╦╝║ ╦║╣ 
+// ╩  ╩ ╩╩╚═ ╩ ╩╚═╝╩═╝╚═╝  ╩ ╩╚═╝╩╚═╚═╝╚═╝
 
-    Particle * other = particles[i];
+Particle * ParticleSystem::particlePairMerge(Particle * &a, Particle * &b){ 
 
-    if(other == center)
-      continue;
+  // Input: A pair of particles and an empty pointer that 
+  //   will be result in a new particle
+  // Output: None, handled through pass by reference
+  // Assumptions: non null pointers
+  // Side Effects: Calls directly particleVectorMerge
 
-    if(other->isDead())
-      continue;
 
-    float dist = glm::distance(center->getOldPos(), other->getOldPos());
+  std::vector<Particle *> vec;
+  vec.push_back(a); vec.push_back(b);
 
-    if(dist < r){
-
-      float angle = angleBetweenVectors(center->getDir(), other->getDir());
-
-      if( angle < a)
-        result.push_back(other);
-    }
-  }
+  return particleVectorMerge(vec);
 }
 
-bool ParticleSystem::linearDuplicateSearch(const glm::vec3 & pos, double th){
-   for( Particle * p : particles)
-     if ( glm::distance(p->getOldPos(), pos ) < th)
-      return true;
-  return false;
-}
 
-bool ParticleSystem::linearNewDuplicateSearch(const glm::vec3 & pos, const PartPtrVec & newVec , double th){
+Particle * ParticleSystem::particleVectorMerge(std::vector<Particle *> &vec){
 
-   for( Particle * p : newVec)
-     if ( glm::distance(p->getOldPos(), pos ) < th)
-      return true;
-  return false;
-}
+  // Input: A vector of particles and an empty pointer that will be 
+  //  result in a new particle
+  // Output: None, handled through pass by reference
+  // Assumptions: vec is populated with at least 1 particle 
+  // Side Effects: None
+  // Bugs: What should I do with the freq of merged particles & splits 
+  //    (split not as much)
 
-void ParticleSystem::moveCursor( const float & dx, 
-    const float & dy, const float & dz ){
-  // Function called by glCanvas
-  
-  cursor+= glm::vec3(10*dx,10*dy,10*dz);
-  std::cout << cursor << std::endl;
-}
-
-void ParticleSystem::createDebugParticle(){
-
-  // HARDCODED targetPosition
-  glm::vec3 targetPosition(2.7, 0.324, -2.1); // for corner room
-  // glm::vec3 targetPosition(-5.8, 1.524, -0.2); // for acoustics 
-
-  // Direction 
-  glm::vec3 directionToTarget = targetPosition - cursor;
-  directionToTarget  = glm::normalize(directionToTarget);
-
-  // Create a ray to move up a little
-  glm::vec3 newPos = 
-    cursor + ( (float) RADIUS_INIT_SPHERE * 2  ) * directionToTarget;
+  // Values will accumlate to find the average
+  double pos_x = 0; double cen_x = 0;
+  double pos_y = 0; double cen_y = 0;
+  double pos_z = 0; double cen_z = 0;
 
 
+  double mergeFreq = 0; double mergeWatt = 0;
+  double mergeSplit = 0;
+  int    mergeIter = 0;
 
-  // default constructor
-  Particle * p = new Particle(
-      newPos,                     // Position     
-      newPos,                  // OldPosition
-      cursor,                  // CenterPos
-      0,                       // Wattage
-      0,                       // Freq
-      0);                      // SplitAmount
+  for(unsigned int i = 0;  i <  vec.size();  i++ ){
 
-  // For each given source type we will generate a diffrerent distrubution
-  // of freq to represent
-  
-  if( args-> source_type == 1){
+    const glm::vec3 oldPos = vec[i]->getOldPos();
+    const glm::vec3 cen = vec[i]->getCenter();
 
-    // Low Freq Noise  AC unit
-    // Not very powerfull
-
-    p->setWatt(0.00001); // 70dBs about vacuum cleaner loudness
-    p->setFreq(args->randomGen.randInt(80) + 20); // Freq [20Hz-100Hz]
+    pos_x += oldPos.x; cen_x += cen.x; 
+    pos_y += oldPos.y; cen_y += cen.y;
+    pos_z += oldPos.z; cen_z += cen.z;
 
 
-  } else if (args-> source_type == 2 ){
-
-    // Assume Talking Range
-    // For speach we are using the fundmental, aka lowest freq
-    
-    p->setWatt(0.000001); // 60dBs about people talking loud
-    p->setFreq(args->randomGen.randInt(150) + 100); // Freq [100Hz-250Hz]
+    mergeFreq  += vec[i]->getFreq();
+    mergeWatt  += vec[i]->getWatt();
+    mergeSplit += vec[i]->getSplit();
 
 
-  } else if( args-> source_type == 3 ){
-    // Assume higher pitched noise
-    // Assume you have a CRT mointor
-
-    p->setWatt(0.0000001); // 40dDbs soft conversation level
-    p->setFreq(16744); // Freq of CRT mointor running
-
-
-  } else {
-
-    // White noise there is total random distrubtion in frequency
-    // Assume power of rock concert at 110 dBs
-
-    p->setWatt(0.1); // Power of loud concert
-    p->setFreq(args->randomGen.randInt(20000-20) + 20); // Freq random
+    // Find max iterations among particles in vec
+    if( vec[i]->getIter() > mergeIter )
+      mergeIter = vec[i]->getIter();
 
   }
 
-  // Get new particles to be made and toss in split particles
-  std::vector<Particle *> new_particles;
-  particleSplit(p, new_particles);
-  new_particles.push_back(p);
+  glm::vec3 mergedPos(
+      pos_x / vec.size(), 
+      pos_y / vec.size(), 
+      pos_z / vec.size());
 
-  // change cur particle watts
-  p->setWatt(p->getWatt() / (double)(SPLIT_AMOUNT + 1.0));
-  
-  for(Particle * sp: new_particles)
-    particles.push_back(sp);
+  glm::vec3 mergedCen(
+      cen_x / vec.size(), 
+      cen_y / vec.size(), 
+      cen_z / vec.size());
 
-  particle_kdtree.update(particles,*bbox);
+  mergeFreq  = mergeFreq  / vec.size();                                         // Patch for merging freq
+  mergeSplit = mergeSplit / vec.size();
+
+  Particle * newPart = new Particle(
+      mergedPos,mergedPos,mergedCen, mergeWatt, mergeFreq, mergeSplit);
+  newPart->setIter(mergeIter);
+
+
+
+  return newPart;
 }
 
-void ParticleSystem::particleSplit(Particle * &p,
- std::vector<Particle *> &vec){
-  // Side effects: fills vec with new particles
-  // Note: Particles are not updated at this step
-
-    // Where I will store new particles
-    std::vector< glm::vec3> newPart;
-    
-    // Get hex shape on plane
-    circle_points_on_plane(p->getOldPos(), 
-        p->getDir(), RADIUS_PARTICLE_WAVE, SPLIT_AMOUNT, newPart);
-
- 
-    // Project back on sphere // When particles should die
-
-    // cirlce_point_on_sphere(p->getCenter(),
-    //    glm::distance( p->getOldPos(), p->getCenter()),newPart);
-
-    // For each calculated pos, make particle
-    for(unsigned int i = 0; i < newPart.size(); i++){
-    
-      Particle * s = new Particle(
-          newPart[i],                                   // Position
-          newPart[i],                                   // OldPosition
-          p->getCenter(),                               // CenterPos
-          p->getWatt() / (double)(SPLIT_AMOUNT + 1.0),   // Amp
-          p->getFreq(),                                 // Freq
-          p->getSplit() + 1);                           // SplitAmount
-
-    
-      // put particle there to be "moved" when its their turn
-      vec.push_back(s);
-    }// for
+void ParticleSystem::mergeSimilarParticles(Particle * &cur){
 }
 
-void ParticleSystem::createInitWave(){
-  // Testing function to create circle in 3d space
 
-  // Using cursor
-  double s = RADIUS_INIT_SPHERE;
-  
-  // Create Box of ranodm points
-  for(unsigned int i = 0; i < NUM_INIT_PARTICLES; i++){
-    // Find x,y,z
-    float x = cursor.x - s/2.0 + (float) args->randomGen.rand(s);
-    float y = cursor.y - s/2.0 + (float) args->randomGen.rand(s);
-    float z = cursor.z - s/2.0 + (float) args->randomGen.rand(s);
-  
-    glm::vec3 pos(x,y,z);
-  
-    // Project into a circle
-    float radius = s;
-    
-    glm::vec3 dir = pos - cursor;
-  
-    dir = glm::normalize(dir);
-  
-    pos = cursor + dir * radius;
-
-    // default constructor
-
-    Particle * p = new Particle(
-        pos,                     // Position     
-        pos,                     // OldPosition
-        cursor,                  // CenterPos
-        0,                       // Wattage
-        0,                       // Freq
-        0);                      // SplitAmount
-  
-    // For each given source type we will generate a diffrerent distrubution
-    // of freq to represent
-    
-    if( args-> source_type == 1){
-
-      // Low Freq Noise  AC unit
-      // Not very powerfull
-
-      p->setWatt(0.00001); // 70dBs about vacuum cleaner loudness
-      p->setFreq(args->randomGen.randInt(80) + 20); // Freq [20Hz-100Hz]
-
-
-    } else if (args-> source_type == 2 ){
-
-      // Assume Talking Range
-      // For speach we are using the fundmental, aka lowest freq
-      
-      p->setWatt(0.000001); // 60dBs about people talking loud
-      p->setFreq(args->randomGen.randInt(150) + 100); // Freq [100Hz-250Hz]
-
-
-    } else if( args-> source_type == 3 ){
-      // Assume higher pitched noise
-      // Assume you have a CRT mointor
-
-      p->setWatt(0.0000001); // 40dDbs soft conversation level
-      p->setFreq(16744); // Freq of CRT mointor running
-
-
-    } else {
-
-      // White noise there is total random distrubtion in frequency
-      // Assume power of rock concert at 110 dBs
-
-      p->setWatt(0.1); // Power of loud concert
-      p->setFreq(args->randomGen.randInt(20000-20) + 20); // Freq random
-
-    }
-  
-    // put particle there
-    particles.push_back(p);
-  
-  }
-
-
-  particle_kdtree.update(particles, *bbox);
-}
+// ╔╦╗╦ ╦╔╗╔╦╔═╦═╗╔═╗╔═╗  ╔╦╗╔═╗╔╦╗╔═╗╦ ╦╦╔╗╔╔═╗
+// ║║║║ ║║║║╠╩╗╠╦╝║╣ ╚═╗  ║║║╠═╣ ║ ║  ╠═╣║║║║║ ╦
+// ╩ ╩╚═╝╝╚╝╩ ╩╩╚═╚═╝╚═╝  ╩ ╩╩ ╩ ╩ ╚═╝╩ ╩╩╝╚╝╚═╝
 
 void ParticleSystem::munkresMatching 
   (std::vector<Particle*> & partVec, vMat & matchingMat, vMat & costMat){
@@ -955,85 +882,119 @@ void ParticleSystem::generateMask(
   m.setSize(size_of_mask);
 }
 
-Particle * ParticleSystem::particlePairMerge(Particle * &a, Particle * &b){ 
+void ParticleSystem::delusionalParticleLocations(
+    Particle * &cur_particle,
+    std::vector<Particle *> &gathered_particles,
+    std::vector<glm::vec3> & output){
 
-  // Input: A pair of particles and an empty pointer that 
-  //   will be result in a new particle
-  // Output: None, handled through pass by reference
-  // Assumptions: non null pointers
-  // Side Effects: Calls directly particleVectorMerge
-
-
-  std::vector<Particle *> vec;
-  vec.push_back(a); vec.push_back(b);
-
-  return particleVectorMerge(vec);
-}
+  // Input : cur_particle is the particle we will use the center of the mask
+  // Input : gathered_particles are the particles we will use to orient ourselves
+  // Input (output) :  We will return our locations here
 
 
-Particle * ParticleSystem::particleVectorMerge(std::vector<Particle *> &vec){
-
-  // Input: A vector of particles and an empty pointer that will be 
-  //  result in a new particle
-  // Output: None, handled through pass by reference
-  // Assumptions: vec is populated with at least 1 particle 
-  // Side Effects: None
-  // Bugs: What should I do with the freq of merged particles & splits 
-  //    (split not as much)
-
-  // Values will accumlate to find the average
-  double pos_x = 0; double cen_x = 0;
-  double pos_y = 0; double cen_y = 0;
-  double pos_z = 0; double cen_z = 0;
+  assert(cur_particle == gathered_particles[0]);
 
 
-  double mergeFreq = 0; double mergeWatt = 0;
-  double mergeSplit = 0;
-  int    mergeIter = 0;
+  // Search for neareast particle
+  double dist = RADIUS_PARTICLE_WAVE * 10; // really large number
+  unsigned int nearest_part = 0;
 
-  for(unsigned int i = 0;  i <  vec.size();  i++ ){
-
-    const glm::vec3 oldPos = vec[i]->getOldPos();
-    const glm::vec3 cen = vec[i]->getCenter();
-
-    pos_x += oldPos.x; cen_x += cen.x; 
-    pos_y += oldPos.y; cen_y += cen.y;
-    pos_z += oldPos.z; cen_z += cen.z;
-
-
-    mergeFreq  += vec[i]->getFreq();
-    mergeWatt  += vec[i]->getWatt();
-    mergeSplit += vec[i]->getSplit();
-
-
-    // Find max iterations among particles in vec
-    if( vec[i]->getIter() > mergeIter )
-      mergeIter = vec[i]->getIter();
-
+  for(unsigned int i = 1; i < gathered_particles.size(); i++){
+    float  curDist = glm::distance(gathered_particles[i]->getOldPos(), cur_particle->getOldPos());
+    if( curDist < dist  ){
+        dist = curDist; nearest_part = i;
+      }
   }
 
-  glm::vec3 mergedPos(
-      pos_x / vec.size(), 
-      pos_y / vec.size(), 
-      pos_z / vec.size());
+  glm::vec3 nearest_pos = gathered_particles[nearest_part]->getOldPos();
+  
+  // We will adjust the mask size of our particles by a factor of two
+  // If we are within the range of [0, 2*RADIUS_PARTICLE_WAVE]
+  double mask_radius = dist;
 
-  glm::vec3 mergedCen(
-      cen_x / vec.size(), 
-      cen_y / vec.size(), 
-      cen_z / vec.size());
-
-  mergeFreq  = mergeFreq  / vec.size();                                         // Patch for merging freq
-  mergeSplit = mergeSplit / vec.size();
-
-  Particle * newPart = new Particle(
-      mergedPos,mergedPos,mergedCen, mergeWatt, mergeFreq, mergeSplit);
-  newPart->setIter(mergeIter);
+  // Cap our distance at 
+  if( mask_radius > 2.2 * RADIUS_PARTICLE_WAVE )
+    mask_radius = 2.2 * RADIUS_PARTICLE_WAVE;
 
 
+  circle_points_on_plane_refence(
+      cur_particle->getOldPos(),                        // center of mask
+      cur_particle->getDir(),                     // direction of plane
+      nearest_pos,              // particle using for reference
+      mask_radius,                 // radius of my mask
+      6,                                    // number of particles mask has
+      output);                       // where I will append my results
 
-  return newPart;
+
+  // We project there mask particles  on the sphere of the sound source
+  circle_points_on_sphere(
+    cur_particle->getCenter(),                                      // center
+    glm::distance(cur_particle->getCenter(), cur_particle->getOldPos()), // radi
+    output);
+
+
+  /*
+circle_points_on_sphere
+  assert(cur_particle == gathered_particles[0]);
+  circle_points_on_plane(
+      cur_particle->getOldPos(),                        // center of mask
+      cur_particle->getDir(),                     // direction of plane
+      // nearestParticlePosition,              // particle using for reference
+      RADIUS_PARTICLE_WAVE,                 // radius of my mask
+      6,                                    // number of particles mask has
+      output);                       // where I will append my results
+
+
+  */
 }
 
+// ╔═╗╔═╗╦═╗╔╦╗╦╔═╗╦  ╔═╗  ╔═╗╔═╗╔═╗╦═╗╔═╗╦ ╦╔═╗╔═╗
+// ╠═╝╠═╣╠╦╝ ║ ║║  ║  ║╣   ╚═╗║╣ ╠═╣╠╦╝║  ╠═╣║╣ ╚═╗
+// ╩  ╩ ╩╩╚═ ╩ ╩╚═╝╩═╝╚═╝  ╚═╝╚═╝╩ ╩╩╚═╚═╝╩ ╩╚═╝╚═╝
+
+void ParticleSystem::linearGatherParticles(Particle * center, double r, double a, PartPtrVec & result){
+
+  // Old Gather code
+  for(unsigned int i = 0; i < particles.size(); i++){
+
+    Particle * other = particles[i];
+
+    if(other == center)
+      continue;
+
+    if(other->isDead())
+      continue;
+
+    float dist = glm::distance(center->getOldPos(), other->getOldPos());
+
+    if(dist < r){
+
+      float angle = angleBetweenVectors(center->getDir(), other->getDir());
+
+      if( angle < a)
+        result.push_back(other);
+    }
+  }
+}
+
+bool ParticleSystem::linearDuplicateSearch(const glm::vec3 & pos, double th){
+   for( Particle * p : particles)
+     if ( glm::distance(p->getOldPos(), pos ) < th)
+      return true;
+  return false;
+}
+
+bool ParticleSystem::linearNewDuplicateSearch(const glm::vec3 & pos, const PartPtrVec & newVec , double th){
+
+   for( Particle * p : newVec)
+     if ( glm::distance(p->getOldPos(), pos ) < th)
+      return true;
+  return false;
+}
+
+// ╔═╗╦ ╦╔╦╗╦╔═╗
+// ╠═╣║ ║ ║║║║ ║
+// ╩ ╩╚═╝═╩╝╩╚═╝
 double ParticleSystem::absorbFunc(const std::string & mtlName, 
     const double freq){
 
@@ -1257,79 +1218,185 @@ double ParticleSystem::absorbFunc(const std::string & mtlName,
   }
 }
 
-void ParticleSystem::delusionalParticleLocations(
-    Particle * &cur_particle,
-    std::vector<Particle *> &gathered_particles,
-    std::vector<glm::vec3> & output){
 
-  // Input : cur_particle is the particle we will use the center of the mask
-  // Input : gathered_particles are the particles we will use to orient ourselves
-  // Input (output) :  We will return our locations here
+// ╔╦╗╔═╗╔╗ ╦ ╦╔═╗
+//  ║║║╣ ╠╩╗║ ║║ ╦
+// ═╩╝╚═╝╚═╝╚═╝╚═╝
+void ParticleSystem::createDebugParticle(){
+
+  // HARDCODED targetPosition
+  glm::vec3 targetPosition(2.7, 0.324, -2.1); // for corner room
+  // glm::vec3 targetPosition(-5.8, 1.524, -0.2); // for acoustics 
+
+  // Direction 
+  glm::vec3 directionToTarget = targetPosition - cursor;
+  directionToTarget  = glm::normalize(directionToTarget);
+
+  // Create a ray to move up a little
+  glm::vec3 newPos = 
+    cursor + ( (float) RADIUS_INIT_SPHERE * 2  ) * directionToTarget;
 
 
-  assert(cur_particle == gathered_particles[0]);
+
+  // default constructor
+  Particle * p = new Particle(
+      newPos,                     // Position     
+      newPos,                  // OldPosition
+      cursor,                  // CenterPos
+      0,                       // Wattage
+      0,                       // Freq
+      0);                      // SplitAmount
+
+  // For each given source type we will generate a diffrerent distrubution
+  // of freq to represent
+  
+  if( args-> source_type == 1){
+
+    // Low Freq Noise  AC unit
+    // Not very powerfull
+
+    p->setWatt(0.00001); // 70dBs about vacuum cleaner loudness
+    p->setFreq(args->randomGen.randInt(80) + 20); // Freq [20Hz-100Hz]
 
 
-  // Search for neareast particle
-  double dist = RADIUS_PARTICLE_WAVE * 10; // really large number
-  unsigned int nearest_part = 0;
+  } else if (args-> source_type == 2 ){
 
-  for(unsigned int i = 1; i < gathered_particles.size(); i++){
-    float  curDist = glm::distance(gathered_particles[i]->getOldPos(), cur_particle->getOldPos());
-    if( curDist < dist  ){
-        dist = curDist; nearest_part = i;
-      }
+    // Assume Talking Range
+    // For speach we are using the fundmental, aka lowest freq
+    
+    p->setWatt(0.000001); // 60dBs about people talking loud
+    p->setFreq(args->randomGen.randInt(150) + 100); // Freq [100Hz-250Hz]
+
+
+  } else if( args-> source_type == 3 ){
+    // Assume higher pitched noise
+    // Assume you have a CRT mointor
+
+    p->setWatt(0.0000001); // 40dDbs soft conversation level
+    p->setFreq(16744); // Freq of CRT mointor running
+
+
+  } else {
+
+    // White noise there is total random distrubtion in frequency
+    // Assume power of rock concert at 110 dBs
+
+    p->setWatt(0.1); // Power of loud concert
+    p->setFreq(args->randomGen.randInt(20000-20) + 20); // Freq random
+
   }
 
-  glm::vec3 nearest_pos = gathered_particles[nearest_part]->getOldPos();
+  // Get new particles to be made and toss in split particles
+  std::vector<Particle *> new_particles;
+  particleSplit(p, new_particles);
+  new_particles.push_back(p);
+
+  // change cur particle watts
+  p->setWatt(p->getWatt() / (double)(SPLIT_AMOUNT + 1.0));
   
-  // We will adjust the mask size of our particles by a factor of two
-  // If we are within the range of [0, 2*RADIUS_PARTICLE_WAVE]
-  double mask_radius = dist;
+  for(Particle * sp: new_particles)
+    particles.push_back(sp);
 
-  // Cap our distance at 
-  if( mask_radius > 2.2 * RADIUS_PARTICLE_WAVE )
-    mask_radius = 2.2 * RADIUS_PARTICLE_WAVE;
-
-
-  circle_points_on_plane_refence(
-      cur_particle->getOldPos(),                        // center of mask
-      cur_particle->getDir(),                     // direction of plane
-      nearest_pos,              // particle using for reference
-      mask_radius,                 // radius of my mask
-      6,                                    // number of particles mask has
-      output);                       // where I will append my results
-
-
-  // We project there mask particles  on the sphere of the sound source
-  circle_points_on_sphere(
-    cur_particle->getCenter(),                                      // center
-    glm::distance(cur_particle->getCenter(), cur_particle->getOldPos()), // radi
-    output);
-
-
-  /*
-circle_points_on_sphere
-  assert(cur_particle == gathered_particles[0]);
-  circle_points_on_plane(
-      cur_particle->getOldPos(),                        // center of mask
-      cur_particle->getDir(),                     // direction of plane
-      // nearestParticlePosition,              // particle using for reference
-      RADIUS_PARTICLE_WAVE,                 // radius of my mask
-      6,                                    // number of particles mask has
-      output);                       // where I will append my results
-
-
-  */
+  particle_kdtree.update(particles,*bbox);
 }
 
-void ParticleSystem::colorCursorTri(){
+void ParticleSystem::debug(){
 
-//   std::vector <Triangle*> tri = 
-//     uniform_grid.getTriangles(cursor);
-// 
-//   for(uint i = 0; i < tri.size();i++)
-//     tri[i]->setMaterial("DEBUG");
+  glm::vec3 a(0,1,0);
+  glm::vec3 b(0,0,0);
+  glm::vec3 c(1,0,0);
+  glm::vec3 d(1,1,0);
+  
+  // Create a fake mesh to work on
+  Mesh * debug = new Mesh(args);
+  
+  Vertex * va = debug->addVertex(a);
+  Vertex * vb = debug->addVertex(b);
+  Vertex * vc = debug->addVertex(c);
+  Vertex * vd = debug->addVertex(d);
 
+  debug->addTriangle("DEBUG",va,vb,vc);
+  debug->addTriangle("DEBUG",vc,vd,va);
+
+  glm::vec3 ray_start(0.2,0.2,1); 
+  glm::vec3 ray_dir(0,0,-1); 
+
+  Ray ray(ray_start, ray_dir, 340);
+  Hit h; bool hitTriangle = false; bool backface = false;
+
+
+  BoundingBox box(glm::vec3(0,0,-1), glm::vec3(1,1,0));
+
+  // When i should hit about
+  double t = 1 / VELOCITY_OF_MEDIUM;
+
+  double steps = t / TIME_STEP;
+
+  std::cout << "steps:" << steps << std::endl;
+
+  double stepOneBefore = (int)steps-1;
+  double stepOneAfter = (int)steps + 1;
+
+  hitTriangle =  box.hitbox(ray,0,TIME_STEP*stepOneBefore);
+
+  std::cout << " one before Should miss " <<  std::endl;
+
+  if(hitTriangle){
+
+    std::cout << "Hit"  << std::endl;
+
+  }else{
+
+    std::cout << "Missed" << std::endl;
+
+  }
+
+  hitTriangle =  box.hitbox(ray,0,TIME_STEP*stepOneAfter);
+
+  std::cout << "one after Should hit " <<  std::endl;
+
+  if(hitTriangle){
+
+    std::cout << "Hit"  << std::endl;
+
+  }else{
+
+    std::cout << "Missed" << std::endl;
+
+  }
+
+  // BVHNode * r = new BVHNode(tv,0);
+
+  // glm::vec3 ray_start(0.1,0.1,1); 
+  // glm::vec3 ray_dir(0,0,-1); // Given this setup the bbox (b,d)
+
+
+  // std::vector < Triangle *> hits;
+  // r->getTriangles(ray,2.0,hits);
+
+  // std::cout << "DEBUG HIT SHOULD RETURN 0: " << hits.size() << std::endl;
+
+  // // I should hit this triangle
+  // Hit h; bool hitTriangle = false; bool backface = false;
+  
+  // for(uint i = 0; i < hits.size();i++){
+  
+  //   Triangle *t = hits[i];
+
+  //   glm::vec3 a = (*t)[0]->getPos();
+  //   glm::vec3 b = (*t)[1]->getPos();
+  //   glm::vec3 c = (*t)[2]->getPos();    
+
+
+  //   if(triangle_intersect(ray,h,a,b,c,backface)){
+  //     hitTriangle = true;
+  //     h.setMaterial(t->getMaterial());
+  //   }
+  // }
+
+  // // We didnt hit anything
+  // if(hitTriangle == true)
+  //   std::cout << "We hit our goal" << std::endl;
+  // else
+  //   std::cout << "We missed our goal" << std::endl;
 }
-

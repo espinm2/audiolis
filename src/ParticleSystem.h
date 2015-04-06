@@ -33,6 +33,7 @@ class BVHNode;
 
 class ParticleSystem {
 
+  friend class Particle; // particle access to mesh
 
   //TODO move comment over here to header
   public:
@@ -53,11 +54,13 @@ class ParticleSystem {
     // Setter
     void setTimeStep( const double ts){ TIME_STEP = ts; }
 
+    Particle * createParticle(const glm::vec3 & pos, const glm::vec3 & old, 
+      const glm::vec3 cen, double watts, double freq, int s);
+
     // Getter
     unsigned int numParticles(){ return particles.size();}
     double getTimeStep(){ return TIME_STEP;}
     glm::vec3 getCursor(){ return cursor; }
-    // UniformGrid * getUniformGrid(){ return &uniform_grid; }
 
     // Main Simulation Functions
     void load();  // load inital values from args file and meshes
@@ -70,8 +73,8 @@ class ParticleSystem {
     // Debug Functions
     void createDebugParticle(); // used for debugging in testing_chamber_1.obj
     void particleSplit(Particle * &p, std::vector<Particle *> &vec);
-    void colorCursorTri();
-    void debug();
+    void debug(); // Used to test non-visual code
+    void collisionDetection(Particle * p);
 
     // Kuhn–Munkres algorithm based matching
     void munkresMatching (PartPtrVec & partVec,
@@ -89,12 +92,8 @@ class ParticleSystem {
     bool linearNewDuplicateSearch(const glm::vec3 & pos, 
         const PartPtrVec & newVec , double th);
 
-    // Mesh Search functions
-    // TODO
-
     // Miscellaneous <I coulnd't find a group>
     void closeProfiler(){output_profiler_str.close(); }
-
 
     // New Update Function Code (untested)
     void generateResSplits(Particle * &cur);
