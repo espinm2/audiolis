@@ -50,9 +50,16 @@ int main(int argc, char *argv[]) {
   float scaleFactor = 2.0 / float(maxDim);
   glm::mat4 myScalingMatrix = glm::scale(glm::vec3(scaleFactor,scaleFactor,scaleFactor));
   
+
+  double target_time = ( (1.0 / (args.fps_cap) ) * 1000 );
+
   // While we don't close this window
   while (!glfwWindowShouldClose(GLCanvas::window))  {
     
+
+    // Take time you start the program
+    std::clock_t start = std::clock(); int sleep_time = 0;
+
     // Clear the buffers, color info + depth info
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -74,17 +81,30 @@ int main(int argc, char *argv[]) {
     // Calling the simulations
     GLCanvas::animate();
 
+
+    // sleep ___________________________________________________________________
+    double time_elapsed = (std::clock() - start ) / (double) (CLOCKS_PER_SEC / 1000);
+    if ( time_elapsed < target_time ) { 
+      sleep_time =  1000 * ( (int) (target_time - time_elapsed) ); 
+    } 
+
+    #if defined(_WIN32)
+      Sleep(sleep_time);
+    #else
+      usleep(sleep_time);
+    #endif
+
     // Swap buffers
     glfwSwapBuffers(GLCanvas::window);
     fflush(stdout);
     glfwPollEvents();  
     fflush(stdout);
 
-#if defined(_WIN32)
-  Sleep(10);
-#else
-  usleep(10);
-#endif
+// #if defined(_WIN32)
+//   Sleep(10);
+// #else
+//   usleep(10);
+// #endif
 
   }
   
@@ -96,6 +116,7 @@ int main(int argc, char *argv[]) {
   glfwTerminate();
   exit(EXIT_SUCCESS);
 }
+
 
 // ====================================================================
 // ====================================================================

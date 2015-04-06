@@ -80,6 +80,10 @@ public:
         i++; assert (i < argc); 
         timestep = atof(argv[i]);
 
+      } else if (!strcmp(argv[i],"-fps")) {
+        i++; assert (i < argc); 
+        fps_cap = atoi(argv[i]);
+
       } else if (!strcmp(argv[i],"-profile")) {
         profile = true;
 
@@ -131,6 +135,7 @@ public:
     ugrid_render = false;
 
     division = 10;
+    fps_cap = 30;
 
 
   }
@@ -182,6 +187,7 @@ public:
   bool ugrid_render;
 
   int division;
+  int fps_cap;
 
   // Material Key
   // wall_material 0 => bricked_wall; 

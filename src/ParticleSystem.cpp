@@ -128,8 +128,8 @@ void ParticleSystem::update(){
     moveParticle(cur);
 
   // Create all possible splits
-  for(Particle * cur : particles)
-    generateResSplits(cur);
+  // for(Particle * cur : particles)
+    // generateResSplits(cur);
 
   // Merge particles that are the same
   for(Particle * cur : particles)
@@ -334,8 +334,8 @@ void ParticleSystem::removeDeadParticles(){
       }
   }
 
-  if( removed > 0)
-    std::cout << "Removed " << removed << " Particles this iteration\n";
+  // if( removed > 0)
+  //   std::cout << "Removed " << removed << " Particles this iteration\n";
 
 }
 
