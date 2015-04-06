@@ -32,6 +32,7 @@
 #define EPSILON     0.0001
 
 #define USE_BVH true
+#define FUTURE_VISION 10
 typedef unsigned int uint;
 typedef short unsigned int uint8;
 typedef std::vector<Particle *>  PartPtrVec;
@@ -126,33 +127,26 @@ void ParticleSystem::update(){
   for(Particle * cur : particles)
     moveParticle(cur);
 
-  // // Create all possible splits
-  // for(Particle * cur : particles)
-  //   generateResSplits(cur);
-
-  // // New particles are added to the mix
-  // for(Particle * np : newParticles)
-  //   particles.push_back(np);
-
-  // Resolve all collision that occur
-  for(Particle * cur: particles)
-    if(cur->getCollisionSteps() < 10)
-      resolveCollisions(cur);
+  // Create all possible splits
+  for(Particle * cur : particles)
+    generateResSplits(cur);
 
   // Merge particles that are the same
   for(Particle * cur : particles)
     mergeSimilarParticles(cur);
 
-  // removal of dead particles & adding new
-  removeDeadParticles(); //<--------------------------------- Is not working correctly
-
-  // DBUG CHECK
-  for(Particle * cur : particles)
-    assert(cur->isAlive());
-
-
-
+  // Clean up
+  removeDeadParticles();
   addNewParticles();
+
+
+  // Resolve all collision that occur soon
+  for(Particle * cur: particles)
+    if(cur->getCollisionSteps() < FUTURE_VISION)
+      resolveCollisions(cur);
+
+
+
 
   // Remakes the kd tree
   particle_kdtree.update(particles, *bbox);
@@ -491,7 +485,7 @@ void ParticleSystem::generateResSplits(Particle * &cur){
   // Create new particles
   for(glm::vec3 pos : new_positions){
 
-    Particle * s = new Particle(
+    Particle * s = createParticle(
       pos,  // WARNING THIS MIGHT NEED TO CHANGE
       pos, 
       cur->getCenter(), 
@@ -503,6 +497,7 @@ void ParticleSystem::generateResSplits(Particle * &cur){
     newParticles.push_back(s);
 
   }
+
 }
 
 void ParticleSystem::particleSplit(Particle * &p,
@@ -1338,7 +1333,7 @@ void ParticleSystem::createDebugParticle(){
 
 
   // default constructor
-  Particle * p = new Particle(
+  Particle * p = createParticle(
       newPos,                     // Position     
       newPos,                  // OldPosition
       cursor,                  // CenterPos
