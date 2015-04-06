@@ -261,6 +261,9 @@ void ParticleSystem::collisionDetection(Particle * p){
   hitTriangle = root->rayHit(r,0,1000,h);
 
   // We didnt hit anything in the scene ( travel forever)
+
+  // Case 1) Corner hit
+  // Case 2) Bug
   if(!hitTriangle)
     assert(false);
 
@@ -351,17 +354,17 @@ void ParticleSystem::resolveCollisions(Particle* &p){
   // Gareneteee that we hit just this timestep
   // Change the direction of our particle & backstep to hitting wall
 
-  // Debug _________________________________
   double time_until_impact = h.getT();
-  assert(time_until_impact >= 0);
-  time_until_impact = -1 * TIME_STEP;
-  // _______________________________________
+  assert( h.getT() >= 0 );
 
   glm::vec3 old = p->getOldPos();
   glm::vec3 dir = p->getDir();
+
   glm::vec3 impactPos(old+(dir*(float)time_until_impact)*VELOCITY_OF_MEDIUM);
+
   glm::vec3 mir_dir = MirrorDirection( h.getNormal() , p->getDir() );
   mir_dir = mir_dir * (float)(-1.0);
+
   float radius = glm::distance(p->getCenter(), impactPos);
   p->setCenter(impactPos + mir_dir * radius);
 
@@ -372,6 +375,7 @@ void ParticleSystem::resolveCollisions(Particle* &p){
   // Sanity Check
   p->setWatt( (1 - absorb_ratio ) * p->getWatt() );                           // Math Review Required
   p->incIter();
+  p->setPos(old); // Don't move when we bounce
 
   // Finding new collision
   collisionDetection(p);
