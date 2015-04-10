@@ -296,13 +296,19 @@ void ParticleSystem::setupParticles(){
      color = glm::vec4(sum, sum, sum, 1);
       
     
-    }
+    }//typesend
 
 
     // DEBUG///////////////////////////////////////////////////////////////////
     // This code causes the animation to stop if we encounter a "free-particle"
     // a particle without having to hit any surface in the open.
-    // DEBUG///////////////////////////////////////////////////////////////////
+
+    if(part->getCollisionSteps() == (int) pow(10,6) ){
+      color = glm::vec4(1,0,0,1);
+      std::cout << "Free Particle Caught in Code"<< std::endl;
+      args->animate = false;
+    }
+    // END /////////////////////////////////////////////////////////////////////
     
     particle_verts.push_back(VBOPosNormalColor(pos,normal,color));
   

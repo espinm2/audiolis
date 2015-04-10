@@ -127,13 +127,13 @@ void ParticleSystem::update(){
   for(Particle * cur : particles)
     moveParticle(cur);
 
-  // Create all possible splits
+  // // Create all possible splits
   // for(Particle * cur : particles)
-    // generateResSplits(cur);
+  //   generateResSplits(cur);
 
   // Merge particles that are the same
-  for(Particle * cur : particles)
-    mergeSimilarParticles(cur);
+  // for(Particle * cur : particles)
+  //   mergeSimilarParticles(cur);
 
   // Clean up
   removeDeadParticles();
@@ -144,8 +144,6 @@ void ParticleSystem::update(){
   for(Particle * cur: particles)
     if(cur->getCollisionSteps() < FUTURE_VISION)
       resolveCollisions(cur);
-
-
 
 
   // Remakes the kd tree
@@ -271,8 +269,11 @@ void ParticleSystem::collisionDetection(Particle * p){
 
   // Case 1) Corner hit
   // Case 2) Bug
-  if(!hitTriangle)
-    assert(false);
+  if(!hitTriangle){
+    p->setCollisionSteps((int)pow(10,6)); // We do this so that we can debug
+    return;
+  }
+
 
   // We hit something, 
   double time_until_collision = h.getT();
@@ -285,8 +286,11 @@ void ParticleSystem::collisionDetection(Particle * p){
 void ParticleSystem::addNewParticles(){
 
   // Add into the main vector those new particles yet added
-  for( unsigned int i = 0; i < newParticles.size(); i++)
-    particles.push_back(newParticles[i]);
+  for( Particle * p: newParticles )
+    if(p->isAlive())
+      particles.push_back(p);
+    else
+      delete p;
 
   // Clear for next iteration
   newParticles.clear();
@@ -302,41 +306,28 @@ void ParticleSystem::removeDeadParticles(){
       // Keep if 0, else delete
       if(particles[i]->isDead()){
 
+        // there is stuff to push off
+        if(i != particles.size()-1){
+
+          // Pop off back of vector to fill the gap
+          delete particles[i];
+          particles[i] = particles.back();
+          particles.pop_back();
+          // No garentee that this isnt dead
+          i--;
+
+        }else{
+
+          // Just delete the last element, nothing need be poped
+          delete particles[i];
+          particles.pop_back();
+
+        }
+
         removed++;
 
-          if(!newParticles.empty()){
-
-              // Put in new particle to fill gap
-              delete particles[i];
-              particles[i] = newParticles.back();
-              newParticles.pop_back();
-
-          }else{
-
-              // there is stuff to push off
-              if(i != particles.size()-1){
-
-                // Pop off back of vector to fill the gap
-                delete particles[i];
-                particles[i] = particles.back();
-                particles.pop_back();
-                // No garentee that this isnt dead
-                i--;
-
-              }else{
-
-                // Just delete the last element, nothing need be poped
-                delete particles[i];
-                particles.pop_back();
-
-              }
-          }
       }
   }
-
-  // if( removed > 0)
-  //   std::cout << "Removed " << removed << " Particles this iteration\n";
-
 }
 
 // ╔═╗╔═╗╦═╗╔╦╗╦╔═╗╦  ╔═╗  ╔╦╗╔═╗╦  ╦╔═╗╔╦╗╔═╗╔╗╔╔╦╗
@@ -482,6 +473,8 @@ void ParticleSystem::generateResSplits(Particle * &cur){
 
   if( !mask.resSpit( new_positions )){ return; } // skip no splits occur
 
+  std::cout << "Splits created " << new_positions.size() << std::endl;
+
   // Create new particles
   for(glm::vec3 pos : new_positions){
 
@@ -497,6 +490,7 @@ void ParticleSystem::generateResSplits(Particle * &cur){
     newParticles.push_back(s);
 
   }
+
 
 }
 
@@ -521,7 +515,7 @@ void ParticleSystem::particleSplit(Particle * &p,
     // For each calculated pos, make particle
     for(unsigned int i = 0; i < newPart.size(); i++){
     
-      Particle * s = new Particle(
+      Particle * s = createParticle(
           newPart[i],                                   // Position
           newPart[i],                                   // OldPosition
           p->getCenter(),                               // CenterPos
@@ -679,8 +673,9 @@ void ParticleSystem::mergeSimilarParticles(Particle * &cur){
   if(cur->isDead()) { return; }
 
   // Paramaters that I will use for the gathering of particles
-  float gather_distance = CENTIMETER;
+  float gather_distance = RADIUS_PARTICLE_WAVE * 2.5;
   float gather_angle    = M_PI / 16.0; 
+  float merge_distance  = RADIUS_PARTICLE_WAVE * 0.2; 
 
   // Gather Particles around cur from our kd_tree 
   PartPtrVec merge_pending_particles;
@@ -689,16 +684,44 @@ void ParticleSystem::mergeSimilarParticles(Particle * &cur){
   particle_kdtree.GatherParticles(cur,gather_distance, gather_angle,
     merge_pending_particles);
 
-  // Kill all gathered particles
-  for(Particle * pending: merge_pending_particles) {
+  // Kill all gathered particles that fall witin some range
+  for(Particle * pending: merge_pending_particles) 
+    if( glm::distance(cur->getOldPos(), pending->getOldPos()) < merge_distance )
+      pending->kill();
 
-    pending->kill();  // Remove it because we already have a similar particle
+  // Check the newParticles vector for similar particles
+  for(Particle * pending: newParticles) 
+    if( glm::distance(cur->getOldPos(), pending->getOldPos()) < merge_distance )
+      pending->kill();
 
-    // DEBUG CHECK ___________________________________________________________
-    float dist = glm::distance(cur->getOldPos(), pending->getOldPos());
-    assert( dist <=  gather_distance );
 
-  }
+
+  // ======================================================
+  // Old Function , Resetting to old 
+
+  // if(cur->isDead()) { return; }
+
+  // // Paramaters that I will use for the gathering of particles
+  // float gather_distance = CENTIMETER;
+  // float gather_angle    = M_PI / 16.0; 
+
+  // // Gather Particles around cur from our kd_tree 
+  // PartPtrVec merge_pending_particles;
+
+  // // GATHER our particles from our kd tree
+  // particle_kdtree.GatherParticles(cur,gather_distance, gather_angle,
+  //   merge_pending_particles);
+
+  // // Kill all gathered particles
+  // for(Particle * pending: merge_pending_particles) {
+
+  //   pending->kill();  // Remove it because we already have a similar particle
+
+  //   // DEBUG CHECK __________________________________________________________
+  //   float dist = glm::distance(cur->getOldPos(), pending->getOldPos());
+  //   assert( dist <=  gather_distance );
+
+  // }
 
 }
 
@@ -1330,6 +1353,8 @@ void ParticleSystem::createDebugParticle(){
   glm::vec3 newPos = 
     cursor + ( (float) RADIUS_INIT_SPHERE * 2  ) * directionToTarget;
 
+  glm::vec3 oldPos = 
+    cursor + ( (float) RADIUS_INIT_SPHERE ) * directionToTarget;
 
 
   // default constructor
