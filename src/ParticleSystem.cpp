@@ -132,8 +132,8 @@ void ParticleSystem::update(){
   //   generateResSplits(cur);
 
   // Merge particles that are the same
-  // for(Particle * cur : particles)
-  //   mergeSimilarParticles(cur);
+  for(Particle * cur : particles)
+    mergeSimilarParticles(cur);
 
   // Clean up
   removeDeadParticles();
@@ -270,10 +270,12 @@ void ParticleSystem::collisionDetection(Particle * p){
   // Case 1) Corner hit
   // Case 2) Bug
   if(!hitTriangle){
-    p->setCollisionSteps((int)pow(10,6)); // We do this so that we can debug
-    return;
-  }
 
+    // For debugs
+    // p->setCollisionSteps((int)pow(10,6)); // We do this so that we can debug
+    assert(false);
+
+  }
 
   // We hit something, 
   double time_until_collision = h.getT();
@@ -417,11 +419,18 @@ void ParticleSystem::resolveCollisions(Particle* &p){
 
   glm::vec3 impactPos(old+(dir*(float)time_until_impact)*VELOCITY_OF_MEDIUM);
 
-  glm::vec3 mir_dir = MirrorDirection( h.getNormal() , p->getDir() );
-  mir_dir = mir_dir * (float)(-1.0);
+  // Setting mirror direction
+  glm::vec3 mir_dir;
+  double ang = glm::angle(( dir * -1.0f ) ,h.getNormal());
+  // We set this to be robut to in normal calculations
+  if(ang > 90.0 ){ 
+    mir_dir = MirrorDirection( h.getNormal() * -1.0f , p->getDir() );
+  }else{
+    mir_dir = MirrorDirection( h.getNormal() , p->getDir() );
+  }
 
   float radius = glm::distance(p->getCenter(), impactPos);
-  p->setCenter(impactPos + mir_dir * radius);
+  p->setCenter(impactPos + (mir_dir * -1.0f) * radius);
 
   // Setting sound properties
   double absorb_ratio = absorbFunc(h.getMaterial(), p->getFreq());

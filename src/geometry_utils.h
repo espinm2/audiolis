@@ -24,7 +24,7 @@ typedef std::vector<std::vector<double>> doubleMatrix;
 // The appropriate value for epsilon depends on the precision of
 // the floating point calculations on your hardware **AND** on the
 // overall dimensions of the scene and your camera projection matrix.
-#define EPSILON 0.0001
+#define EPSILON 0.00001
 #define square(x) ((x)*(x))
 
 // ╔═╗╦═╗╔═╗╔╦╗╔═╗╔╦╗╦ ╦╔═╗╔═╗
