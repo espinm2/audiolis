@@ -103,7 +103,12 @@ void ParticleSystem::load(){
 
   ITERATION             = 0;
 
-  // Debug phase
+  // Tunable parameters
+  GATHER_DISTANCE       = RADIUS_PARTICLE_WAVE * 2.5; // far away we concider gathers
+  GATHER_ANGLE          = M_PI / 16.0;                // angle we gather as thresh
+  MERGE_DISTANCE        = RADIUS_PARTICLE_WAVE * 0.2; // when we concider same particle
+
+  // Debug phase 
   // debug();
 
   // Profiler stuff
@@ -117,36 +122,47 @@ void ParticleSystem::load(){
 
 void ParticleSystem::update(){
 
-  // Clear the new positions
+  // Use only old positions, clear new ones
   for(Particle * cur : particles){
     cur->setOldPos(cur->getPos());
     cur->setPos((glm::vec3)NULL);
   }
 
-  // Move all the partilces in the system up a timestep
-  for(Particle * cur : particles)
-    moveParticle(cur);
 
-  // // Create all possible splits
-  // for(Particle * cur : particles)
-  //   generateResSplits(cur);
+  // Gather, Merge, and ResSplits
+  for(Particle * cur : particles){
 
-  // Merge particles that are the same
-  for(Particle * cur : particles)
-    mergeSimilarParticles(cur);
+    // Leave the dead in peace
+    if(cur->isDead()) { return; }
+
+    // Gather the particles I will use for mask fitting
+    PartPtrVec gathered_particles;        
+    particle_kdtree.GatherParticles(cur, 
+    GATHER_DISTANCE, GATHER_ANGLE, gathered_particles);
+
+    // Handle merges
+    mergeSimilarParticles(cur,gathered_particles);
+
+    // Handle splits
+    generateResSplits(cur,gathered_particles);
+
+
+  }//gather,merge,resSplits
 
   // Clean up
   removeDeadParticles();
   addNewParticles();
 
+  // Move all the partilces in the system up a timestep
+  for(Particle * cur : particles)
+    moveParticle(cur);
 
-  // Resolve all collision that occur soon
+  // Resolve all collision that occur as a result
   for(Particle * cur: particles)
     if(cur->getCollisionSteps() < FUTURE_VISION)
       resolveCollisions(cur);
 
-
-  // Remakes the kd tree
+  // Remakes the kd tree for particles
   particle_kdtree.update(particles, *bbox);
 
 }
@@ -288,6 +304,7 @@ void ParticleSystem::collisionDetection(Particle * p){
 void ParticleSystem::addNewParticles(){
 
   // Add into the main vector those new particles yet added
+  std::cout << "Adding " << newParticles.size() << std::endl;
   for( Particle * p: newParticles )
     if(p->isAlive())
       particles.push_back(p);
@@ -451,44 +468,33 @@ void ParticleSystem::resolveCollisions(Particle* &p){
 // ╩╚═╚═╝╚═╝╚═╝╩═╝╚═╝ ╩ ╩╚═╝╝╚╝  ╚═╝╩  ╩ ╩ ╚═╝
 
 
-void ParticleSystem::generateResSplits(Particle * &cur){
+void ParticleSystem::generateResSplits(Particle * &cur, 
+  PartPtrVec & gathered_particles){
 
  /* Input : Particle ptr
   * Output: None
   * Asumpt: That particle exisit
   * SideEf: Adds to new particle vector
+  * Opt!  : If gather_particles is too large use linkedlist
   */
 
-  assert(cur!= NULL && cur->isAlive());
-
-  // Properties we will use for gathering and merging
-  double gather_distance = RADIUS_PARTICLE_WAVE * 2.5;
-  double gather_angle    = M_PI / 16.0; 
-
-  // temprary vectors
-  PartPtrVec gathered_particles;           // temp particle holders
   std::vector < glm::vec3 > new_positions; // used incase we split
 
-  // requirment for mask fitting
-  gathered_particles.push_back(cur);
+  // maskfitting requires center be at index 0
+  PartPtrVec::iterator it = gathered_particles.begin();
+  gathered_particles.insert(it, cur );
 
-  // Gather the particles I will use for mask fitting
-  particle_kdtree.GatherParticles(cur, 
-  gather_distance, gather_angle, gathered_particles);
 
-  // Generate my mask
-  Mask mask;
-  generateMask(gathered_particles, mask);
+  // Generate fit mask to these points
+  Mask mask; generateMask(gathered_particles, mask);
 
-  if( !mask.resSpit( new_positions )){ return; } // skip no splits occur
-
-  std::cout << "Splits created " << new_positions.size() << std::endl;
+  if( !mask.resSpit( new_positions )){ return; } // return if no splits
 
   // Create new particles
   for(glm::vec3 pos : new_positions){
 
     Particle * s = createParticle(
-      pos,  // WARNING THIS MIGHT NEED TO CHANGE
+      (glm::vec3) NULL, 
       pos, 
       cur->getCenter(), 
       cur->getWatt() / (double)(SPLIT_AMOUNT + 1.0), 
@@ -499,7 +505,6 @@ void ParticleSystem::generateResSplits(Particle * &cur){
     newParticles.push_back(s);
 
   }
-
 
 }
 
@@ -676,61 +681,17 @@ Particle * ParticleSystem::particleVectorMerge(std::vector<Particle *> &vec){
   return newPart;
 }
 
-void ParticleSystem::mergeSimilarParticles(Particle * &cur){
-  // This function will handle all the merging code
-
-  if(cur->isDead()) { return; }
-
-  // Paramaters that I will use for the gathering of particles
-  float gather_distance = RADIUS_PARTICLE_WAVE * 2.5;
-  float gather_angle    = M_PI / 16.0; 
-  float merge_distance  = RADIUS_PARTICLE_WAVE * 0.2; 
-
-  // Gather Particles around cur from our kd_tree 
-  PartPtrVec merge_pending_particles;
-
-  // GATHER our particles from our kd tree
-  particle_kdtree.GatherParticles(cur,gather_distance, gather_angle,
-    merge_pending_particles);
+void ParticleSystem::mergeSimilarParticles(Particle * &cur, PartPtrVec & merge_pending_particles){
 
   // Kill all gathered particles that fall witin some range
-  for(Particle * pending: merge_pending_particles) 
-    if( glm::distance(cur->getOldPos(), pending->getOldPos()) < merge_distance )
+  for(Particle * pending: merge_pending_particles) {
+    if( glm::distance(cur->getOldPos(), pending->getOldPos()) < merge_distance ){
       pending->kill();
 
-  // Check the newParticles vector for similar particles
-  for(Particle * pending: newParticles) 
-    if( glm::distance(cur->getOldPos(), pending->getOldPos()) < merge_distance )
-      pending->kill();
+      // Clean up on our merge_pending_particle vector ** 
 
-
-
-  // ======================================================
-  // Old Function , Resetting to old 
-
-  // if(cur->isDead()) { return; }
-
-  // // Paramaters that I will use for the gathering of particles
-  // float gather_distance = CENTIMETER;
-  // float gather_angle    = M_PI / 16.0; 
-
-  // // Gather Particles around cur from our kd_tree 
-  // PartPtrVec merge_pending_particles;
-
-  // // GATHER our particles from our kd tree
-  // particle_kdtree.GatherParticles(cur,gather_distance, gather_angle,
-  //   merge_pending_particles);
-
-  // // Kill all gathered particles
-  // for(Particle * pending: merge_pending_particles) {
-
-  //   pending->kill();  // Remove it because we already have a similar particle
-
-  //   // DEBUG CHECK __________________________________________________________
-  //   float dist = glm::distance(cur->getOldPos(), pending->getOldPos());
-  //   assert( dist <=  gather_distance );
-
-  // }
+    }
+  }
 
 }
 
