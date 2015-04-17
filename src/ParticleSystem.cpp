@@ -133,19 +133,18 @@ void ParticleSystem::update(){
   for(Particle * cur : particles){
 
     // Leave the dead in peace
-    if(cur->isDead()) { return; }
+    if(cur->isDead()) { continue; } // To handle dead particles created by merge
 
     // Gather the particles I will use for mask fitting
     PartPtrVec gathered_particles;        
     particle_kdtree.GatherParticles(cur, 
-    GATHER_DISTANCE, GATHER_ANGLE, gathered_particles);
+      GATHER_DISTANCE, GATHER_ANGLE, gathered_particles);
 
-    // Handle merges
-    mergeSimilarParticles(cur,gathered_particles);
+    // Handle merges ( kills particles in gathered_particles vector)
+    mergeSimilarParticles(cur,gathered_particles); 
 
     // Handle splits
     generateResSplits(cur,gathered_particles);
-
 
   }//gather,merge,resSplits
 
@@ -304,7 +303,7 @@ void ParticleSystem::collisionDetection(Particle * p){
 void ParticleSystem::addNewParticles(){
 
   // Add into the main vector those new particles yet added
-  std::cout << "Adding " << newParticles.size() << std::endl;
+  // std::cout << "Adding " << newParticles.size() << std::endl;
   for( Particle * p: newParticles )
     if(p->isAlive())
       particles.push_back(p);
@@ -322,30 +321,31 @@ void ParticleSystem::removeDeadParticles(){
 
   // Removes dead particles from our main vector
   for( unsigned int i = 0 ; i < particles.size(); i++){
-      // Keep if 0, else delete
-      if(particles[i]->isDead()){
+    // Keep if 0, else delete
+    if(particles[i]->isDead()){
+      // std::cout << "Removing Particle " << i << std::endl; 
 
-        // there is stuff to push off
-        if(i != particles.size()-1){
+      // there is stuff to push off
+      if(i != particles.size()-1){
 
-          // Pop off back of vector to fill the gap
-          delete particles[i];
-          particles[i] = particles.back();
-          particles.pop_back();
-          // No garentee that this isnt dead
-          i--;
+        // Pop off back of vector to fill the gap
+        delete particles[i];
+        particles[i] = particles.back();
+        particles.pop_back();
+        // No garentee that this isnt dead
+        i--;
 
-        }else{
+      }else{
 
-          // Just delete the last element, nothing need be poped
-          delete particles[i];
-          particles.pop_back();
-
-        }
-
-        removed++;
+        // Just delete the last element, nothing need be poped
+        delete particles[i];
+        particles.pop_back();
 
       }
+
+      removed++;
+
+    }
   }
 }
 
@@ -506,6 +506,7 @@ void ParticleSystem::generateResSplits(Particle * &cur,
 
   }
 
+  args->animate = false;
 }
 
 void ParticleSystem::particleSplit(Particle * &p,
@@ -685,11 +686,9 @@ void ParticleSystem::mergeSimilarParticles(Particle * &cur, PartPtrVec & merge_p
 
   // Kill all gathered particles that fall witin some range
   for(Particle * pending: merge_pending_particles) {
-    if( glm::distance(cur->getOldPos(), pending->getOldPos()) < merge_distance ){
+    if( glm::distance(cur->getOldPos(), pending->getOldPos()) < MERGE_DISTANCE ){
+      // std::cout << "Triggering Kill Command " << std::endl;
       pending->kill();
-
-      // Clean up on our merge_pending_particle vector ** 
-
     }
   }
 
