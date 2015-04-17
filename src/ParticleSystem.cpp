@@ -506,7 +506,6 @@ void ParticleSystem::generateResSplits(Particle * &cur,
 
   }
 
-  args->animate = false;
 }
 
 void ParticleSystem::particleSplit(Particle * &p,
