@@ -383,8 +383,8 @@ glm::vec3 ParticleSystem::interParticleForce(Particle * & cur, PartPtrVec & part
   // The force that my particle experiences from other particles
   glm::vec3 force(0,0,0);
 
-  double K = 1.0;
-  double REST_LENGTH = 0.01; // 1CM spacing
+  double K = 1.0; // spring strength
+  double REST_LENGTH = 0.01; // 1 CM spacing
 
   // I want to calulcate the force between particles
   for (int i = 0; i < PartPtrVec.size(); ++i) {
@@ -392,17 +392,18 @@ glm::vec3 ParticleSystem::interParticleForce(Particle * & cur, PartPtrVec & part
     // Get the distance
     Particle * p = partv[i];
 
-    // Force from spring  = Kconstant * (where I should be - where I am)
-    double dist = glm::distance(p->getOldPos(), cur->getOldPos());
-    double f = K * (REST_LENGTH - dist)
+    // Force from spring  =-  Kconstant * (where I should be - where I am)
+    double dist = glm::distance( p->getOldPos(), cur->getOldPos() );
+    double displacement = dist - REST_LENGTH; // disp will be negative if we need to repel
+    float  f = -1.0* K * displacement;
+
+    // Postive forces push me away, negative push me inward
+    if( f > 0.0 ){ continue; }
 
     // Convert into 3D vector by dir * force
-    force +=  ( (float)f * (p->getOldPos() - cur->getOldPos()) ) 
+    force +=  ( f * glm::normalize( (cur->getOldPos() - p->getOldPos() );
     
   }
-
-  // Optional normalization
-  force = glm::normalize(force);
 
   return force;
 
@@ -1557,18 +1558,20 @@ void ParticleSystem::simulatedannealing(
  *         state. Enforces the spacial constraints.
  */
 
-  //  get all force felt by this particle
+  //  get all force felt by this particle from nearby particles
   glm::vec3 force  = interParticleForce(p,gathered);
-
-
+  double force_mag = glm::length(force);
 
   // apply this force
   glm::vec3 newPos =  p->getOldPos() + force;
- 
-  // 
 
+  // now see the diffrence
+  // glm::vec3 new_force  = interParticleForce(p,gathered);
+  // double new_force_mag = glm::length(new_force);
 
-
+  // LATER, CALL REC
+  // double change = new_force_mag - force_mag;
+  // simulatedannealingAux(p,gathered,change);
 
 
 }
@@ -1578,6 +1581,11 @@ void ParticleSystem::simulatedannealingAux(
 /*! \brief This function will move particles until they reach a comfortable
  *         state. Enforces the spacial 
  */
+
+  // If there was not significant change we are done
+  if( -0.0001 < prev && prev < 0.0001 ){return;}
+
+
 
 
 }
