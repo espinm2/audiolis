@@ -46,81 +46,38 @@ void Mask::renderCost( std::vector<VBOPosNormalColor> & cost_verts){
 }//func
 
 
+double maskArea(){
+  
+  // Purpose:
+  //   Returns the area that this mask encompasses this is used to find 
+  //   out how many particles we expect within the space
+  //  Args:
+  //    None
+  
+  assert(false);
+  return 0.0;
+
+}
 
 bool Mask::resSpit(std::vector<glm::vec3> & newPartPos){
+  // Purpose:
+  //  Returns true or false if the current space needs to split
+  //  if true it will also add new particle positions to  newPartPos 
+  //  Args:
+  //    newPartPos : a vector where we keep points, passed by ref
 
-  bool split_happened = false;
-
-  for( int i = 0; i < maskParticles.size(); i++ ){
+  // TODO IMPLEMENT THIS FUNCTION TO ALLOW FOR SPITS 
+  // THAT CAN SLIDE BETWEEN EACHOTHER !!!
+  assert(false);
   
-    Particle * curOuter = maskParticles[i];
-
-    if(curOuter == NULL){
-      continue;
-
-    }
   
-    float dist_center_outer = glm::distance(curOuter->getOldPos(), maskCenter->getOldPos());
+  // Code might be useful for projecting back on the scene
+  // // Project this new particle back onto the sphere
+  // float radius = glm::distance(maskCenter->getCenter(), maskCenter->getOldPos());
+  // glm::vec3 newDir = glm::normalize(posNew - maskCenter->getCenter());
+  // posNew = maskCenter->getCenter() + radius * newDir;
 
-    // if that edge is too streched out
-    if( dist_center_outer > 2 * RADIUS_PARTICLE_WAVE  ){
-
-      // Average both vectors postions
-      glm::vec3 posA = maskCenter->getOldPos();
-      glm::vec3 posB = curOuter->getOldPos();
-      glm::vec3 posNew = ((float) 0.5 ) * (posA + posB);
-
-      // Project this new particle back onto the sphere
-      float radius = glm::distance(maskCenter->getCenter(), maskCenter->getOldPos());
-      glm::vec3 newDir = glm::normalize(posNew - maskCenter->getCenter());
-      posNew = maskCenter->getCenter() + radius * newDir;
-
-      newPartPos.push_back(posNew);
-      split_happened = true;
-    }
-      
-  } // for each edge
-
-  return split_happened;
-
-  // Blow if working resSplit for projection
-  /*
-  bool split_happened = false;
-
-  for( int i = 0; i < maskParticles.size(); i++ ){
-  
-    Particle * curOuter = maskParticles[i];
-
-    if(curOuter == NULL){
-      continue;
-
-    }
-  
-    // if that edge is too streched out
-    if(costVector[i] > RADIUS_PARTICLE_WAVE * 1000 ){
-
-
-      // Average both vectors postions
-      glm::vec3 posA = maskCenter->getOldPos();
-      glm::vec3 posB = curOuter->getOldPos();
-      glm::vec3 posNew = ((float) 0.5 ) * (posA + posB);
-      glm::vec3 center = maskCenter->getCenter();
-
-      // Get direction from the center
-      glm::vec3 dirNew = glm::normalize(posNew - center);
-    
-      // Project on the imaginary sphere
-      float dist = glm::distance(posA, center);
-      posNew = center + dirNew * dist;
-
-      newPartPos.push_back(posNew);
-      split_happened = true;
-    }
-      
-  } // for each edge
-
-  return split_happened;
-  */
+  return false;
 
 }
 

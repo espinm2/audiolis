@@ -28,6 +28,7 @@ class Mask{
     const Particle * getMaskParticle(int i){ return maskParticles[i];}
     const int getCost(int i){ return costVector[i];}
     const int size(){ return size_of_mask; }
+    double maskArea(); // TODO
 
     // Standard setters
     void setCenter( Particle * p){ maskCenter = p; }

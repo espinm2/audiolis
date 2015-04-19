@@ -101,9 +101,15 @@ class ParticleSystem {
     void resolveCollisions(Particle * &cur);
     void removeDeadParticles();
     void addNewParticles(); // adds new particles to main vector
+    void simulatedannealing(Particle * p, PartPtrVec & gathered);
+    void simulatedannealingAux(Particle * p, PartPtrVec & gathered, double prev);
+    
 
     // New Update Function Code (tested)
     void moveParticle(Particle * & cur); // moves a particle
+
+    // Freeflow code (NEW)
+    glm::vec3 interParticleForce(Particle * & cur, PartPtrVec & partv);
 
 
     // Merge helper functions
@@ -140,7 +146,6 @@ class ParticleSystem {
     void drawDelusionalParticles();
     void drawDelusionalConnections();
 
-
     // Memebers Borrowed from GLCanvas
     ArgParser * args;
     BoundingBox * bbox;
@@ -169,6 +174,8 @@ class ParticleSystem {
     unsigned int      SPLIT_AMOUNT; // how many created upon splits, excluding center
     
     unsigned int      ITERATION;
+    unsigned int      PARTICLES_PER_M;
+
 
     // Gather particles
     double GATHER_DISTANCE; // How far away we gather particles for splits

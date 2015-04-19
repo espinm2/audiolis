@@ -20,7 +20,6 @@ bool compare_z_pos(Triangle * a, Triangle * b){
   return a->getCenter().z < b->getCenter().z; }
 
 
-
 class  BVHNode {
 
   public:

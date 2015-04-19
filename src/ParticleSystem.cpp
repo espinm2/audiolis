@@ -108,6 +108,9 @@ void ParticleSystem::load(){
   GATHER_ANGLE          = M_PI / 16.0;                // angle we gather as thresh
   MERGE_DISTANCE        = RADIUS_PARTICLE_WAVE * 0.2; // when we concider same particle
 
+
+  PARTICLES_PER_M       = 100;
+
   // Debug phase 
   // debug();
 
@@ -128,8 +131,8 @@ void ParticleSystem::update(){
     cur->setPos((glm::vec3)NULL);
   }
 
-
-  // Gather, Merge, and ResSplits
+  /*  DELETE THIS LINE
+  // Gather, Merge, and ResSplits 
   for(Particle * cur : particles){
 
     // Leave the dead in peace
@@ -145,12 +148,28 @@ void ParticleSystem::update(){
 
     // Handle splits
     generateResSplits(cur,gathered_particles);
+  }//gather,merge,resSplits */
 
-  }//gather,merge,resSplits
 
-  // Clean up
+  // Clean up phase
   removeDeadParticles();
   addNewParticles();
+
+  // Move particles horzitonally
+  for(Particle * cur : particles){
+
+    // Leave the dead in peace
+    if(cur->isDead()) { continue; } // To handle dead particles created by merge
+
+    // Gather the particles I will use for mask fitting
+    PartPtrVec gathered_particles;        
+    particle_kdtree.GatherParticles(cur, 
+      GATHER_DISTANCE, GATHER_ANGLE, gathered_particles);
+
+    // simulated annealing
+    simulatedannealing(cur, gathered_particles);
+
+  }
 
   // Move all the partilces in the system up a timestep
   for(Particle * cur : particles)
@@ -352,6 +371,42 @@ void ParticleSystem::removeDeadParticles(){
 // ╔═╗╔═╗╦═╗╔╦╗╦╔═╗╦  ╔═╗  ╔╦╗╔═╗╦  ╦╔═╗╔╦╗╔═╗╔╗╔╔╦╗
 // ╠═╝╠═╣╠╦╝ ║ ║║  ║  ║╣   ║║║║ ║╚╗╔╝║╣ ║║║║╣ ║║║ ║ 
 // ╩  ╩ ╩╩╚═ ╩ ╩╚═╝╩═╝╚═╝  ╩ ╩╚═╝ ╚╝ ╚═╝╩ ╩╚═╝╝╚╝ ╩ 
+
+  // Experimental
+glm::vec3 ParticleSystem::interParticleForce(Particle * & cur, PartPtrVec & partv){
+  // Purpose:
+  //    This function will return the force a particle feels from those around it
+  // Input:
+  //    cur -> is our current particle we are concidering the force for
+  //    partv -> is the particles near it that belong to the same wave
+
+  // The force that my particle experiences from other particles
+  glm::vec3 force(0,0,0);
+
+  double K = 1.0;
+  double REST_LENGTH = 0.01; // 1CM spacing
+
+  // I want to calulcate the force between particles
+  for (int i = 0; i < PartPtrVec.size(); ++i) {
+
+    // Get the distance
+    Particle * p = partv[i];
+
+    // Force from spring  = Kconstant * (where I should be - where I am)
+    double dist = glm::distance(p->getOldPos(), cur->getOldPos());
+    double f = K * (REST_LENGTH - dist)
+
+    // Convert into 3D vector by dir * force
+    force +=  ( (float)f * (p->getOldPos() - cur->getOldPos()) ) 
+    
+  }
+
+  // Optional normalization
+  force = glm::normalize(force);
+
+  return force;
+
+}
 
 void ParticleSystem::moveParticle(Particle* &p){
  /* Input : Particle ptr
@@ -681,7 +736,8 @@ Particle * ParticleSystem::particleVectorMerge(std::vector<Particle *> &vec){
   return newPart;
 }
 
-void ParticleSystem::mergeSimilarParticles(Particle * &cur, PartPtrVec & merge_pending_particles){
+void ParticleSystem::mergeSimilarParticles(Particle * &cur, 
+  PartPtrVec & merge_pending_particles){
 
   // Kill all gathered particles that fall witin some range
   for(Particle * pending: merge_pending_particles) {
@@ -1037,7 +1093,8 @@ circle_points_on_sphere
 // ╠═╝╠═╣╠╦╝ ║ ║║  ║  ║╣   ╚═╗║╣ ╠═╣╠╦╝║  ╠═╣║╣ ╚═╗
 // ╩  ╩ ╩╩╚═ ╩ ╩╚═╝╩═╝╚═╝  ╚═╝╚═╝╩ ╩╩╚═╚═╝╩ ╩╚═╝╚═╝
 
-void ParticleSystem::linearGatherParticles(Particle * center, double r, double a, PartPtrVec & result){
+void ParticleSystem::linearGatherParticles(Particle * center, 
+  double r, double a, PartPtrVec & result){
 
   // Old Gather code
   for(unsigned int i = 0; i < particles.size(); i++){
@@ -1069,7 +1126,8 @@ bool ParticleSystem::linearDuplicateSearch(const glm::vec3 & pos, double th){
   return false;
 }
 
-bool ParticleSystem::linearNewDuplicateSearch(const glm::vec3 & pos, const PartPtrVec & newVec , double th){
+bool ParticleSystem::linearNewDuplicateSearch(const glm::vec3 & pos, 
+  const PartPtrVec & newVec , double th){
 
    for( Particle * p : newVec)
      if ( glm::distance(p->getOldPos(), pos ) < th)
@@ -1486,4 +1544,40 @@ void ParticleSystem::debug(){
   //   std::cout << "We hit our goal" << std::endl;
   // else
   //   std::cout << "We missed our goal" << std::endl;
+}
+
+
+// ╔═╗╔╗╔╔╗╔╔═╗╔═╗╦  ╦╔╗╔╔═╗  
+// ╠═╣║║║║║║║╣ ╠═╣║  ║║║║║ ╦  
+// ╩ ╩╝╚╝╝╚╝╚═╝╩ ╩╩═╝╩╝╚╝╚═╝  
+
+void ParticleSystem::simulatedannealing(
+  Particle * p, PartPtrVec & gathered){
+/*! \brief This function will move particles until they reach a comfortable
+ *         state. Enforces the spacial constraints.
+ */
+
+  //  get all force felt by this particle
+  glm::vec3 force  = interParticleForce(p,gathered);
+
+
+
+  // apply this force
+  glm::vec3 newPos =  p->getOldPos() + force;
+ 
+  // 
+
+
+
+
+
+}
+
+void ParticleSystem::simulatedannealingAux(
+  Particle * p, PartPtrVec & gathered, double prev){
+/*! \brief This function will move particles until they reach a comfortable
+ *         state. Enforces the spacial 
+ */
+
+
 }
