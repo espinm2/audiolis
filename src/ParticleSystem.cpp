@@ -1,6 +1,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/vector_angle.hpp>
 #include <iostream>
+#include <stdio.h>
 #include <cmath>
 #include <limits>
 #include <float.h>
@@ -109,7 +110,8 @@ void ParticleSystem::load(){
   MERGE_DISTANCE        = RADIUS_PARTICLE_WAVE * 0.2; // when we concider same particle
 
 
-  PARTICLES_PER_M       = 100;
+  PARTICLES_PER_M       = 100; // (Not used )
+  RELAXATION_MERGE_TRIGGER = 10; // how many iterations of annealing before we merge
 
   // Debug phase 
   // debug();
@@ -123,7 +125,42 @@ void ParticleSystem::load(){
  }
 }
 
-void ParticleSystem::update(){
+void ParticleSystem::mergeGlobalParticles(double dist ){
+
+  // Move particles horzitonally
+  for(Particle * cur : particles){
+
+    // Leave the dead in peace
+    if(cur->isDead()) { continue; } // To handle dead particles created by merge
+
+    // Gather the particles I will kill
+    PartPtrVec gathered_particles;        
+    particle_kdtree.GatherParticles(cur, 
+      GATHER_DISTANCE, GATHER_ANGLE, gathered_particles);
+
+    // Kill all gathered particles that fall witin some range
+    for(Particle * pending: gathered_particles ) 
+      if( glm::distance(cur->getOldPos(), pending->getOldPos()) < dist )
+        pending->kill();
+
+  }//for
+}
+
+
+void ParticleSystem::recompute_collisions(){
+  // This function will step through each particle and recompute its collisions
+  // Assumption all particles are alive at this phase
+
+  printf("recompute_collisions()");
+  // recompute collisions
+  for(Particle * cur : particles)
+    collisionDetection(cur);
+}
+
+void ParticleSystem::annealing(unsigned int iterations, double prevForce){
+  // This function will put the entire system into a relaxation mode
+
+  printf("annealing(%u,%f)\n;", iterations, prevForce);
 
   // Use only old positions, clear new ones
   for(Particle * cur : particles){
@@ -131,26 +168,9 @@ void ParticleSystem::update(){
     cur->setPos((glm::vec3)NULL);
   }
 
-  /*  DELETE THIS LINE
-  // Gather, Merge, and ResSplits 
-  for(Particle * cur : particles){
-
-    // Leave the dead in peace
-    if(cur->isDead()) { continue; } // To handle dead particles created by merge
-
-    // Gather the particles I will use for mask fitting
-    PartPtrVec gathered_particles;        
-    particle_kdtree.GatherParticles(cur, 
-      GATHER_DISTANCE, GATHER_ANGLE, gathered_particles);
-
-    // Handle merges ( kills particles in gathered_particles vector)
-    mergeSimilarParticles(cur,gathered_particles); 
-
-    // Handle splits
-    generateResSplits(cur,gathered_particles);
-  }//gather,merge,resSplits */
-
-
+  // Used to know when to stop calling annealing
+  double total_forces = 0.0;
+  bool   merge_triggered  = false;
 
   // Move particles horzitonally
   for(Particle * cur : particles){
@@ -163,29 +183,87 @@ void ParticleSystem::update(){
     particle_kdtree.GatherParticles(cur, 
       GATHER_DISTANCE, GATHER_ANGLE, gathered_particles);
 
-    // simulated annealing
-    simulatedannealing(cur, gathered_particles);
+    // try to relax the particle
+    double f = simulatedannealing(cur, gathered_particles);
+    total_forces += f; 
 
     // Handle merges ( kills particles in gathered_particles vector)
-    if(cur->getIter() % 20 == 0 && cur->getIter() > 0){
+    if( iterations % RELAXATION_MERGE_TRIGGER == 0 
+      && iterations > 0){
       // std::cout << "Merging" << std::endl;
       mergeSimilarParticles(cur,gathered_particles); 
+      merge_triggered = true;
     }
+  }//for
 
+  // Remove particles we killed any this turn
+  if(merge_triggered)
+    removeDeadParticles();
+
+  // Check if we have to keep trying annealing
+  double changeForce  = fabs( prevForce - total_forces );
+
+  if(changeForce > 0.01  && total_forces != 0.0 ){
+    annealing(iterations+1,changeForce);
+  } else{
+    // Merge particles more
+    mergeGlobalParticles(MERGE_DISTANCE*2.0); 
+    removeDeadParticles();
+
+    recompute_collisions(); // Will force all particles trajctories to be fixed
   }
+}
+
+
+void ParticleSystem::update(){
+
+  // Use only old positions, clear new ones
+  for(Particle * cur : particles){
+    cur->setOldPos(cur->getPos());
+    cur->setPos((glm::vec3)NULL);
+  }
+
+  // Gather, Merge, and ResSplits 
+  for(Particle * cur : particles){
+
+    // Leave the dead in peace
+    if(cur->isDead()) { continue; } // To handle dead particles created by merge
+
+    // Gather the particles I will use for mask fitting
+    PartPtrVec gathered_particles;        
+    particle_kdtree.GatherParticles(cur, 
+      GATHER_DISTANCE, GATHER_ANGLE, gathered_particles);
+
+    // Handle merges ( kills particles in gathered_particles vector)
+    // Shouldn have  to worry about these anymore
+    // mergeSimilarParticles(cur,gathered_particles); 
+
+    // Handle splits
+    generateResSplits(cur,gathered_particles);
+
+  }//gather,merge,resSplits 
+
+  // How we will check if 
+  bool annealing_required = newParticles.size() > 0;
 
   // Clean up phase
   removeDeadParticles();
   addNewParticles();
+
+
+  // Going to put the system into a loop to find stablization
+  if(annealing_required){
+    annealing(0,10000.0); // set prevForce = 1 so that fabs(1-1234)
+  }
 
   // Move all the partilces in the system up a timestep
   for(Particle * cur : particles)
     moveParticle(cur);
 
   // // Resolve all collision that occur as a result
-  // for(Particle * cur: particles)
-  //   if(cur->getCollisionSteps() < FUTURE_VISION)
-  //     resolveCollisions(cur);
+  for(Particle * cur: particles)
+    if(cur->getCollisionSteps() < FUTURE_VISION)
+      resolveCollisions(cur);
 
   // Remakes the kd tree for particles
   particle_kdtree.update(particles, *bbox);
@@ -202,12 +280,15 @@ void ParticleSystem::moveCursor( const float & dx,
 
 void ParticleSystem::createInitWave(){
   // Testing function to create circle in 3d space
+  printf("createInitWave()\n");
 
   // Using cursor
   double s = RADIUS_INIT_SPHERE;
   
   // Create Box of ranodm points
   for(unsigned int i = 0; i < NUM_INIT_PARTICLES; i++){
+
+    printf("Creating Particle %i\n", i);
     // Find x,y,z
     float x = cursor.x - s/2.0 + (float) args->randomGen.rand(s);
     float y = cursor.y - s/2.0 + (float) args->randomGen.rand(s);
@@ -281,6 +362,11 @@ void ParticleSystem::createInitWave(){
 
   particle_kdtree.update(particles, *bbox);
 
+  // Trigger annaeling to happen
+  printf("Triggering annealing from inside of create function\n");
+  annealing(0,100); 
+  printf("End annealing from inside of create function\n");
+
 }
 
 Particle *  ParticleSystem::createParticle(
@@ -322,6 +408,7 @@ void ParticleSystem::collisionDetection(Particle * p){
   double time_until_collision = h.getT();
 
   int steps = (int) (time_until_collision / TIME_STEP);
+  printf("particle %p : computed steps %d\n",p,steps);
 
   p->setCollisionSteps(steps);
 }
@@ -426,9 +513,6 @@ void ParticleSystem::moveParticle(Particle* &p){
 
   assert(p != NULL && p->isAlive());
 
-  // DEBUG
-  // Update the particle
-  p->setPos(p->getOldPos()); p->incIter(); return;
 
   // Calculate new position
   glm::vec3 oldPos = p->getOldPos();
@@ -1565,7 +1649,7 @@ void ParticleSystem::debug(){
 // ╠═╣║║║║║║║╣ ╠═╣║  ║║║║║ ╦  
 // ╩ ╩╝╚╝╝╚╝╚═╝╩ ╩╩═╝╩╝╚╝╚═╝  
 
-void ParticleSystem::simulatedannealing(
+double ParticleSystem::simulatedannealing(
   Particle * p, PartPtrVec & gathered){
 /*! \brief This function will move particles until they reach a comfortable
  *         state. Enforces the spacial constraints.
@@ -1573,6 +1657,8 @@ void ParticleSystem::simulatedannealing(
 
   //  get all force felt by this particle from nearby particles
   glm::vec3 force  = interParticleForce(p,gathered);
+
+
   glm::vec3 newPos = p->getOldPos() + force;
 
   // Reproject back to sphere
@@ -1580,9 +1666,11 @@ void ParticleSystem::simulatedannealing(
   float radius = glm::distance(p->getOldPos(), p->getCenter());
   newPos = p->getCenter() + (radius * dir );
 
-  // change my direction
+  // change my direction & postition, think of this as a movie function
   p->setDir(dir);
-  p->setOldPos(newPos); // Putting it in oldpos for concideration before move
+  p->setPos(newPos); 
+
+  return glm::length(force);
 
   // Debug
 
@@ -1597,16 +1685,3 @@ void ParticleSystem::simulatedannealing(
 
 }
 
-void ParticleSystem::simulatedannealingAux(
-  Particle * p, PartPtrVec & gathered, double prev){
-/*! \brief This function will move particles until they reach a comfortable
- *         state. Enforces the spacial 
- */
-
-  // If there was not significant change we are done
-  if( -0.0001 < prev && prev < 0.0001 ){return;}
-
-
-
-
-}

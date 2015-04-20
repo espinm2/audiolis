@@ -98,11 +98,13 @@ class ParticleSystem {
     // New Update Function Code (untested)
     void generateResSplits(Particle * &cur, PartPtrVec & gathered);
     void mergeSimilarParticles(Particle * &cur, PartPtrVec & gathered);
+    void mergeGlobalParticles(double dist);
     void resolveCollisions(Particle * &cur);
     void removeDeadParticles();
     void addNewParticles(); // adds new particles to main vector
-    void simulatedannealing(Particle * p, PartPtrVec & gathered);
-    void simulatedannealingAux(Particle * p, PartPtrVec & gathered, double prev);
+    double simulatedannealing(Particle * p, PartPtrVec & gathered);
+    void annealing(unsigned int iterations, double prevForce);
+    void recompute_collisions();
     
 
     // New Update Function Code (tested)
@@ -181,6 +183,9 @@ class ParticleSystem {
     double GATHER_DISTANCE; // How far away we gather particles for splits
     double GATHER_ANGLE;    // Directional distance from us  in RAD
     double MERGE_DISTANCE;  // range 0 to this, such as we merge
+
+
+    unsigned int RELAXATION_MERGE_TRIGGER;
 
     // Used to save profiling output
     std::ofstream output_profiler_str;

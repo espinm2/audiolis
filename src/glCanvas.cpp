@@ -6,6 +6,7 @@
 #include "render_utils.h"
 #include "fpscounter.h"
 #include "ParticleSystem.h"
+#include <stdio.h>
 
 // ========================================================
 // static variables of GLCanvas class
@@ -352,7 +353,9 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       particleSystem->setupVBOs();
       break;
     case 'p': case 'P':
+      printf("Triggered createInitWave\n");
       particleSystem->createInitWave();
+      printf("Left createInitWave\n");
       particleSystem->setupVBOs();
       break;
     case 'z': case 'Z':
