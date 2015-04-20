@@ -19,6 +19,7 @@ public:
     position     = (glm::vec3) NULL; 
     oldPosition  = (glm::vec3) NULL; 
     center       = (glm::vec3) NULL; 
+    direction    = (glm::vec3) NULL;
 
     wattage      = 0;
     freqency     = 0;
@@ -43,13 +44,14 @@ public:
     iterations  = 0;
     _isDead      = false;
     collisionSteps = 0; 
-
+    direction = glm::normalize( old - cen );
   }
 
   // Accessors /////////////////////n///////////////////////////////////////////
   const   glm::vec3 & getPos()        const { return position; }
   const   glm::vec3 & getOldPos()     const { return oldPosition;}
   const   glm::vec3 & getCenter()     const { return center; }
+  const   glm::vec3 & getDir()        const { return direction; }
 
   double  getWatt()                   const { return wattage; }
   double  getFreq()                   const { return freqency; }
@@ -62,13 +64,11 @@ public:
 
   uint    getCollisionSteps()            const { return collisionSteps; }
 
-  
-  glm::vec3 getDir() const { return glm::normalize(oldPosition-center); }
-
   // Modifiers ////////////////////////////////////////////////////////////////
   void setPos     (const glm::vec3 & pos) { position = pos; }
   void setOldPos  (const glm::vec3 & pos) { oldPosition = pos; }
   void setCenter  (const glm::vec3 & pos) { center = pos; }
+  void setDir     (const glm::vec3 & pos) { direction = pos; }
 
   void setWatt    (const double & a)  { wattage = a; }
   void setFreq    (const double & f)   {freqency = f;}
@@ -88,7 +88,8 @@ private:
   glm::vec3 position;       // Position to use for rendering
   glm::vec3 oldPosition;    // Position before rendering
   glm::vec3 center;         // Where the epi-center is
-    
+  glm::vec3 direction;      // The directon we are traveling
+
   // In Simulation ////////////////////////////////////////////////////////////
   int       splits;         // How many times our particle split
   int       iterations;     // How many iterations have I been around for

@@ -151,9 +151,6 @@ void ParticleSystem::update(){
   }//gather,merge,resSplits */
 
 
-  // Clean up phase
-  removeDeadParticles();
-  addNewParticles();
 
   // Move particles horzitonally
   for(Particle * cur : particles){
@@ -169,16 +166,26 @@ void ParticleSystem::update(){
     // simulated annealing
     simulatedannealing(cur, gathered_particles);
 
+    // Handle merges ( kills particles in gathered_particles vector)
+    if(cur->getIter() % 20 == 0 && cur->getIter() > 0){
+      // std::cout << "Merging" << std::endl;
+      mergeSimilarParticles(cur,gathered_particles); 
+    }
+
   }
+
+  // Clean up phase
+  removeDeadParticles();
+  addNewParticles();
 
   // Move all the partilces in the system up a timestep
   for(Particle * cur : particles)
     moveParticle(cur);
 
-  // Resolve all collision that occur as a result
-  for(Particle * cur: particles)
-    if(cur->getCollisionSteps() < FUTURE_VISION)
-      resolveCollisions(cur);
+  // // Resolve all collision that occur as a result
+  // for(Particle * cur: particles)
+  //   if(cur->getCollisionSteps() < FUTURE_VISION)
+  //     resolveCollisions(cur);
 
   // Remakes the kd tree for particles
   particle_kdtree.update(particles, *bbox);
@@ -383,11 +390,11 @@ glm::vec3 ParticleSystem::interParticleForce(Particle * & cur, PartPtrVec & part
   // The force that my particle experiences from other particles
   glm::vec3 force(0,0,0);
 
-  double K = 1.0; // spring strength
+  double K = 0.02; // spring strength
   double REST_LENGTH = 0.01; // 1 CM spacing
 
   // I want to calulcate the force between particles
-  for (int i = 0; i < PartPtrVec.size(); ++i) {
+  for (int i = 0; i < partv.size(); ++i) {
 
     // Get the distance
     Particle * p = partv[i];
@@ -395,13 +402,13 @@ glm::vec3 ParticleSystem::interParticleForce(Particle * & cur, PartPtrVec & part
     // Force from spring  =-  Kconstant * (where I should be - where I am)
     double dist = glm::distance( p->getOldPos(), cur->getOldPos() );
     double displacement = dist - REST_LENGTH; // disp will be negative if we need to repel
-    float  f = -1.0* K * displacement;
+    float  f = 1.0* K * displacement;
 
     // Postive forces push me away, negative push me inward
-    if( f > 0.0 ){ continue; }
+    if( f < 0.0 ){ continue; }
 
     // Convert into 3D vector by dir * force
-    force +=  ( f * glm::normalize( (cur->getOldPos() - p->getOldPos() );
+    force +=  f * glm::normalize(cur->getOldPos() - p->getOldPos() );
     
   }
 
@@ -416,7 +423,12 @@ void ParticleSystem::moveParticle(Particle* &p){
   * SideEf: Changes position of the particle & up incr
   */
 
+
   assert(p != NULL && p->isAlive());
+
+  // DEBUG
+  // Update the particle
+  p->setPos(p->getOldPos()); p->incIter(); return;
 
   // Calculate new position
   glm::vec3 oldPos = p->getOldPos();
@@ -504,6 +516,7 @@ void ParticleSystem::resolveCollisions(Particle* &p){
 
   float radius = glm::distance(p->getCenter(), impactPos);
   p->setCenter(impactPos + (mir_dir * -1.0f) * radius);
+  p->setDir(mir_dir);
 
   // Setting sound properties
   double absorb_ratio = absorbFunc(h.getMaterial(), p->getFreq());
@@ -1560,10 +1573,18 @@ void ParticleSystem::simulatedannealing(
 
   //  get all force felt by this particle from nearby particles
   glm::vec3 force  = interParticleForce(p,gathered);
-  double force_mag = glm::length(force);
+  glm::vec3 newPos = p->getOldPos() + force;
 
-  // apply this force
-  glm::vec3 newPos =  p->getOldPos() + force;
+  // Reproject back to sphere
+  glm::vec3 dir = glm::normalize(newPos - p->getCenter());
+  float radius = glm::distance(p->getOldPos(), p->getCenter());
+  newPos = p->getCenter() + (radius * dir );
+
+  // change my direction
+  p->setDir(dir);
+  p->setOldPos(newPos); // Putting it in oldpos for concideration before move
+
+  // Debug
 
   // now see the diffrence
   // glm::vec3 new_force  = interParticleForce(p,gathered);
