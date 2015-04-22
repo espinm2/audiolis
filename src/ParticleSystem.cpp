@@ -105,9 +105,9 @@ void ParticleSystem::load(){
   ITERATION             = 0;
 
   // Tunable parameters
-  GATHER_DISTANCE       = RADIUS_PARTICLE_WAVE * 2.5; // far away we concider gathers
+  GATHER_DISTANCE       = RADIUS_PARTICLE_WAVE * 3.0; // far away we concider gathers
   GATHER_ANGLE          = M_PI / 16.0;                // angle we gather as thresh
-  MERGE_DISTANCE        = RADIUS_PARTICLE_WAVE * 0.2; // when we concider same particle
+  MERGE_DISTANCE        = 0.05; // when we concider same particle
 
 
   PARTICLES_PER_M       = 100; // (Not used )
@@ -151,10 +151,12 @@ void ParticleSystem::recompute_collisions(){
   // This function will step through each particle and recompute its collisions
   // Assumption all particles are alive at this phase
 
-  printf("recompute_collisions()");
+  printf("recompute_collisions()\n");
   // recompute collisions
-  for(Particle * cur : particles)
+  for(Particle * cur : particles){
+    std::cout <<  *cur << std::endl;
     collisionDetection(cur);
+  }
 }
 
 void ParticleSystem::annealing(unsigned int iterations, double prevForce){
@@ -174,6 +176,7 @@ void ParticleSystem::annealing(unsigned int iterations, double prevForce){
 
   // Move particles horzitonally
   for(Particle * cur : particles){
+
 
     // Leave the dead in peace
     if(cur->isDead()) { continue; } // To handle dead particles created by merge
@@ -220,11 +223,13 @@ void ParticleSystem::update(){
   // Use only old positions, clear new ones
   for(Particle * cur : particles){
     cur->setOldPos(cur->getPos());
-    cur->setPos((glm::vec3)NULL);
+    // cur->setPos((glm::vec3)NULL); // we need old particles to have their position here for annealing
   }
 
+  // std::cout << "================= OLD PARTICLES ================="<<std::endl;
   // Gather, Merge, and ResSplits 
   for(Particle * cur : particles){
+    // std::cout << "OLD: " << *cur << std::endl;
 
     // Leave the dead in peace
     if(cur->isDead()) { continue; } // To handle dead particles created by merge
@@ -234,36 +239,57 @@ void ParticleSystem::update(){
     particle_kdtree.GatherParticles(cur, 
       GATHER_DISTANCE, GATHER_ANGLE, gathered_particles);
 
+    // Gathered
+    // printf("Particle has gathered %d \n",gathered_particles.size());
+
     // Handle merges ( kills particles in gathered_particles vector)
     // Shouldn have  to worry about these anymore
     // mergeSimilarParticles(cur,gathered_particles); 
+
 
     // Handle splits
     generateResSplits(cur,gathered_particles);
 
   }//gather,merge,resSplits 
 
+  /*
+  std::cout << "================= NEW PARTICLES ================="<<std::endl;
+  for(Particle * p: newParticles)
+    std::cout << "NEW: " << *p << std::endl;
+  std::cout << "================= END           ================="<<std::endl;
+  */
+
   // How we will check if 
   bool annealing_required = newParticles.size() > 0;
 
-  // Clean up phase
-  removeDeadParticles();
+  if(annealing_required)
+    printf("Particles before split: %d\n", particles.size() );
+
   addNewParticles();
 
+  if(annealing_required)
+    printf("Particles after split: %d\n", particles.size() );
 
   // Going to put the system into a loop to find stablization
   if(annealing_required){
-    annealing(0,10000.0); // set prevForce = 1 so that fabs(1-1234)
+
+    annealing(0,100.0); // set prevForce = 1 so that fabs(1-1234)
+    printf("Particles after annealing: %d\n", particles.size() );
+
   }
+
+  // Clean up phase
+  removeDeadParticles();
+
 
   // Move all the partilces in the system up a timestep
   for(Particle * cur : particles)
     moveParticle(cur);
 
   // // Resolve all collision that occur as a result
-  for(Particle * cur: particles)
-    if(cur->getCollisionSteps() < FUTURE_VISION)
-      resolveCollisions(cur);
+  // for(Particle * cur: particles)
+  //   if(cur->getCollisionSteps() < FUTURE_VISION)
+  //     resolveCollisions(cur);
 
   // Remakes the kd tree for particles
   particle_kdtree.update(particles, *bbox);
@@ -400,6 +426,7 @@ void ParticleSystem::collisionDetection(Particle * p){
 
     // For debugs
     // p->setCollisionSteps((int)pow(10,6)); // We do this so that we can debug
+    printf("Particle collision missed all triangles\n");
     assert(false);
 
   }
@@ -408,7 +435,7 @@ void ParticleSystem::collisionDetection(Particle * p){
   double time_until_collision = h.getT();
 
   int steps = (int) (time_until_collision / TIME_STEP);
-  printf("particle %p : computed steps %d\n",p,steps);
+  // printf("particle %p : computed steps %d\n",p,steps);
 
   p->setCollisionSteps(steps);
 }
@@ -647,13 +674,14 @@ void ParticleSystem::generateResSplits(Particle * &cur,
   for(glm::vec3 pos : new_positions){
 
     Particle * s = createParticle(
-      (glm::vec3) NULL, 
+      pos,  
       pos, 
       cur->getCenter(), 
       cur->getWatt() / (double)(SPLIT_AMOUNT + 1.0), 
       cur->getFreq(), 
       cur->getSplit() + 1 
     );
+
 
     newParticles.push_back(s);
 
@@ -1466,8 +1494,8 @@ double ParticleSystem::absorbFunc(const std::string & mtlName,
 void ParticleSystem::createDebugParticle(){
 
   // HARDCODED targetPosition
-  glm::vec3 targetPosition(2.7, 0.324, -2.1); // for corner room
-  // glm::vec3 targetPosition(-5.8, 1.524, -0.2); // for acoustics 
+  // glm::vec3 targetPosition(2.7, 0.324, -2.1); // for corner room
+  glm::vec3 targetPosition(-5.8, 1.524, -0.2); // for acoustics 
 
   // Direction 
   glm::vec3 directionToTarget = targetPosition - cursor;
@@ -1658,6 +1686,8 @@ double ParticleSystem::simulatedannealing(
   //  get all force felt by this particle from nearby particles
   glm::vec3 force  = interParticleForce(p,gathered);
 
+  double forceMag = glm::length(force);
+
 
   glm::vec3 newPos = p->getOldPos() + force;
 
@@ -1666,11 +1696,17 @@ double ParticleSystem::simulatedannealing(
   float radius = glm::distance(p->getOldPos(), p->getCenter());
   newPos = p->getCenter() + (radius * dir );
 
+  std::cout << "ANNEALING BEFORE "<< *p << std::endl;
+
   // change my direction & postition, think of this as a movie function
   p->setDir(dir);
   p->setPos(newPos); 
 
-  return glm::length(force);
+  std::cout << "ANNEALING AFTER  "<< *p << std::endl;
+
+
+
+  return forceMag;
 
   // Debug
 

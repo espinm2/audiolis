@@ -110,6 +110,8 @@ inline std::ostream & operator<<(std::ostream & leftOp,
 
     leftOp << "Loc " << &rightOp << " ";
 
+    leftOp << "isAlive " << rightOp.isAlive() << " ";
+
     leftOp << "pos(" << rightOp.position.x  << 
       ", " << rightOp.position.y  << ", " <<  rightOp.position.z  << ") ";
 

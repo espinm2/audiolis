@@ -53,10 +53,8 @@ double maskArea(){
   //   out how many particles we expect within the space
   //  Args:
   //    None
-  
+  std::cout << "MaskArea() is not made yet";
   assert(false);
-  return 0.0;
-
 }
 
 bool Mask::resSpit(std::vector<glm::vec3> & newPartPos){
@@ -66,18 +64,39 @@ bool Mask::resSpit(std::vector<glm::vec3> & newPartPos){
   //  Args:
   //    newPartPos : a vector where we keep points, passed by ref
 
-  // TODO IMPLEMENT THIS FUNCTION TO ALLOW FOR SPITS 
-  // THAT CAN SLIDE BETWEEN EACHOTHER !!!
-  assert(false);
-  
-  
-  // Code might be useful for projecting back on the scene
-  // // Project this new particle back onto the sphere
-  // float radius = glm::distance(maskCenter->getCenter(), maskCenter->getOldPos());
-  // glm::vec3 newDir = glm::normalize(posNew - maskCenter->getCenter());
-  // posNew = maskCenter->getCenter() + radius * newDir;
+  bool split_happened = false;
 
-  return false;
+  for( int i = 0; i < maskParticles.size(); i++ ){
+  
+    Particle * curOuter = maskParticles[i];
+
+    if(curOuter == NULL){
+      continue;
+
+    }
+  
+    float dist_center_outer = glm::distance(curOuter->getOldPos(), maskCenter->getOldPos());
+
+    // if that edge is too streched out
+    if( dist_center_outer > 2 * RADIUS_PARTICLE_WAVE  ){
+
+      // Average both vectors postions
+      glm::vec3 posA = maskCenter->getOldPos();
+      glm::vec3 posB = curOuter->getOldPos();
+      glm::vec3 posNew = ((float) 0.5 ) * (posA + posB);
+
+      // Project this new particle back onto the sphere
+      float radius = glm::distance(maskCenter->getCenter(), maskCenter->getOldPos());
+      glm::vec3 newDir = glm::normalize(posNew - maskCenter->getCenter());
+      posNew = maskCenter->getCenter() + radius * newDir;
+
+      newPartPos.push_back(posNew);
+      split_happened = true;
+    }
+      
+  } // for each edge
+
+  return split_happened;
 
 }
 
