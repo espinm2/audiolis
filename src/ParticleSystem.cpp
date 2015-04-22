@@ -83,7 +83,6 @@ void ParticleSystem::load(){
   // SETUP UNIFORM GRID (REMOVE)________________________________
   uniform_grid.loadMesh(mesh,args->division);
 
-
   // SETUP PSUDO GLOBALS _______________________________________
   // Initalize simulation variables
   VELOCITY_OF_MEDIUM    = 340; //implement to sound speed in m/s
@@ -105,10 +104,10 @@ void ParticleSystem::load(){
   ITERATION             = 0;
 
   // Tunable parameters
-  GATHER_DISTANCE       = RADIUS_PARTICLE_WAVE * 3.0; // far away we concider gathers
+  GATHER_DISTANCE       = RADIUS_PARTICLE_WAVE * 2.5; // far away we concider gathers
   GATHER_ANGLE          = M_PI / 16.0;                // angle we gather as thresh
-  MERGE_DISTANCE        = 0.05; // when we concider same particle
-
+  // MERGE_DISTANCE        = RADIUS_PARTICLE_WAVE * 0.25; // when we concider same particle
+  MERGE_DISTANCE        = 0.01; // when we concider same particle
 
   PARTICLES_PER_M       = 100; // (Not used )
   RELAXATION_MERGE_TRIGGER = 10; // how many iterations of annealing before we merge
@@ -164,6 +163,10 @@ void ParticleSystem::annealing(unsigned int iterations, double prevForce){
 
   printf("annealing(%u,%f)\n;", iterations, prevForce);
 
+  printf("Remaking KD Tree\n");
+  // Remakes the kd tree for particles
+  particle_kdtree.update(particles, *bbox);
+
   // Use only old positions, clear new ones
   for(Particle * cur : particles){
     cur->setOldPos(cur->getPos());
@@ -204,16 +207,17 @@ void ParticleSystem::annealing(unsigned int iterations, double prevForce){
     removeDeadParticles();
 
   // Check if we have to keep trying annealing
-  double changeForce  = fabs( prevForce - total_forces );
+  double changeForce = fabs( prevForce - total_forces );
 
-  if(changeForce > 0.01  && total_forces != 0.0 ){
-    annealing(iterations+1,changeForce);
+  if(changeForce > 0.0001  && total_forces != 0.0 ){
+    annealing(iterations+1,total_forces);
   } else{
     // Merge particles more
     mergeGlobalParticles(MERGE_DISTANCE*2.0); 
     removeDeadParticles();
 
-    recompute_collisions(); // Will force all particles trajctories to be fixed
+    // PLEASE UNCOMMENT AFTER DEBUG
+    // recompute_collisions(); // Will force all particles trajctories to be fixed
   }
 }
 
@@ -314,7 +318,7 @@ void ParticleSystem::createInitWave(){
   // Create Box of ranodm points
   for(unsigned int i = 0; i < NUM_INIT_PARTICLES; i++){
 
-    printf("Creating Particle %i\n", i);
+    // printf("Creating Particle %i\n", i);
     // Find x,y,z
     float x = cursor.x - s/2.0 + (float) args->randomGen.rand(s);
     float y = cursor.y - s/2.0 + (float) args->randomGen.rand(s);
@@ -389,9 +393,9 @@ void ParticleSystem::createInitWave(){
   particle_kdtree.update(particles, *bbox);
 
   // Trigger annaeling to happen
-  printf("Triggering annealing from inside of create function\n");
+  // printf("Triggering annealing from inside of create function\n");
   annealing(0,100); 
-  printf("End annealing from inside of create function\n");
+  // printf("End annealing from inside of create function\n");
 
 }
 
@@ -402,7 +406,7 @@ Particle *  ParticleSystem::createParticle(
 
   // Will create particle and setup it's collision time with mesh
   Particle * p = new Particle(pos,old,cen,watts,freq,s);
-  collisionDetection(p);
+  // collisionDetection(p);
 
   return p;
 }
@@ -1696,14 +1700,13 @@ double ParticleSystem::simulatedannealing(
   float radius = glm::distance(p->getOldPos(), p->getCenter());
   newPos = p->getCenter() + (radius * dir );
 
-  std::cout << "ANNEALING BEFORE "<< *p << std::endl;
+  // std::cout << "ANNEALING BEFORE "<< *p << std::endl;
 
   // change my direction & postition, think of this as a movie function
   p->setDir(dir);
   p->setPos(newPos); 
 
-  std::cout << "ANNEALING AFTER  "<< *p << std::endl;
-
+  // std::cout << "ANNEALING AFTER  "<< *p << std::endl;
 
 
   return forceMag;

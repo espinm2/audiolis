@@ -497,8 +497,8 @@ void ParticleSystem::setupEdges(){
 
   // GATHER STEP //////////////////////////////////////////////////////////
 
-  float gather_distance = RADIUS_PARTICLE_WAVE * 2.5;
-  float gather_angle    = M_PI / 4.0;
+  float gather_distance = GATHER_DISTANCE;
+  float gather_angle    = GATHER_ANGLE;
 
   std::vector<unsigned int> gathered_particles_indices;
 
@@ -611,8 +611,8 @@ void ParticleSystem::setupDelusionalParticles(){
   // ==========================================================================
 
   // Properties we will use for gathering 
-  float gather_distance = RADIUS_PARTICLE_WAVE * 2.5;
-  float gather_angle    = M_PI / 16.0; 
+  float gather_distance = GATHER_DISTANCE;
+  float gather_angle    = GATHER_ANGLE;
 
   // Get the particle I will render for
   int index = args->render_mask;
@@ -658,6 +658,8 @@ void ParticleSystem::setupDelusionalParticles(){
 
   // Assert 1-1 matching
   assert(maskParticles.size()==positions.size());
+
+  printf("Found Mask of Size: %d\n", mask.size() );
 
   for(int i = 0; i < maskParticles.size(); i++){
 
