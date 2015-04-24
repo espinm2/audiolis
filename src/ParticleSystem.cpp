@@ -825,7 +825,7 @@ void ParticleSystem::munkresMatching
 
   // Setting the dimension of our square matrix
   unsigned int maxtrix_dimension = 0;
-  partVec.size() > 7 ? maxtrix_dimension = partVec.size() : maxtrix_dimension = 7;
+  partVec.size() > shape+1 ? maxtrix_dimension = partVec.size() : maxtrix_dimension = shape+1;
 
   // Create a square matrix and initiate all of it with infinate values
   int ** matrix = new int*[maxtrix_dimension];
@@ -892,19 +892,21 @@ void ParticleSystem::munkresMatching
         double angle = acos( glm::dot( dir_ideal, dir_of_partPos ) / 
           (glm::length( dir_ideal ) * glm::length( dir_of_partPos)));
 
+        // Could be a bit more descriptive then 0.436332313 ? plz..
         angle <= 0.436332313 ? within_angle_constrant = true : within_angle_constrant = false;
 
       }
 
       // Prevent concave shapes
-      if( dist_from_ideal <= 1.2*RADIUS_PARTICLE_WAVE && within_angle_constrant  ){ 
+      if( dist_from_ideal <= 1.2 * RADIUS_PARTICLE_WAVE && within_angle_constrant ){ 
     
-
         // This will put in the scale of milimeters everything inside my matrix
         matrix[i][j] = (int) (dist_from_ideal * 1000); 
     
       }
+
     }
+    
   }
 
 
@@ -951,6 +953,31 @@ void ParticleSystem::munkresMatching
 }
 
 void ParticleSystem::generateMask(
+    std::vector <Particle*> & conciderForMask, Mask &m){
+  // Will fit a mask  weather it is shape 5 or 6
+
+  // Generate the mask for a hex and pent
+  Mask hex; Mask pent;
+  maskFitting(conciderForMask,hex,6);
+  maskFitting(conciderForMask,pent,5);
+
+  int hc = hex.getTotalCost();
+  int pc = pent.getTotalCost();
+
+  printf("HEXAGON TOTAL COST: %d\n",hc);
+  hex.debugPrint();
+  printf("\n");
+
+  printf("PENTAGON TOTAL COST: %d\n",pc);
+  pent.debugPrint();
+  printf("\n");
+
+  // Set the best choice
+  (hc < pc) ? m = hex : m = pent;
+
+}
+
+void ParticleSystem::maskFitting(
     std::vector <Particle*> & conciderForMask, Mask &m, int shape){
   // Input: p is a particle that it not null, it will be the center of the mask
   // Input: Mask &m is a mask that will be populated by a mask object
@@ -960,12 +987,10 @@ void ParticleSystem::generateMask(
   // Side effects: None.
   // Preformance: O(p) where p is the size of particles vector
 
-
   vMat cost; vMat matching;
 
   // Calculate the cost and matching matries
   munkresMatching(conciderForMask,matching,cost,shape);
-
 
   /*
   // Uncomment for debugging cost matrix 
@@ -1000,13 +1025,12 @@ void ParticleSystem::generateMask(
   assert(matching[0].size() == cost[0].size());
 
   assert(matching.size() == conciderForMask.size()); 
-  assert(matching[0].size() == 7); 
+  assert(matching[0].size() == shape + 1);  // Changed to handle pent
 
   // Inners of the mask class
   std::vector<Particle*> maskPart;
   std::vector<int> maskCost;
   int size_of_mask = 0;
-
 
   // For each column in the matching matrix push back the matching particle 
   for(unsigned int j = 1; j < matching[0].size(); j++){
@@ -1034,13 +1058,16 @@ void ParticleSystem::generateMask(
 
   }// for each column
 
-  assert(maskPart.size()==6);
+  assert(maskPart.size() == shape);
   // Setting the memebers of the mask object
   m.setCenter(conciderForMask[0]);
   m.setMaskParticles(maskPart);
   m.setCostVector(maskCost);
   m.setSize(size_of_mask);
+  m.setShape(shape);
+
 }
+
 
 void ParticleSystem::delusionalParticleLocations(
     Particle * &cur_particle,

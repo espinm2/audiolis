@@ -78,7 +78,8 @@ class ParticleSystem {
 
     // Kuhn–Munkres algorithm based matching
     void munkresMatching(PartPtrVec & partVec, vMat & matchingMat, vMat & costMat,int shape = 6);
-    void generateMask(PartPtrVec & conciderForMask, Mask &m, int shape=6);
+    void generateMask(PartPtrVec & conciderForMask, Mask &m);
+    void maskFitting(PartPtrVec & conciderForMask, Mask &m, int shape=6);
 
     // Getting delusional particle locations
     void delusionalParticleLocations(Particle * &cur,

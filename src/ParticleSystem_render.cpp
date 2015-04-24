@@ -630,25 +630,30 @@ void ParticleSystem::setupDelusionalParticles(){
   // Setup of delusional particle points
   // ==========================================================================
   
+  Mask mask;
+  generateMask(gathered_particles, mask);
+
+  int shape = mask.getShape();
+
   // Pushing in  center of mask
   delusional_verts.push_back(
       VBOPosNormalColor(cur->getOldPos(),glm::vec3(0,0,0),glm::vec4(1,1,1,1)));
 
   // Get those points
   std::vector < glm::vec3 > positions;
-  delusionalParticleLocations(cur, gathered_particles,positions);
+  printf("maskShape: %d\n", shape);
+  delusionalParticleLocations(cur, gathered_particles,positions,shape);
 
   // ==========================================================================
   // Setup of the 1 -1 matching between delisional pos and our mask
   // ==========================================================================
 
-  Mask mask;
-  generateMask(gathered_particles, mask);
 
   // get particles there
   const std::vector<Particle*> maskParticles = mask.getMaskParticles();
 
   // Assert 1-1 matching
+  printf("maskParticles.size() = %d,  postions.size() = %d\n",maskParticles.size(), positions.size());
   assert(maskParticles.size()==positions.size());
 
   printf("Found Mask of Size: %d\n", mask.size() );

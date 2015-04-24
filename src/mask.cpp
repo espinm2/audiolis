@@ -10,7 +10,6 @@ void Mask::renderOutline( std::vector<VBOPosNormalColor> & outline_verts){
 void Mask::renderCost( std::vector<VBOPosNormalColor> & cost_verts){
 
   // FIXME as of right now I am visualizing the distance to split
-  
   assert(costVector.size() == maskParticles.size()); // Safety
 
   
@@ -123,5 +122,22 @@ void Mask::debugPrint(){
   }
 
   std::cout << "]\n";
+
+}
+
+
+int Mask::getTotalCost(){
+
+  int result  = 0;
+
+  for (int i = 0; i < costVector.size(); ++i) {
+
+    // Get the cost
+    int cost = costVector[i];
+    if(cost == -1 ){ continue; }
+    result += cost;
+  }
+
+  return result;
 
 }

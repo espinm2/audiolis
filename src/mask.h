@@ -11,11 +11,14 @@ class Mask{
 
   public:
 
-
     // Constructor
-    Mask(Particle * cen, std::vector <Particle *> maskP){
+    Mask(Particle * cen, std::vector <Particle *> maskP, int s = 6){
+
+      shape = s;
       maskCenter = cen;
-      maskParticles = maskP; }
+      maskParticles = maskP;
+
+    }
 
     Mask(){ }
     
@@ -23,6 +26,7 @@ class Mask{
     const std::vector<Particle *> & getMaskParticles() { return maskParticles;}
     const Particle * getCenter() { return maskCenter;}
     const std::vector<int> & getCostVector(){ return costVector;}
+    int getShape(){ return shape; }
 
     // Easier to use Accessors
     const Particle * getMaskParticle(int i){ return maskParticles[i];}
@@ -35,6 +39,7 @@ class Mask{
     void setMaskParticles( const std::vector<Particle *> pVec ){ maskParticles = pVec;}
     void setCostVector( const std::vector<int> costVec){ costVector = costVec;}
     void setSize( int s ) { size_of_mask = s; }
+    void setShape( int s ) {shape = s;}
 
     // Used to help render this data structure
     void renderOutline( std::vector<VBOPosNormalColor> & outline_verts);
@@ -45,10 +50,13 @@ class Mask{
 
     // Debug functions
     void debugPrint();
+    int getTotalCost();
 
   private:
 
-    // Hexagon 
+    // Pentagon == 5 and Hexagon == 6
+    int shape;
+
     // Center of the mask
     Particle * maskCenter;
 
@@ -59,8 +67,6 @@ class Mask{
     std::vector< int > costVector;
 
     int size_of_mask;
-
-
 
 };
 
