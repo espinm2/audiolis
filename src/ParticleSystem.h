@@ -77,13 +77,12 @@ class ParticleSystem {
     void collisionDetection(Particle * p);
 
     // Kuhn–Munkres algorithm based matching
-    void munkresMatching (PartPtrVec & partVec,
-     vMat & matchingMat, vMat & costMat);
-    void generateMask(PartPtrVec & conciderForMask, Mask &m );
+    void munkresMatching(PartPtrVec & partVec, vMat & matchingMat, vMat & costMat,int shape = 6);
+    void generateMask(PartPtrVec & conciderForMask, Mask &m, int shape=6);
 
     // Getting delusional particle locations
     void delusionalParticleLocations(Particle * &cur,
-        PartPtrVec &gathered, std::vector<glm::vec3> & output);
+        PartPtrVec &gathered, std::vector<glm::vec3> & output, int shape = 6);
 
     // Particle Search Functions KD and linear
     void linearGatherParticles(Particle * center, double r, double a, 

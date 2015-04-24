@@ -55,8 +55,6 @@ ParticleSystem::~ParticleSystem(){
 
 void ParticleSystem::load(){
 
-
-
   // SETUP CURSOR ______________________________________________
   glm::vec3 centerScene;
   bbox->getCenter(centerScene);
@@ -92,22 +90,20 @@ void ParticleSystem::load(){
     TIME_STEP = 0.01 / VELOCITY_OF_MEDIUM; // Centemimer accruacy
 
   // simuation var init
-  RADIUS_INIT_SPHERE    = 0.7; // Doesnt get changed to ofte
-  NUM_INIT_PARTICLES    = args->num_init_particles; // imported from args
+  NUM_INIT_PARTICLES    = args->num_init_particles;  // particles created init
+  RADIUS_INIT_SPHERE    = 0.7;            // Doesnt get changed to often
   MIN_WATTAGE           = 0.000000000002; // Doesnt change often
-  MAX_ITERATIONS        = 6000; // Doesnt change often
+  MAX_ITERATIONS        = 6000;           // Doesnt change often
 
   // split var init
-  RADIUS_PARTICLE_WAVE  = 0.1; // Will be later removed for better split
-  SPLIT_AMOUNT          = 6; // Will be later removed for better split
-
-  ITERATION             = 0;
+  RADIUS_PARTICLE_WAVE  = 0.1; // How large a mask we we want
+  SPLIT_AMOUNT          = 6;   // How many particles I will split into 
+  ITERATION             = 0;   // How many iterations have we been through
 
   // Tunable parameters
   GATHER_DISTANCE       = RADIUS_PARTICLE_WAVE * 2.5; // far away we concider gathers
   GATHER_ANGLE          = M_PI / 16.0;                // angle we gather as thresh
-  // MERGE_DISTANCE        = RADIUS_PARTICLE_WAVE * 0.25; // when we concider same particle
-  MERGE_DISTANCE        = 0.01; // when we concider same particle
+  MERGE_DISTANCE        = RADIUS_PARTICLE_WAVE * 0.25; // when we concider same particle
 
   PARTICLES_PER_M       = 100; // (Not used )
   RELAXATION_MERGE_TRIGGER = 10; // how many iterations of annealing before we merge
@@ -123,104 +119,6 @@ void ParticleSystem::load(){
       exit(1); }
  }
 }
-
-void ParticleSystem::mergeGlobalParticles(double dist ){
-
-  // Move particles horzitonally
-  for(Particle * cur : particles){
-
-    // Leave the dead in peace
-    if(cur->isDead()) { continue; } // To handle dead particles created by merge
-
-    // Gather the particles I will kill
-    PartPtrVec gathered_particles;        
-    particle_kdtree.GatherParticles(cur, 
-      GATHER_DISTANCE, GATHER_ANGLE, gathered_particles);
-
-    // Kill all gathered particles that fall witin some range
-    for(Particle * pending: gathered_particles ) 
-      if( glm::distance(cur->getOldPos(), pending->getOldPos()) < dist )
-        pending->kill();
-
-  }//for
-}
-
-
-void ParticleSystem::recompute_collisions(){
-  // This function will step through each particle and recompute its collisions
-  // Assumption all particles are alive at this phase
-
-  printf("recompute_collisions()\n");
-  // recompute collisions
-  for(Particle * cur : particles){
-    std::cout <<  *cur << std::endl;
-    collisionDetection(cur);
-  }
-}
-
-void ParticleSystem::annealing(unsigned int iterations, double prevForce){
-  // This function will put the entire system into a relaxation mode
-
-  printf("annealing(%u,%f)\n;", iterations, prevForce);
-
-  printf("Remaking KD Tree\n");
-  // Remakes the kd tree for particles
-  particle_kdtree.update(particles, *bbox);
-
-  // Use only old positions, clear new ones
-  for(Particle * cur : particles){
-    cur->setOldPos(cur->getPos());
-    cur->setPos((glm::vec3)NULL);
-  }
-
-  // Used to know when to stop calling annealing
-  double total_forces = 0.0;
-  bool   merge_triggered  = false;
-
-  // Move particles horzitonally
-  for(Particle * cur : particles){
-
-
-    // Leave the dead in peace
-    if(cur->isDead()) { continue; } // To handle dead particles created by merge
-
-    // Gather the particles I will use for mask fitting
-    PartPtrVec gathered_particles;        
-    particle_kdtree.GatherParticles(cur, 
-      GATHER_DISTANCE, GATHER_ANGLE, gathered_particles);
-
-    // try to relax the particle
-    double f = simulatedannealing(cur, gathered_particles);
-    total_forces += f; 
-
-    // Handle merges ( kills particles in gathered_particles vector)
-    if( iterations % RELAXATION_MERGE_TRIGGER == 0 
-      && iterations > 0){
-      // std::cout << "Merging" << std::endl;
-      mergeSimilarParticles(cur,gathered_particles); 
-      merge_triggered = true;
-    }
-  }//for
-
-  // Remove particles we killed any this turn
-  if(merge_triggered)
-    removeDeadParticles();
-
-  // Check if we have to keep trying annealing
-  double changeForce = fabs( prevForce - total_forces );
-
-  if(changeForce > 0.0001  && total_forces != 0.0 ){
-    annealing(iterations+1,total_forces);
-  } else{
-    // Merge particles more
-    mergeGlobalParticles(MERGE_DISTANCE*2.0); 
-    removeDeadParticles();
-
-    // PLEASE UNCOMMENT AFTER DEBUG
-    // recompute_collisions(); // Will force all particles trajctories to be fixed
-  }
-}
-
 
 void ParticleSystem::update(){
 
@@ -249,7 +147,6 @@ void ParticleSystem::update(){
     // Handle merges ( kills particles in gathered_particles vector)
     // Shouldn have  to worry about these anymore
     // mergeSimilarParticles(cur,gathered_particles); 
-
 
     // Handle splits
     generateResSplits(cur,gathered_particles);
@@ -297,7 +194,6 @@ void ParticleSystem::update(){
 
   // Remakes the kd tree for particles
   particle_kdtree.update(particles, *bbox);
-
 }
 
 void ParticleSystem::moveCursor( const float & dx, 
@@ -396,7 +292,6 @@ void ParticleSystem::createInitWave(){
   // printf("Triggering annealing from inside of create function\n");
   annealing(0,100); 
   // printf("End annealing from inside of create function\n");
-
 }
 
 Particle *  ParticleSystem::createParticle(
@@ -409,39 +304,6 @@ Particle *  ParticleSystem::createParticle(
   // collisionDetection(p);
 
   return p;
-}
-
-void ParticleSystem::collisionDetection(Particle * p){
-  // returns true if hit object found
-  // false otherwise
-
-  // Finding when we would collide with geometery
-  Ray r(p->getOldPos(), p->getDir(), VELOCITY_OF_MEDIUM); 
-  Hit h; bool hitTriangle = false;
-
-  // Setting up collision time with mesh
-  hitTriangle = root->rayHit(r,0,1000,h);
-
-  // We didnt hit anything in the scene ( travel forever)
-
-  // Case 1) Corner hit
-  // Case 2) Bug
-  if(!hitTriangle){
-
-    // For debugs
-    // p->setCollisionSteps((int)pow(10,6)); // We do this so that we can debug
-    printf("Particle collision missed all triangles\n");
-    assert(false);
-
-  }
-
-  // We hit something, 
-  double time_until_collision = h.getT();
-
-  int steps = (int) (time_until_collision / TIME_STEP);
-  // printf("particle %p : computed steps %d\n",p,steps);
-
-  p->setCollisionSteps(steps);
 }
 
 void ParticleSystem::addNewParticles(){
@@ -498,41 +360,6 @@ void ParticleSystem::removeDeadParticles(){
 // ╩  ╩ ╩╩╚═ ╩ ╩╚═╝╩═╝╚═╝  ╩ ╩╚═╝ ╚╝ ╚═╝╩ ╩╚═╝╝╚╝ ╩ 
 
   // Experimental
-glm::vec3 ParticleSystem::interParticleForce(Particle * & cur, PartPtrVec & partv){
-  // Purpose:
-  //    This function will return the force a particle feels from those around it
-  // Input:
-  //    cur -> is our current particle we are concidering the force for
-  //    partv -> is the particles near it that belong to the same wave
-
-  // The force that my particle experiences from other particles
-  glm::vec3 force(0,0,0);
-
-  double K = 0.02; // spring strength
-  double REST_LENGTH = 0.01; // 1 CM spacing
-
-  // I want to calulcate the force between particles
-  for (int i = 0; i < partv.size(); ++i) {
-
-    // Get the distance
-    Particle * p = partv[i];
-
-    // Force from spring  =-  Kconstant * (where I should be - where I am)
-    double dist = glm::distance( p->getOldPos(), cur->getOldPos() );
-    double displacement = dist - REST_LENGTH; // disp will be negative if we need to repel
-    float  f = 1.0* K * displacement;
-
-    // Postive forces push me away, negative push me inward
-    if( f < 0.0 ){ continue; }
-
-    // Convert into 3D vector by dir * force
-    force +=  f * glm::normalize(cur->getOldPos() - p->getOldPos() );
-    
-  }
-
-  return force;
-
-}
 
 void ParticleSystem::moveParticle(Particle* &p){
  /* Input : Particle ptr
@@ -647,6 +474,50 @@ void ParticleSystem::resolveCollisions(Particle* &p){
 
 }
 
+void ParticleSystem::recompute_collisions(){
+  // This function will step through each particle and recompute its collisions
+  // Assumption all particles are alive at this phase
+
+  printf("recompute_collisions()\n");
+  // recompute collisions
+  for(Particle * cur : particles){
+    std::cout <<  *cur << std::endl;
+    collisionDetection(cur);
+  }
+}
+
+void ParticleSystem::collisionDetection(Particle * p){
+  // returns true if hit object found
+  // false otherwise
+
+  // Finding when we would collide with geometery
+  Ray r(p->getOldPos(), p->getDir(), VELOCITY_OF_MEDIUM); 
+  Hit h; bool hitTriangle = false;
+
+  // Setting up collision time with mesh
+  hitTriangle = root->rayHit(r,0,1000,h);
+
+  // We didnt hit anything in the scene ( travel forever)
+
+  // Case 1) Corner hit
+  // Case 2) Bug
+  if(!hitTriangle){
+
+    // For debugs
+    // p->setCollisionSteps((int)pow(10,6)); // We do this so that we can debug
+    printf("Particle collision missed all triangles\n");
+    assert(false);
+
+  }
+
+  // We hit something, 
+  double time_until_collision = h.getT();
+
+  int steps = (int) (time_until_collision / TIME_STEP);
+  // printf("particle %p : computed steps %d\n",p,steps);
+
+  p->setCollisionSteps(steps);
+}
 // ╦═╗╔═╗╔═╗╔═╗╦  ╦ ╦╔╦╗╦╔═╗╔╗╔  ╔═╗╔═╗╦╔╦╗╔═╗
 // ╠╦╝║╣ ╚═╗║ ║║  ║ ║ ║ ║║ ║║║║  ╚═╗╠═╝║ ║ ╚═╗
 // ╩╚═╚═╝╚═╝╚═╝╩═╝╚═╝ ╩ ╩╚═╝╝╚╝  ╚═╝╩  ╩ ╩ ╚═╝
@@ -665,9 +536,7 @@ void ParticleSystem::generateResSplits(Particle * &cur,
   std::vector < glm::vec3 > new_positions; // used incase we split
 
   // maskfitting requires center be at index 0
-  PartPtrVec::iterator it = gathered_particles.begin();
-  gathered_particles.insert(it, cur );
-
+  gathered_particles.insert(gathered_particles.begin(), cur );
 
   // Generate fit mask to these points
   Mask mask; generateMask(gathered_particles, mask);
@@ -879,12 +748,33 @@ void ParticleSystem::mergeSimilarParticles(Particle * &cur,
 
 }
 
+void ParticleSystem::mergeGlobalParticles(double dist ){
+
+  // Move particles horzitonally
+  for(Particle * cur : particles){
+
+    // Leave the dead in peace
+    if(cur->isDead()) { continue; } // To handle dead particles created by merge
+
+    // Gather the particles I will kill
+    PartPtrVec gathered_particles;        
+    particle_kdtree.GatherParticles(cur, 
+      GATHER_DISTANCE, GATHER_ANGLE, gathered_particles);
+
+    // Kill all gathered particles that fall witin some range
+    for(Particle * pending: gathered_particles ) 
+      if( glm::distance(cur->getOldPos(), pending->getOldPos()) < dist )
+        pending->kill();
+
+  }//for
+}
+
 // ╔╦╗╦ ╦╔╗╔╦╔═╦═╗╔═╗╔═╗  ╔╦╗╔═╗╔╦╗╔═╗╦ ╦╦╔╗╔╔═╗
 // ║║║║ ║║║║╠╩╗╠╦╝║╣ ╚═╗  ║║║╠═╣ ║ ║  ╠═╣║║║║║ ╦
 // ╩ ╩╚═╝╝╚╝╩ ╩╩╚═╚═╝╚═╝  ╩ ╩╩ ╩ ╩ ╚═╝╩ ╩╩╝╚╝╚═╝
 
 void ParticleSystem::munkresMatching 
-  (std::vector<Particle*> & partVec, vMat & matchingMat, vMat & costMat){
+  (std::vector<Particle*> & partVec, vMat & matchingMat, vMat & costMat, int shape){
 
   // Function: Creates a matching to a hexonagal mask on particles given
   //
@@ -959,8 +849,7 @@ void ParticleSystem::munkresMatching
   std::vector<glm::vec3> maskPositions; 
   maskPositions.push_back(centerMaskPos); // maskPositions[0] is mask center
 
-
-  delusionalParticleLocations(center,partVec, maskPositions);
+  delusionalParticleLocations(center,partVec,maskPositions,shape);
 
   // ==========================================================================
   // Creating a cost for each particle being concidered
@@ -995,6 +884,7 @@ void ParticleSystem::munkresMatching
       glm::vec3 dir_of_partPos = 
         glm::normalize(partPos-center->getOldPos());
 
+        
       double direction_dist = glm::distance(dir_of_partPos,dir_ideal);
 
       if( dist_from_ideal > EPSILON && direction_dist > EPSILON && j != 0){ // conditions that break angle calc
@@ -1050,7 +940,6 @@ void ParticleSystem::munkresMatching
 
     matchingMat.push_back(temp);
   }
-
   
   // ==========================================================================
   // deallocation of created array in matrix **
@@ -1062,7 +951,7 @@ void ParticleSystem::munkresMatching
 }
 
 void ParticleSystem::generateMask(
-    std::vector <Particle*> & conciderForMask, Mask &m ){
+    std::vector <Particle*> & conciderForMask, Mask &m, int shape){
   // Input: p is a particle that it not null, it will be the center of the mask
   // Input: Mask &m is a mask that will be populated by a mask object
   // Output: None, see input (2)
@@ -1075,7 +964,7 @@ void ParticleSystem::generateMask(
   vMat cost; vMat matching;
 
   // Calculate the cost and matching matries
-  munkresMatching(conciderForMask,matching,cost);
+  munkresMatching(conciderForMask,matching,cost,shape);
 
 
   /*
@@ -1156,12 +1045,11 @@ void ParticleSystem::generateMask(
 void ParticleSystem::delusionalParticleLocations(
     Particle * &cur_particle,
     std::vector<Particle *> &gathered_particles,
-    std::vector<glm::vec3> & output){
+    std::vector<glm::vec3> & output, int shape){
 
   // Input : cur_particle is the particle we will use the center of the mask
   // Input : gathered_particles are the particles we will use to orient ourselves
   // Input (output) :  We will return our locations here
-
 
   assert(cur_particle == gathered_particles[0]);
 
@@ -1178,22 +1066,25 @@ void ParticleSystem::delusionalParticleLocations(
   }
 
   glm::vec3 nearest_pos = gathered_particles[nearest_part]->getOldPos();
+
   
   // We will adjust the mask size of our particles by a factor of two
   // If we are within the range of [0, 2*RADIUS_PARTICLE_WAVE]
   double mask_radius = dist;
 
+
   // Cap our distance at 
   if( mask_radius > 2.2 * RADIUS_PARTICLE_WAVE )
     mask_radius = 2.2 * RADIUS_PARTICLE_WAVE;
 
+  printf("Mask Size Used:  %3.3f, maxSize = %3.3f\n", mask_radius, 2.2 * RADIUS_PARTICLE_WAVE );
 
   circle_points_on_plane_refence(
       cur_particle->getOldPos(),                        // center of mask
       cur_particle->getDir(),                     // direction of plane
       nearest_pos,              // particle using for reference
       mask_radius,                 // radius of my mask
-      6,                                    // number of particles mask has
+      shape,                              // number of particles mask has
       output);                       // where I will append my results
 
 
@@ -1573,6 +1464,11 @@ void ParticleSystem::createDebugParticle(){
     particles.push_back(sp);
 
   particle_kdtree.update(particles,*bbox);
+
+  printf("annealing\n");
+  annealing(0,100); 
+  printf("done_annealing\n");
+
 }
 
 void ParticleSystem::debug(){
@@ -1720,7 +1616,107 @@ double ParticleSystem::simulatedannealing(
   // LATER, CALL REC
   // double change = new_force_mag - force_mag;
   // simulatedannealingAux(p,gathered,change);
-
-
 }
 
+glm::vec3 ParticleSystem::interParticleForce(Particle * & cur, PartPtrVec & partv){
+  // Purpose:
+  //    This function will return the force a particle feels from those around it
+  // Input:
+  //    cur -> is our current particle we are concidering the force for
+  //    partv -> is the particles near it that belong to the same wave
+
+  // The force that my particle experiences from other particles
+  glm::vec3 force(0,0,0);
+
+  double K = 0.01; // spring strength
+  double REST_LENGTH = RADIUS_PARTICLE_WAVE; // 1 CM spacing
+
+  // I want to calulcate the force between particles
+  for (int i = 0; i < partv.size(); ++i) {
+
+    // Get the distance
+    Particle * p = partv[i];
+
+    // Force from spring  =-  Kconstant * (where I should be - where I am)
+    double dist = glm::distance( p->getOldPos(), cur->getOldPos() );
+    double displacement = dist - REST_LENGTH; // disp will be negative if we need to repel
+    float  f = - 1.0* K * displacement;
+
+    // Postive forces push me away, negative push me inward
+    if( f < 0.0 ){printf(" Attractive Force Detected \n"); continue; }
+
+    // Convert into 3D vector by dir * force
+    force +=  f * glm::normalize(cur->getOldPos() - p->getOldPos() );
+    
+  }
+
+  return force;
+}
+
+void ParticleSystem::annealing(unsigned int iterations, double prevForce){
+  // This function will put the entire system into a relaxation mode
+
+  printf("annealing(%u,%f); ", iterations, prevForce);
+
+  printf("Remaking KD Tree\n");
+  // Remakes the kd tree for particles
+  particle_kdtree.update(particles, *bbox);
+
+  // Use only old positions, clear new ones
+  for(Particle * cur : particles){
+    cur->setOldPos(cur->getPos());
+    cur->setPos((glm::vec3)NULL);
+  }
+
+  // Used to know when to stop calling annealing
+  double total_forces = 0.0;
+  bool   merge_triggered  = false;
+
+  // Move particles horzitonally
+  for(Particle * cur : particles){
+
+    // Leave the dead in peace
+    if(cur->isDead()) { continue; } // To handle dead particles created by merge
+
+    // Gather only particles around where I want
+    PartPtrVec gathered_particles;        
+    particle_kdtree.GatherParticles(cur, 
+      RADIUS_PARTICLE_WAVE, GATHER_ANGLE, gathered_particles);
+
+    // try to relax the particle
+    double f = simulatedannealing(cur, gathered_particles);
+    total_forces += f; 
+
+    // Handle merges ( kills particles in gathered_particles vector)
+    if( iterations % RELAXATION_MERGE_TRIGGER == 0 
+      && iterations > 0){
+      // std::cout << "Merging" << std::endl;
+      mergeSimilarParticles(cur,gathered_particles); 
+      merge_triggered = true;
+    }
+  }//for
+
+  // Remove particles we killed any this turn
+  if(merge_triggered)
+    removeDeadParticles();
+
+  // Check if we have to keep trying annealing
+  double changeForce = fabs( prevForce - total_forces );
+
+  if(changeForce > 0.0001  && total_forces != 0.0 ){
+
+    annealing(iterations+1,total_forces);
+
+  } else{
+
+    printf("Done Iterating\n");
+    printf("Particles Left: %d \n",particles.size());
+
+    // Merge particles 
+    mergeGlobalParticles(MERGE_DISTANCE*2.0); 
+    removeDeadParticles();
+
+    // PLEASE UNCOMMENT AFTER DEBUG
+    // recompute_collisions(); // Will force all particles trajctories to be fixed
+  }
+}

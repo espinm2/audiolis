@@ -48,6 +48,7 @@ class Mask{
 
   private:
 
+    // Hexagon 
     // Center of the mask
     Particle * maskCenter;
 
@@ -58,6 +59,8 @@ class Mask{
     std::vector< int > costVector;
 
     int size_of_mask;
+
+
 
 };
 

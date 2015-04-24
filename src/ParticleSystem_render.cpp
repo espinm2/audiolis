@@ -535,6 +535,7 @@ void ParticleSystem::setupEdges(){
   for( int i = 0; i < gathered_particles_indices.size(); i++)
    particle_for_mask_calc.push_back(particles[gathered_particles_indices[i]]);
 
+  printf("Gathered %d Particles for Mask\n", particle_for_mask_calc.size());
 
   Mask mask;
   generateMask(particle_for_mask_calc, mask);
@@ -595,9 +596,6 @@ void ParticleSystem::drawHappinessVisual(){
 }
 
 
-
-#define USE_KD_TREE true // See if I can remove this function
-
 void ParticleSystem::setupDelusionalParticles(){
   HandleGLError("entering setupDelusionalParticles");
 
@@ -623,13 +621,10 @@ void ParticleSystem::setupDelusionalParticles(){
   gathered_particles.push_back(cur);
 
   // Use gather our particles
-  if(USE_KD_TREE){
-    particle_kdtree.GatherParticles(
-      cur,gather_distance, gather_angle, gathered_particles);
-  }else{
-    linearGatherParticles(cur,gather_distance,gather_angle,gathered_particles);
-  }
-
+  particle_kdtree.GatherParticles(cur, 
+    GATHER_DISTANCE, GATHER_ANGLE, gathered_particles);
+  
+  printf("gathered_particles.size() : %d \n", gathered_particles.size());
 
   // ==========================================================================
   // Setup of delusional particle points
@@ -639,18 +634,15 @@ void ParticleSystem::setupDelusionalParticles(){
   delusional_verts.push_back(
       VBOPosNormalColor(cur->getOldPos(),glm::vec3(0,0,0),glm::vec4(1,1,1,1)));
 
-
+  // Get those points
   std::vector < glm::vec3 > positions;
-
   delusionalParticleLocations(cur, gathered_particles,positions);
-
 
   // ==========================================================================
   // Setup of the 1 -1 matching between delisional pos and our mask
   // ==========================================================================
 
   Mask mask;
-
   generateMask(gathered_particles, mask);
 
   // get particles there

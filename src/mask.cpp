@@ -25,7 +25,6 @@ void Mask::renderCost( std::vector<VBOPosNormalColor> & cost_verts){
   
     double val= cost / (RADIUS_PARTICLE_WAVE * 1000); 
 
-
     glm::vec4 happyColor =  GiveHeapMapping(val);
 
     // Pushing a line segement from this point to center for happyness ////
