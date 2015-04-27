@@ -148,8 +148,10 @@ void ParticleSystem::update(){
     // Shouldn have  to worry about these anymore
     // mergeSimilarParticles(cur,gathered_particles); 
 
-    // Handle splits
+    // Handle splits & includes localized annealing
     generateResSplits(cur,gathered_particles);
+
+
 
   }//gather,merge,resSplits 
 
@@ -534,6 +536,7 @@ void ParticleSystem::generateResSplits(Particle * &cur,
   */
 
   std::vector < glm::vec3 > new_positions; // used incase we split
+  PartPtrVec before_annealing;
 
   // maskfitting requires center be at index 0
   gathered_particles.insert(gathered_particles.begin(), cur );
@@ -556,9 +559,24 @@ void ParticleSystem::generateResSplits(Particle * &cur,
     );
 
 
-    newParticles.push_back(s);
+    before_annealing.push_back(s); // Save particles to temp vector
 
   }
+
+
+  // Preping for  a localized annealing
+
+  PartPtrVec gutted_mask; std::vector<bool>fixed;
+  prepareMask(before_annealing,mask, gutted_mask,fixed);
+
+  // Run annealing will run recursibly
+  localAnnealing(0,1000,fixed,gutted_mask);
+
+  // Assuming that it will kill particles after merges
+  // Will have updated positions
+  for(Particle * cur: before_annealing)
+    if( cur->isAlive() )
+      newParticles.push_back(cur);
 
 }
 
@@ -1746,4 +1764,56 @@ void ParticleSystem::annealing(unsigned int iterations, double prevForce){
     // PLEASE UNCOMMENT AFTER DEBUG
     // recompute_collisions(); // Will force all particles trajctories to be fixed
   }
+}
+
+void ParticleSystem::localAnnealing(unsigned int iterations, double prevForce, 
+  std::vector<bool> & fixed, PartPtrVec & gutted_mask_created){
+
+  printf("local annealing(%u,%f); ", iterations, prevForce);
+
+  // clear position of those we are moving
+  for (int i = 0; i < fixed.size(); ++i) {
+    if( fixed[i] == true){ continue; } // skip those fixed
+    Particle * cur = gutted_mask_created[i];
+    cur->setOldPos(cur->getPos());
+    cur->setPos((glm::vec3)NULL);
+  }
+
+  // Used to know when to stop calling annealing
+  double total_forces = 0.0;
+  bool   merge_triggered  = false;
+
+  // For each new particle made 
+  for (int i = 0; i < fixed.size(); ++i) {
+
+    if( fixed[i] == true){ continue; } // skip those fixed
+
+    Particle * cur = gutted_mask_created[i]; // set those are free moving
+
+    if(cur->isDead()) { continue; } // To handle dead particles created by merge
+
+    // try to relax the particle based on mask and other particles
+    double f = simulatedannealing(cur, gutted_mask_created);
+    total_forces += f; 
+
+  }
+
+  // Check if we have to keep trying annealing
+  double changeForce = fabs( prevForce - total_forces );
+
+  if(changeForce > 0.0001  && total_forces != 0.0 ){
+
+    localAnnealing(iterations+1,total_forces,fixed,gutted_mask_created);
+
+  } else{
+
+    printf("Done Iterating\n");
+    printf("Particles Left: %d \n",particles.size());
+
+    // CLEANUP
+    // 1) Want to call a merge that will 'kill' those particles that lay on top of eachother
+
+    // recompute_collisions(); // Will force all particles trajctories to be fixed
+  }
+
 }

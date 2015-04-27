@@ -23,6 +23,7 @@
 
 typedef std::vector<std::vector<int>> vMat;
 typedef std::vector<Particle *> PartPtrVec;
+typedef unsigned int uint;
 
 // Forward declaration
 class ArgParser;
@@ -102,7 +103,14 @@ class ParticleSystem {
     void resolveCollisions(Particle * &cur);
     void removeDeadParticles();
     void addNewParticles(); // adds new particles to main vector
-    double simulatedannealing(Particle * p, PartPtrVec & gathered);
+    double simulatedannealing(Particle * p, PartPtrVec & gathered); // Moves based on gathered
+
+    // expirmental totaly
+    void localAnnealing(unsigned int iterations, double prevForce, 
+        std::vector<bool> & fixed, PartPtrVec & gutted_mask_created);
+
+
+    void annealing(unsigned int iterations, double prevForce);
     void annealing(unsigned int iterations, double prevForce);
     void recompute_collisions();
     
