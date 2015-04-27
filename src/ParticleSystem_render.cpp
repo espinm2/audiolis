@@ -418,8 +418,8 @@ void ParticleSystem::setupVelocityVisual(){
     glm::vec3 pos = cur->getPos();
     glm::vec3 dir = cur->getDir();
 
-    std::cout << "================================\n";
-    std::cout << "Cur: " << *cur << std::endl;
+    // std::cout << "================================\n";
+    // std::cout << "Cur: " << *cur << std::endl;
 
     if(args->direction){
     

@@ -329,7 +329,7 @@ void ParticleSystem::removeDeadParticles(){
   for( unsigned int i = 0 ; i < particles.size(); i++){
     // Keep if 0, else delete
     if(particles[i]->isDead()){
-      // std::cout << "Removing Particle " << i << std::endl; 
+      std::cout << "Removing Particle " << i << std::endl; 
 
       // there is stuff to push off
       if(i != particles.size()-1){
@@ -572,7 +572,7 @@ void ParticleSystem::generateResSplits(Particle * &cur,
   // Assuming that we will kill particles after a few merges
   for(Particle * cur: before_annealing){
     if( cur->isAlive() ){
-      if( cur->getDir() != cur->getDir() ){printf("Found a NaN\n"); assert(false); }
+      // if( cur->getDir() != cur->getDir() ){printf("Found a NaN\n"); assert(false); }
       newParticles.push_back(cur);
     }
   }
@@ -1629,7 +1629,7 @@ double ParticleSystem::simulatedannealing(
 
   //  get all force felt by this particle from nearby particles
   glm::vec3 force  = interParticleForce(p,gathered);
-  std::cout << "FORCE : " << force << std::endl;
+  // std::cout << "FORCE : " << force << std::endl;
 
   double forceMag = glm::length(force);
 
@@ -1640,13 +1640,13 @@ double ParticleSystem::simulatedannealing(
   float radius = glm::distance(p->getOldPos(), p->getCenter());
   newPos = p->getCenter() + (radius * dir );
 
-  std::cout << "ANNEALING BEFORE "<< *p << std::endl;
+  // std::cout << "ANNEALING BEFORE "<< *p << std::endl;
 
   // change my direction & postition, think of this as a movie function
   p->setDir(dir);
   p->setPos(newPos); 
 
-  std::cout << "ANNEALING AFTER  "<< *p << std::endl;
+  // std::cout << "ANNEALING AFTER  "<< *p << std::endl;
 
   if( p->getDir() != p->getDir() ){printf("Found a NaN in simulatedannealing\n"); assert(false); }
   return forceMag;
@@ -1689,7 +1689,8 @@ glm::vec3 ParticleSystem::interParticleForce(Particle * & cur, PartPtrVec & part
     float  f = - 1.0* K * displacement;
 
     // Postive forces push me away, negative push me inward
-    if( f < 0.0 ){printf(" Attractive Force Detected \n"); continue; }
+    // Expected with local
+    if( f < 0.0 ){/* printf(" Attractive Force Detected \n");*/ continue; }
 
     // Convert into 3D vector by dir * force
     force +=  f * glm::normalize(cur->getOldPos() - p->getOldPos() );
@@ -1857,8 +1858,8 @@ void ParticleSystem::prepareMask(PartPtrVec & movable,
 
   assert(exposed.size() == fixed.size() );
 
-  printf("==============GUTTING MASK OBJECT====================\n");
-  for (int i = 0; i < exposed.size(); ++i) {
-    std::cout << &(*exposed[i]) << " :  " << fixed[i] << std::endl;
-  }
+  // printf("==============GUTTING MASK OBJECT====================\n");
+  // for (int i = 0; i < exposed.size(); ++i) {
+  //   std::cout << &(*exposed[i]) << " :  " << fixed[i] << std::endl;
+  // }
 }
