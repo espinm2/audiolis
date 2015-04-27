@@ -1629,9 +1629,9 @@ double ParticleSystem::simulatedannealing(
 
   //  get all force felt by this particle from nearby particles
   glm::vec3 force  = interParticleForce(p,gathered);
+  std::cout << "FORCE : " << force << std::endl;
 
   double forceMag = glm::length(force);
-
 
   glm::vec3 newPos = p->getOldPos() + force;
 
@@ -1640,15 +1640,15 @@ double ParticleSystem::simulatedannealing(
   float radius = glm::distance(p->getOldPos(), p->getCenter());
   newPos = p->getCenter() + (radius * dir );
 
-  // std::cout << "ANNEALING BEFORE "<< *p << std::endl;
+  std::cout << "ANNEALING BEFORE "<< *p << std::endl;
 
   // change my direction & postition, think of this as a movie function
   p->setDir(dir);
   p->setPos(newPos); 
 
-  // std::cout << "ANNEALING AFTER  "<< *p << std::endl;
+  std::cout << "ANNEALING AFTER  "<< *p << std::endl;
 
-
+  if( p->getDir() != p->getDir() ){printf("Found a NaN in simulatedannealing\n"); assert(false); }
   return forceMag;
 
   // Debug
@@ -1680,6 +1680,8 @@ glm::vec3 ParticleSystem::interParticleForce(Particle * & cur, PartPtrVec & part
 
     // Get the distance
     Particle * p = partv[i];
+
+    if( p == cur) { continue; } // do not compare against myself
 
     // Force from spring  =-  Kconstant * (where I should be - where I am)
     double dist = glm::distance( p->getOldPos(), cur->getOldPos() );
@@ -1855,10 +1857,8 @@ void ParticleSystem::prepareMask(PartPtrVec & movable,
 
   assert(exposed.size() == fixed.size() );
 
-  printf("GUTTING MASK OBJECT\n");
-  for (int i = 0; i < fixed.size(); ++i) {
-    std::cout << ""
-
+  printf("==============GUTTING MASK OBJECT====================\n");
+  for (int i = 0; i < exposed.size(); ++i) {
+    std::cout << &(*exposed[i]) << " :  " << fixed[i] << std::endl;
   }
-
 }
