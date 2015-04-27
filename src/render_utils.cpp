@@ -11,6 +11,7 @@ void addEdgeGeometry(std::vector<VBOPosNormalColor> &verts,
                      const glm::vec4 &acolor, const glm::vec4 &bcolor, 
                      float a_th,float b_th) {
   
+  printf("a <%3.3f,%3.3f,%3.3f> and b <%3.3f,%3.3f,%3.3f>\n", a.x,a.y,a.z,b.x,b.y, b.z);
   // find perpendicular axes
   float length = glm::length(a-b);
   

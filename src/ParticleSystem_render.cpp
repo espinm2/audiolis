@@ -413,8 +413,13 @@ void ParticleSystem::setupVelocityVisual(){
   for(int i = 0; i < particles.size(); i++){
 
     Particle * cur = particles[i];
+    if(cur == NULL){
+    }
     glm::vec3 pos = cur->getPos();
     glm::vec3 dir = cur->getDir();
+
+    std::cout << "================================\n";
+    std::cout << "Cur: " << *cur << std::endl;
 
     if(args->direction){
     

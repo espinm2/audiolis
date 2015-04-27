@@ -144,13 +144,10 @@ void ParticleSystem::update(){
     // Gathered
     // printf("Particle has gathered %d \n",gathered_particles.size());
 
-    // Handle merges ( kills particles in gathered_particles vector)
-    // Shouldn have  to worry about these anymore
-    // mergeSimilarParticles(cur,gathered_particles); 
+    mergeSimilarParticles(cur,gathered_particles); 
 
     // Handle splits & includes localized annealing
     generateResSplits(cur,gathered_particles);
-
 
 
   }//gather,merge,resSplits 
@@ -162,28 +159,29 @@ void ParticleSystem::update(){
   std::cout << "================= END           ================="<<std::endl;
   */
 
-  // How we will check if 
-  bool annealing_required = newParticles.size() > 0;
+  // // How we will check if 
+  // bool annealing_required = newParticles.size() > 0;
+  // // DEBUG DISABLE 
+  // bool annealing_required = newParticles.size() > 0;
 
-  if(annealing_required)
-    printf("Particles before split: %d\n", particles.size() );
+  // if(annealing_required)
+  //   printf("Particles before split: %d\n", particles.size() );
 
   addNewParticles();
 
-  if(annealing_required)
-    printf("Particles after split: %d\n", particles.size() );
+  // if(annealing_required)
+  //   printf("Particles after split: %d\n", particles.size() );
 
-  // Going to put the system into a loop to find stablization
-  if(annealing_required){
+  // // Going to put the system into a loop to find stablization
+  // if(annealing_required){
 
-    annealing(0,100.0); // set prevForce = 1 so that fabs(1-1234)
-    printf("Particles after annealing: %d\n", particles.size() );
+  //   annealing(0,100.0); // set prevForce = 1 so that fabs(1-1234)
+  //   printf("Particles after annealing: %d\n", particles.size() );
 
-  }
+  // }
 
   // Clean up phase
   removeDeadParticles();
-
 
   // Move all the partilces in the system up a timestep
   for(Particle * cur : particles)
@@ -558,27 +556,27 @@ void ParticleSystem::generateResSplits(Particle * &cur,
       cur->getSplit() + 1 
     );
 
-
     before_annealing.push_back(s); // Save particles to temp vector
-
   }
 
 
-  // Preping for  a localized annealing
+  // Localized Annealing! 
 
+  // Preping for  a localized annealing
   PartPtrVec gutted_mask; std::vector<bool>fixed;
-  prepareMask(before_annealing,mask, gutted_mask,fixed);
+  prepareMask(before_annealing,mask, fixed, gutted_mask);
 
   // Run annealing will run recursibly
   localAnnealing(0,1000,fixed,gutted_mask);
 
-  // Assuming that it will kill particles after merges
-  // Will have updated positions
-  for(Particle * cur: before_annealing)
-    if( cur->isAlive() )
+  // Assuming that we will kill particles after a few merges
+  for(Particle * cur: before_annealing){
+    if( cur->isAlive() ){
+      if( cur->getDir() != cur->getDir() ){printf("Found a NaN\n"); assert(false); }
       newParticles.push_back(cur);
-
-}
+    }
+  }
+ }
 
 void ParticleSystem::particleSplit(Particle * &p,
  std::vector<Particle *> &vec){
@@ -758,6 +756,7 @@ void ParticleSystem::mergeSimilarParticles(Particle * &cur,
 
   // Kill all gathered particles that fall witin some range
   for(Particle * pending: merge_pending_particles) {
+    if(cur == pending){ continue; } // do not merge with self
     if( glm::distance(cur->getOldPos(), pending->getOldPos()) < MERGE_DISTANCE ){
       // std::cout << "Triggering Kill Command " << std::endl;
       pending->kill();
@@ -982,13 +981,13 @@ void ParticleSystem::generateMask(
   int hc = hex.getTotalCost();
   int pc = pent.getTotalCost();
 
-  printf("HEXAGON TOTAL COST: %d\n",hc);
-  hex.debugPrint();
-  printf("\n");
+  // printf("HEXAGON TOTAL COST: %d\n",hc);
+  // hex.debugPrint();
+  // printf("\n");
 
-  printf("PENTAGON TOTAL COST: %d\n",pc);
-  pent.debugPrint();
-  printf("\n");
+  // printf("PENTAGON TOTAL COST: %d\n",pc);
+  // pent.debugPrint();
+  // printf("\n");
 
   // Set the best choice
   (hc < pc) ? m = hex : m = pent;
@@ -1122,7 +1121,7 @@ void ParticleSystem::delusionalParticleLocations(
   if( mask_radius > 2.2 * RADIUS_PARTICLE_WAVE )
     mask_radius = 2.2 * RADIUS_PARTICLE_WAVE;
 
-  printf("Mask Size Used:  %3.3f, maxSize = %3.3f\n", mask_radius, 2.2 * RADIUS_PARTICLE_WAVE );
+  // printf("Mask Size Used:  %3.3f, maxSize = %3.3f\n", mask_radius, 2.2 * RADIUS_PARTICLE_WAVE );
 
   circle_points_on_plane_refence(
       cur_particle->getOldPos(),                        // center of mask
@@ -1715,7 +1714,7 @@ void ParticleSystem::annealing(unsigned int iterations, double prevForce){
 
   // Used to know when to stop calling annealing
   double total_forces = 0.0;
-  bool   merge_triggered  = false;
+  bool merge_triggered = false;
 
   // Move particles horzitonally
   for(Particle * cur : particles){
@@ -1773,10 +1772,10 @@ void ParticleSystem::localAnnealing(unsigned int iterations, double prevForce,
 
   // clear position of those we are moving
   for (int i = 0; i < fixed.size(); ++i) {
-    if( fixed[i] == true){ continue; } // skip those fixed
+    if( fixed[i] == true ){ continue; } // do not change fixed
     Particle * cur = gutted_mask_created[i];
+
     cur->setOldPos(cur->getPos());
-    cur->setPos((glm::vec3)NULL);
   }
 
   // Used to know when to stop calling annealing
@@ -1792,8 +1791,9 @@ void ParticleSystem::localAnnealing(unsigned int iterations, double prevForce,
 
     if(cur->isDead()) { continue; } // To handle dead particles created by merge
 
-    // try to relax the particle based on mask and other particles
+    // Moves cur particle to a less dense space
     double f = simulatedannealing(cur, gutted_mask_created);
+
     total_forces += f; 
 
   }
@@ -1807,13 +1807,58 @@ void ParticleSystem::localAnnealing(unsigned int iterations, double prevForce,
 
   } else{
 
-    printf("Done Iterating\n");
-    printf("Particles Left: %d \n",particles.size());
+    printf("Done annealing on mask\n");
 
-    // CLEANUP
-    // 1) Want to call a merge that will 'kill' those particles that lay on top of eachother
+    // // Localized cleanup
+    // for (int i = 0; i < fixed.size(); ++i) {
+    //   if( fixed[i] == true){ continue; } // skip those fixed
+    //   Particle * cur = gutted_mask_created[i]; // set those are free moving
+    //   mergeSimilarParticles(cur,gutted_mask_created); // DO NOT KILL PARTICLES IN MASK<
+    // }
 
     // recompute_collisions(); // Will force all particles trajctories to be fixed
+  }
+
+}
+
+void ParticleSystem::prepareMask(PartPtrVec & movable, 
+  Mask & m, std::vector<bool> & fixedVec, PartPtrVec & exposed){
+
+  assert(exposed.empty()); // should be empty
+
+  // We will create a mask where true == fixed and false == moveable
+  // This will be large enough for mask particles & my movable particles 
+  std::vector<bool> fixed(1 + m.size() + movable.size(), false);
+
+  // Setup the center of mask
+  fixed[0] = true; exposed.push_back(m.getCenter());
+
+  unsigned int index = 1;
+  // Setup other mask particles
+  for (unsigned int i = 0; i < m.getShape(); ++i) {
+    Particle * cur = m.getMaskParticle(i);
+
+    // If the partile isn't null, then it is a mask particle, add it
+    if( cur == NULL ) { continue; }
+    fixed[index++] = true; exposed.push_back(cur);
+
+  }
+
+  assert(exposed.size() == m.size() + 1);
+
+  // Add in those we can move, no need to tag, auto false
+  for(Particle * cur: movable)
+    exposed.push_back(cur);
+
+  // because return by ref
+  fixedVec = fixed;
+
+  assert(exposed.size() == fixed.size() );
+
+  printf("GUTTING MASK OBJECT\n");
+  for (int i = 0; i < fixed.size(); ++i) {
+    std::cout << ""
+
   }
 
 }

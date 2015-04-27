@@ -24,12 +24,12 @@ class Mask{
     
     // Standard Accessors
     const std::vector<Particle *> & getMaskParticles() { return maskParticles;}
-    const Particle * getCenter() { return maskCenter;}
+    Particle * getCenter() { return maskCenter;}
     const std::vector<int> & getCostVector(){ return costVector;}
     int getShape(){ return shape; }
 
     // Easier to use Accessors
-    const Particle * getMaskParticle(int i){ return maskParticles[i];}
+    Particle * getMaskParticle(int i){ return maskParticles[i];}
     const int getCost(int i){ return costVector[i];}
     const int size(){ return size_of_mask; }
     double maskArea(); // TODO

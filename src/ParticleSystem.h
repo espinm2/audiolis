@@ -108,9 +108,9 @@ class ParticleSystem {
     // expirmental totaly
     void localAnnealing(unsigned int iterations, double prevForce, 
         std::vector<bool> & fixed, PartPtrVec & gutted_mask_created);
+    void prepareMask(PartPtrVec & tmpvec, Mask & m, std::vector<bool> & fixed, PartPtrVec & exposed);
 
 
-    void annealing(unsigned int iterations, double prevForce);
     void annealing(unsigned int iterations, double prevForce);
     void recompute_collisions();
     
