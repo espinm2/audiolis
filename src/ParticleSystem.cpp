@@ -123,38 +123,20 @@ void ParticleSystem::load(){
 void ParticleSystem::update(){
 
   // Use only old positions, clear new ones
-  for(Particle * cur : particles){
+  for(Particle * cur : particles)
     cur->setOldPos(cur->getPos());
-    // cur->setPos((glm::vec3)NULL); // we need old particles to have their position here for annealing
-  }
 
-  // std::cout << "================= OLD PARTICLES ================="<<std::endl;
   // Gather, Merge, and ResSplits 
   for(Particle * cur : particles){
-    // std::cout << "OLD: " << *cur << std::endl;
 
-
-    /*
-    // DEBUG REMOVE ME
-    // Print out all gathered particles and their distances
-    printf("==============================================\n");
-    int debug_index = 0;
-    for(Particle * other : particles){
-      printf("id: %d\t %s\t %p\t", debug_index++, other->isAlive()?"alive":"dead", &(*other) );
-      std::cout << glm::distance(cur->getPos(),other->getPos()) << std::endl;
-    }
-    */
-
-    // Leave the dead in peace
-    if(cur->isDead()) { continue; } // To handle dead particles created by merge
+    if(cur->isDead()) { continue; } // Skip the dead
 
     // Gather the particles I will use for mask fitting
     PartPtrVec gathered_particles;        
     particle_kdtree.GatherParticles(cur, 
       GATHER_DISTANCE, GATHER_ANGLE, gathered_particles);
 
-    // Gathered
-    // printf("Particle has gathered %d \n",gathered_particles.size());
+    // With our gathered particles code, remove those too close to us
     mergeSimilarParticles(cur,gathered_particles); 
 
     // Handle splits & includes localized annealing
@@ -162,35 +144,8 @@ void ParticleSystem::update(){
 
   }//gather,merge,resSplits 
 
-  /*
-  std::cout << "================= NEW PARTICLES ================="<<std::endl;
-  for(Particle * p: newParticles)
-    std::cout << "NEW: " << *p << std::endl;
-  std::cout << "================= END           ================="<<std::endl;
-  */
-
-  // // How we will check if 
-  // bool annealing_required = newParticles.size() > 0;
-  // // DEBUG DISABLE 
-  // bool annealing_required = newParticles.size() > 0;
-
-  // if(annealing_required)
-  //   printf("Particles before split: %d\n", particles.size() );
-
+  // Cleanup
   addNewParticles();
-
-  // if(annealing_required)
-  //   printf("Particles after split: %d\n", particles.size() );
-
-  // // Going to put the system into a loop to find stablization
-  // if(annealing_required){
-
-  //   annealing(0,100.0); // set prevForce = 1 so that fabs(1-1234)
-  //   printf("Particles after annealing: %d\n", particles.size() );
-
-  // }
-
-  // Clean up phase
   removeDeadParticles();
 
   // Move all the partilces in the system up a timestep
@@ -204,6 +159,7 @@ void ParticleSystem::update(){
 
   // Remakes the kd tree for particles
   particle_kdtree.update(particles, *bbox);
+
 }
 
 void ParticleSystem::moveCursor( const float & dx, 
@@ -566,41 +522,43 @@ void ParticleSystem::generateResSplits(Particle * &cur,
       cur->getSplit() + 1 
     );
 
-    before_annealing.push_back(s); // Save particles to temp vector
+    newParticles.push_back(s); // Save particles to temp vector
+    // before_annealing.push_back(s); // Save particles to temp vector
   }
 
-  printf("Mask Created, Resolved Spits, Making %d Particles\n",new_positions.size());
+  return; // Testing merge code without annealing
 
-  // Localized Annealing! 
-  // Preping for  a localized annealing
-  PartPtrVec gutted_mask; std::vector<bool>fixed;
-  prepareMask(before_annealing,mask, fixed, gutted_mask);
+  /*
+    // Localized Annealing! 
+    // Preping for  a localized annealing
+    PartPtrVec gutted_mask; std::vector<bool>fixed;
+    prepareMask(before_annealing,mask, fixed, gutted_mask);
 
-  // printf("======Before Annealing======\n");
-  // for (int i = 0; i < gutted_mask.size(); ++i)
-  //   std::cout <<"Particle " << fixed[i] << ": " << *(gutted_mask[i]) << std::endl;
+    // printf("======Before Annealing======\n");
+    // for (int i = 0; i < gutted_mask.size(); ++i)
+    //   std::cout <<"Particle " << fixed[i] << ": " << *(gutted_mask[i]) << std::endl;
 
-  // printf("======After Annealing======\n");
-  // for (int i = 0; i < gutted_mask.size(); ++i)
-  //   std::cout <<"Particle " << fixed[i] << ": " << *(gutted_mask[i]) << std::endl;
+    // printf("======After Annealing======\n");
+    // for (int i = 0; i < gutted_mask.size(); ++i)
+    //   std::cout <<"Particle " << fixed[i] << ": " << *(gutted_mask[i]) << std::endl;
 
-  // Run annealing will run recursibly
-  localAnnealing(0,1000,fixed,gutted_mask);
+    // Run annealing will run recursibly
+    localAnnealing(0,1000,fixed,gutted_mask);
 
-  int debugcount = 0;
-  // Assuming that we will kill particles after a few merges
-  for(Particle * cur: before_annealing){
-    if( cur->isAlive() ){
-      newParticles.push_back(cur);
-      debugcount++;
-    }else{
-      std::cout << "Killing new particle\n";
-      delete cur;
+    int debugcount = 0;
+    // Assuming that we will kill particles after a few merges
+    for(Particle * cur: before_annealing){
+      if( cur->isAlive() ){
+        newParticles.push_back(cur);
+        debugcount++;
+      }else{
+        std::cout << "Killing new particle\n";
+        delete cur;
+      }
     }
-  }
 
-  printf(">>>>>>>>>> Created %d out of %d possible particles\n",debugcount, new_positions.size() );
-
+    printf(">>>>>>>>>> Created %d out of %d possible particles\n",debugcount, new_positions.size() );
+  */
 }
 
 void ParticleSystem::particleSplit(Particle * &p,
