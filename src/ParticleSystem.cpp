@@ -2015,7 +2015,7 @@ void ParticleSystem::constrainedAnnealing( AttractorVector & av,
 
 
 }
-double ParticleSystem::constrainedNudge(Particle * cur,
+double ParticleSystem::constrainedNudge(Particle * p,
  PartPtrVec & gathered_particles, glm::vec3 ap_pos){
 
 /*! \brief This function will move particles until they reach a comfortable
@@ -2025,14 +2025,18 @@ double ParticleSystem::constrainedNudge(Particle * cur,
   //  get all force felt by this particle from nearby particles
   glm::vec3 force  = interParticleForce(p,gathered);
 
-  // TODO CALCULATE FORCE CAUSED BY ATTRATOR
-  glm::vec3 attractor_force = 
 
-  // std::cout << "FORCE : " << force << std::endl;
+  // ===========================================================================
+  // TODO CALCULATE FORCE CAUSED BY ATTRATOR
+  double dist = glm::distance( p->getOldPos(), ap_pos );
+  double displacement = dist - 2 * RADIUS_PARTICLE_WAVE;
+  float  f = - 1.0 * 0.1 * displacement; // K = 0.1
+  // only add in 
+  if( f < 0.0 )
+    force += f * glm::normalize(ap_pos - p->getOldPos()) ;
+  // ===========================================================================
 
   double forceMag = glm::length(force);
-
-
   glm::vec3 newPos = p->getOldPos() + force;
 
   // Reproject back to sphere
