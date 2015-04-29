@@ -139,7 +139,7 @@ void GLCanvas::animate(){
 
     particleSystem->update();
     particleSystem->setupVBOs();
-
+    // GLCanvas::iteration++;
 
     // print every millisecond we pass in the 
     if(GLCanvas::iteration % (int)(.001/ particleSystem->getTimeStep()) == 0){
@@ -331,6 +331,9 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       break;
     case ' ':
       args->timer += 0.1;
+      particleSystem->update();
+      particleSystem->setupVBOs();
+      GLCanvas::iteration++;
       mesh->setupVBOs();
       break;
     case 'u': case 'U':

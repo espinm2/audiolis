@@ -68,10 +68,7 @@ bool Mask::resSpit(std::vector<glm::vec3> & newPartPos){
   
     Particle * curOuter = maskParticles[i];
 
-    if(curOuter == NULL){
-      continue;
-
-    }
+    if(curOuter == NULL){continue; }
   
     float dist_center_outer = glm::distance(curOuter->getOldPos(), maskCenter->getOldPos());
 

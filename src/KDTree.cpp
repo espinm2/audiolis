@@ -305,9 +305,12 @@ void KDTree::GatherParticles( Particle * center_particle, double gather_radius,
     if(binary_heap.size() <= heap_index || binary_heap[heap_index] == NULL)
       return;
 
+    bool dist_okay,angl_okay;
+    double dist = glm::distance(center_particle->getOldPos(),binary_heap[heap_index]->getOldPos());
+
     // If you fall inside the sphere
-    bool dist_okay =  glm::distance(center_particle->getOldPos(),binary_heap[heap_index]->getOldPos()) < gather_radius;
-    bool angl_okay =  angleBetweenVectors(center_particle->getDir(), binary_heap[heap_index]->getDir()) < gather_angle;
+    dist_okay =  dist < gather_radius;
+    angl_okay =  angleBetweenVectors(center_particle->getDir(), binary_heap[heap_index]->getDir()) < gather_angle;
 
     if( dist_okay  && angl_okay){
       Particle * pending = binary_heap[heap_index];

@@ -60,8 +60,12 @@ class Mask{
     // Center of the mask
     Particle * maskCenter;
 
+    // p1 p2 p3 p4 NULL p6
+    // d1 d2 d3 d4 d5 d6
+
     // Standard convention to use NULL pointer if there is no particle there
     std::vector< Particle *> maskParticles;
+    // std::vector< glm::vec3 > delusionalParticleLocations;
 
     // Standard convention to -1 if there is no cost associated
     std::vector< int > costVector;
