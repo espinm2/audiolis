@@ -6,6 +6,7 @@
 #include <limits>
 #include <float.h>
 #include <cstdlib>
+#include <utility>
 
 #include "boundingbox.h"
 #include "geometry_utils.h"
@@ -41,6 +42,10 @@ typedef std::vector<Particle *>  PartPtrVec;
 // Used for update
 typedef std::vector<Particle *>::iterator ParticleIter;
 typedef std::vector<std::vector<int>> vMat;
+
+// Used for for new code
+typedef std::pair<glm::vec3, PartPtrVec> Attractor;
+typedef std::vector<Attractor *> AttractorVector;
 
 
 // ╔═╗╦╔╦╗╦ ╦╦  ╔═╗╔╦╗╦╔═╗╔╗╔  ╦  ╔═╗╔═╗╔═╗
@@ -128,6 +133,10 @@ void ParticleSystem::update(){
   }
 
 
+  // Might be required if we need to anneal
+  AttractorVector av;
+  bool annealing_required = false;
+
   // Gather, Merge, and ResSplits 
   for(Particle * cur : particles){
 
@@ -139,21 +148,31 @@ void ParticleSystem::update(){
     particle_kdtree.GatherParticles(cur, 
       GATHER_DISTANCE, GATHER_ANGLE, gathered_particles);
 
+    // Let us know if we need to do a contained anneal
+    Attractor * at_ptr;
+    annealing_required = maintainDensity(cur,gathered_particles,at_ptr);
+    av.push_back(at_ptr);
+
+    // OLD CODE_____________________________________________________
     // With our gathered particles code, remove those too close to us
-    mergeSimilarParticles(cur,gathered_particles); 
+    // mergeSimilarParticles(cur,gathered_particles); 
 
     // Handle splits & includes localized annealing
-    generateResSplits(cur,gathered_particles);
+    // generateResSplits(cur,gathered_particles);
 
 
   }//gather,merge,resSplits 
 
-  if(!newParticles.empty())
-    args->animate = false;
+  if(!newParticles.empty()){ args->animate = false;}  // Debug 
+
+  // Add in all the new particles made!
+  addNewParticles();
+
+  // Go into a globalized annealing step
+  constrainedAnnealing(av,0,1000);
 
   // Cleanup
   removeDeadParticles();
-  addNewParticles();
 
   // Move all the partilces in the system up a timestep
   for(Particle * cur : particles)
@@ -1851,4 +1870,194 @@ void ParticleSystem::prepareMask(PartPtrVec & movable,
   //   std::cout << &(*exposed[i]) << " :  " << fixed[i] << std::endl;
   // }
 
+}
+
+
+
+bool ParticleSystem::maintainDensity(Particle * cur,
+  PartPtrVec & gathered_particles, Attractor * ap){
+
+  // Create an attractor requires a position and children
+  glm::vec3 ap_pos = cur->getOldPos();
+  PartPtrVec children; children.push_back(cur);
+
+
+  // Continue only if we need splits, else just return a attractor with self
+  if (!shouldSplit(cur,gathered_particles)){ 
+    ap = new Attractor(ap_pos,children);
+    return false; 
+  }
+
+
+  // Get points around us to initally place to be made children
+  glm::vec3 new_particles_pos;
+  circle_points_on_plane_refence(
+      ap_pos,                // center of mask
+      cur->getDir(),         // direction of plane
+      RADIUS_PARTICLE_WAVE,  // radius of my mask
+      6,                     // number of particles mask has
+      new_particles_pos);    // where I will append my results
+
+  // We project the particles  on the sphere
+  double radi = glm::distance(cur_particle->getCenter(), 
+    cur_particle->getOldPos();
+  circle_points_on_sphere(cur->getCenter(), radi, new_particles_pos);
+
+
+  // Create new children
+  for(glm::vec3 pos : new_particles_pos){
+
+    Particle * s = createParticle(
+      pos,  
+      pos, 
+      cur->getCenter(), 
+      cur->getWatt() / (double)(SPLIT_AMOUNT + 1.0), 
+      cur->getFreq(), 
+      cur->getSplit() + 1 
+    );
+
+    newParticles.push_back(s); 
+    children.push_back(s); 
+
+  }
+
+  ap = new Attractor(ap_pos,children);
+  return true;
+
+}
+
+
+void ParticleSystem::shouldSplit(Particle * cur,
+  PartPtrVec & gathered_particles){
+
+  // Purpose: should I add more particles to the sytem
+
+  // If i encounter a particle in my space, then I need not split
+  glm::vec3  a = cur->getOldPos();
+  for( Particle * p: gathered_particles){
+
+    glm::vec3  b = p->getOldPos();
+    squ_dist = pow(a.x-b.x,2) + pow(a.y-b.y,2) + pow(a.z-b.z,2);
+
+    if(squ_dist < pow(RADIUS_PARTICLE_WAVE*2,2))
+      return false;
+
+  }
+
+  // If none are found, then go ahead and split
+  return true;
+}
+
+void ParticleSystem::constrainedAnnealing( AttractorVector & av,
+  unsigned int iterations,double prevForce ){
+
+  printf("constrainedAnnealing(av,%u,%f); ", iterations, prevForce);
+
+  // Remakes the kd tree for particles
+  particle_kdtree.update(particles, *bbox);
+
+  // Set old to new positions
+  for(Particle * cur : particles)
+    cur->setOldPos(cur->getPos());
+
+  // Used to know when to stop calling annealing
+  double total_forces = 0.0; bool merge_triggered = false;
+
+  for(Attractor * ap : av){
+    for(Particle * cur: ap->second){
+
+      // Leave the dead in peace
+      if(cur->isDead()) { continue; } // To handle dead particles created by merge
+
+      // Gather only particles around where I want
+      PartPtrVec gathered_particles;        
+      particle_kdtree.GatherParticles(cur, 
+        RADIUS_PARTICLE_WAVE, GATHER_ANGLE, gathered_particles);
+
+      // try to relax the particle
+      double f = constrainedNudge(cur, gathered_particles, ap->first);
+
+      total_forces += f; 
+
+      // Handle merges ( kills particles in gathered_particles vector)
+      if( iterations % RELAXATION_MERGE_TRIGGER == 0 
+        && iterations > 0){
+        // std::cout << "Merging" << std::endl;
+        mergeSimilarParticles(cur,gathered_particles); 
+        merge_triggered = true;
+      }
+    }
+  }
+
+  // Remove particles we killed any this turn
+  if(merge_triggered)
+    removeDeadParticles();
+
+  // Check if we have to keep trying annealing
+  double changeForce = fabs( prevForce - total_forces );
+
+  if(changeForce > 0.0001  && total_forces != 0.0 ){
+
+    annealing(iterations+1,total_forces);
+
+  } else{
+
+    printf("Done Iterating\n");
+    printf("Particles Left: %d \n",particles.size());
+
+    // Merge particles 
+    mergeGlobalParticles(MERGE_DISTANCE*2.0); 
+    removeDeadParticles();
+
+    // PLEASE UNCOMMENT AFTER DEBUG
+    // recompute_collisions(); // Will force all particles trajctories to be fixed
+  }
+
+
+}
+double ParticleSystem::constrainedNudge(Particle * cur,
+ PartPtrVec & gathered_particles, glm::vec3 ap_pos){
+
+/*! \brief This function will move particles until they reach a comfortable
+ *         state. Enforces the spacial constraints.
+ */
+
+  //  get all force felt by this particle from nearby particles
+  glm::vec3 force  = interParticleForce(p,gathered);
+
+  // TODO CALCULATE FORCE CAUSED BY ATTRATOR
+  glm::vec3 attractor_force = 
+
+  // std::cout << "FORCE : " << force << std::endl;
+
+  double forceMag = glm::length(force);
+
+
+  glm::vec3 newPos = p->getOldPos() + force;
+
+  // Reproject back to sphere
+  glm::vec3 dir = glm::normalize(newPos - p->getCenter());
+  float radius = glm::distance(p->getOldPos(), p->getCenter());
+  newPos = p->getCenter() + (radius * dir );
+
+  // std::cout << "ANNEALING BEFORE "<< *p << std::endl;
+
+  // change my direction & postition, think of this as a movie function
+  p->setDir(dir);
+  p->setPos(newPos); 
+
+  // std::cout << "ANNEALING AFTER  "<< *p << std::endl;
+
+  // if( p->getDir() != p->getDir() ){printf("Found a NaN in simulatedannealing\n"); assert(false); }
+  return forceMag;
+
+  // Debug
+
+  // now see the diffrence
+  // glm::vec3 new_force  = interParticleForce(p,gathered);
+  // double new_force_mag = glm::length(new_force);
+
+  // LATER, CALL REC
+  // double change = new_force_mag - force_mag;
+  // simulatedannealingAux(p,gathered,change);
 }

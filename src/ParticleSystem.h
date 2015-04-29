@@ -23,6 +23,8 @@
 
 typedef std::vector<std::vector<int>> vMat;
 typedef std::vector<Particle *> PartPtrVec;
+typedef std::pair<glm::vec3, PartPtrVec> Attractor;
+typedef std::vector<Attractor*> AttractorVector;
 typedef unsigned int uint;
 
 // Forward declaration
@@ -104,6 +106,8 @@ class ParticleSystem {
     void removeDeadParticles();
     void addNewParticles(); // adds new particles to main vector
     double simulatedannealing(Particle * p, PartPtrVec & gathered); // Moves based on gathered
+    bool maintainDensity(Particle * cur,PartPtrVec & gathered_particles, Attractive * ap);
+    void shouldSplit(Particle * cur,PartPtrVec & gathered_particles);
 
     // expirmental totaly
     void localAnnealing(unsigned int iterations, double prevForce, 
