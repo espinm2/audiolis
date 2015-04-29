@@ -167,12 +167,20 @@ void ParticleSystem::update(){
 
   // Add in all the new particles made!
   addNewParticles();
-
-  // Go into a globalized annealing step
-  constrainedAnnealing(av,0,1000);
-
-  // Cleanup
   removeDeadParticles();
+
+  if(false){
+    // Go into a globalized annealing step
+    printf("Requires Annealing\n");
+    printf("av.size(): \n",av.size() );
+    constrainedAnnealing(av,0,1000);
+
+  }
+
+
+  // Cleaup av
+  for(Attractor * ap: av ){ delete ap; }
+  av.clear();
 
   // Move all the partilces in the system up a timestep
   for(Particle * cur : particles)
@@ -1890,8 +1898,8 @@ bool ParticleSystem::maintainDensity(Particle * cur,
 
 
   // Get points around us to initally place to be made children
-  glm::vec3 new_particles_pos;
-  circle_points_on_plane_refence(
+  std::vector<glm::vec3> new_particles_pos;
+  circle_points_on_plane(
       ap_pos,                // center of mask
       cur->getDir(),         // direction of plane
       RADIUS_PARTICLE_WAVE,  // radius of my mask
@@ -1899,8 +1907,8 @@ bool ParticleSystem::maintainDensity(Particle * cur,
       new_particles_pos);    // where I will append my results
 
   // We project the particles  on the sphere
-  double radi = glm::distance(cur_particle->getCenter(), 
-    cur_particle->getOldPos();
+  double radi = glm::distance(cur->getCenter(), 
+    cur->getOldPos());
   circle_points_on_sphere(cur->getCenter(), radi, new_particles_pos);
 
 
@@ -1927,7 +1935,7 @@ bool ParticleSystem::maintainDensity(Particle * cur,
 }
 
 
-void ParticleSystem::shouldSplit(Particle * cur,
+bool ParticleSystem::shouldSplit(Particle * cur,
   PartPtrVec & gathered_particles){
 
   // Purpose: should I add more particles to the sytem
@@ -1937,7 +1945,7 @@ void ParticleSystem::shouldSplit(Particle * cur,
   for( Particle * p: gathered_particles){
 
     glm::vec3  b = p->getOldPos();
-    squ_dist = pow(a.x-b.x,2) + pow(a.y-b.y,2) + pow(a.z-b.z,2);
+    double squ_dist = pow(a.x-b.x,2) + pow(a.y-b.y,2) + pow(a.z-b.z,2);
 
     if(squ_dist < pow(RADIUS_PARTICLE_WAVE*2,2))
       return false;
@@ -2023,7 +2031,7 @@ double ParticleSystem::constrainedNudge(Particle * p,
  */
 
   //  get all force felt by this particle from nearby particles
-  glm::vec3 force  = interParticleForce(p,gathered);
+  glm::vec3 force  = interParticleForce(p,gathered_particles);
 
 
   // ===========================================================================

@@ -106,8 +106,10 @@ class ParticleSystem {
     void removeDeadParticles();
     void addNewParticles(); // adds new particles to main vector
     double simulatedannealing(Particle * p, PartPtrVec & gathered); // Moves based on gathered
-    bool maintainDensity(Particle * cur,PartPtrVec & gathered_particles, Attractive * ap);
-    void shouldSplit(Particle * cur,PartPtrVec & gathered_particles);
+    bool maintainDensity(Particle * cur,PartPtrVec & gathered_particles, Attractor * ap);
+    bool shouldSplit(Particle * cur,PartPtrVec & gathered_particles);
+    double constrainedNudge(Particle * p, PartPtrVec & gathered_particles, glm::vec3 ap_pos);
+    void constrainedAnnealing( AttractorVector & av, unsigned int iterations,double prevForce );
 
     // expirmental totaly
     void localAnnealing(unsigned int iterations, double prevForce, 
