@@ -132,11 +132,6 @@ void ParticleSystem::update(){
     cur->setOldPos(cur->getPos());
   }
 
-
-  // Might be required if we need to anneal
-  AttractorVector av;
-  bool annealing_required = false;
-
   // Gather, Merge, and ResSplits 
   for(Particle * cur : particles){
 
@@ -148,39 +143,18 @@ void ParticleSystem::update(){
     particle_kdtree.GatherParticles(cur, 
       GATHER_DISTANCE, GATHER_ANGLE, gathered_particles);
 
-    // Let us know if we need to do a contained anneal
-    Attractor * at_ptr;
-    annealing_required = maintainDensity(cur,gathered_particles,at_ptr);
-    av.push_back(at_ptr);
-
-    // OLD CODE_____________________________________________________
     // With our gathered particles code, remove those too close to us
-    // mergeSimilarParticles(cur,gathered_particles); 
+    mergeSimilarParticles(cur,gathered_particles); 
 
     // Handle splits & includes localized annealing
-    // generateResSplits(cur,gathered_particles);
+    generateResSplits(cur,gathered_particles);
 
 
   }//gather,merge,resSplits 
 
-  if(!newParticles.empty()){ args->animate = false;}  // Debug 
-
   // Add in all the new particles made!
-  addNewParticles();
   removeDeadParticles();
-
-  if(false){
-    // Go into a globalized annealing step
-    printf("Requires Annealing\n");
-    printf("av.size(): \n",av.size() );
-    constrainedAnnealing(av,0,1000);
-
-  }
-
-
-  // Cleaup av
-  for(Attractor * ap: av ){ delete ap; }
-  av.clear();
+  addNewParticles();
 
   // Move all the partilces in the system up a timestep
   for(Particle * cur : particles)
@@ -193,7 +167,7 @@ void ParticleSystem::update(){
 
   // Remakes the kd tree for particles
   particle_kdtree.update(particles, *bbox);
-
+  
 }
 
 void ParticleSystem::moveCursor( const float & dx, 
