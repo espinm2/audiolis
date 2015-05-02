@@ -37,8 +37,8 @@ public:
     shapeBin.clear();
   }
 
-
   void printout(){
+    
     // Sort the ranges to the medium of all of them
     std::sort(minRange.begin(), minRange.end());
     std::sort(maxRange.begin(), maxRange.end());

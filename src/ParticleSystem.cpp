@@ -2059,7 +2059,7 @@ void ParticleSystem::analyze(){
   for(Particle * cur : particles){
 
     // skip the dead
-    if(cur->isDead()) { continue; }
+    if(cur->isDead()) { continue;   }
 
     // Gather the particles I will use to make an analysis of points 
     PartPtrVec gathered_particles;        
@@ -2070,7 +2070,9 @@ void ParticleSystem::analyze(){
       gathered_particles);              // where we will place these particles
 
     // If we do not gather anything at all then try next particle
-    if(gathered_particles.empty()){stats.saveShape(0); continue; }
+    if(gathered_particles.empty()){
+      printf("Collected None ************* \n");
+      stats.saveShape(0); continue; }
 
     // I want to sort these by their distances from me
     std::vector <double> distances;
