@@ -25,6 +25,7 @@
 #include "mask.h"
 #include <algorithm>
 #include "BVHNode.h"
+#include "Stats.h"
 
 #include "ParticleSystem.h"
 
@@ -108,10 +109,10 @@ void ParticleSystem::load(){
   // Tunable parameters
   GATHER_DISTANCE       = RADIUS_PARTICLE_WAVE * 2.5; // far away we concider gathers
   GATHER_ANGLE          = M_PI / 16.0;                // angle we gather as thresh
-  MERGE_DISTANCE        = RADIUS_PARTICLE_WAVE * 0.20; // when we concider same particle
+  MERGE_DISTANCE        = RADIUS_PARTICLE_WAVE * 0.25; // when we concider same particle
 
   PARTICLES_PER_M       = 100; // (Not used )
-  RELAXATION_MERGE_TRIGGER = 10; // how many iterations of annealing before we merge
+  RELAXATION_MERGE_TRIGGER = 20; // how many iterations of annealing before we merge
 
   // Debug phase 
   // debug();
@@ -2047,3 +2048,59 @@ double ParticleSystem::constrainedNudge(Particle * p,
   // double change = new_force_mag - force_mag;
   // simulatedannealingAux(p,gathered,change);
 }
+
+
+void ParticleSystem::analyze(){
+
+  // Clear
+  stats.clearStats();
+  printf("Calculating Stats\n");
+
+  for(Particle * cur : particles){
+
+    // skip the dead
+    if(cur->isDead()) { continue; }
+
+    // Gather the particles I will use to make an analysis of points 
+    PartPtrVec gathered_particles;        
+    particle_kdtree.GatherParticles(
+      cur,                              // This particle we collect around
+      RADIUS_PARTICLE_WAVE * 2.5,       // collect a bit beyond mask
+      GATHER_ANGLE,                     // if angle beyond this do not gather
+      gathered_particles);              // where we will place these particles
+
+    // If we do not gather anything at all then try next particle
+    if(gathered_particles.empty()){stats.saveShape(0); continue; }
+
+    // I want to sort these by their distances from me
+    std::vector <double> distances;
+    for(Particle * g: gathered_particles)
+      distances.push_back(glm::distance(g->getOldPos(), cur->getPos() ));
+    // I want to sort this by lowest to highest
+    std::sort (distances.begin(), distances.end()); 
+
+
+    // I want to find the band in which they lie
+    // I will walk across until I find a gap in distance
+    uint particles_before_gap = 0;
+
+    for( uint i = 0; i < distances.size()-1; i++){
+      double gap = distances[i+1] - distances[i];
+      if( gap < args->gap_threshold ){
+        particles_before_gap++;
+      } else{
+        particles_before_gap++;
+        break;
+      }
+    }
+
+    // Save this in our stats generator
+    stats.saveShape(particles_before_gap);
+    stats.saveRange(distances[0], distances[particles_before_gap-1]);
+
+  }// all particles
+
+  stats.printout();
+
+}//funct
+
