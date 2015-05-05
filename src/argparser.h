@@ -84,6 +84,10 @@ public:
         i++; assert (i < argc); 
         fps_cap = atoi(argv[i]);
 
+      } else if (!strcmp(argv[i],"-gap")) {
+        i++; assert (i < argc); 
+        gap_threshold = atof(argv[i]);
+
       } else if (!strcmp(argv[i],"-profile")) {
         profile = true;
 
@@ -137,6 +141,7 @@ public:
     division = 10;
     fps_cap = 30;
 
+    gap_threshold = .05; // 5cm
 
   }
 
@@ -188,6 +193,9 @@ public:
 
   int division;
   int fps_cap;
+
+
+  double gap_threshold;
 
   // Material Key
   // wall_material 0 => bricked_wall; 

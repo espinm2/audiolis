@@ -20,6 +20,7 @@
 #include "mask.h"
 #include "KDTree.h"
 #include "UniformGrid.h"
+#include "Stats.h"
 
 typedef std::vector<std::vector<int>> vMat;
 typedef std::vector<Particle *> PartPtrVec;
@@ -98,35 +99,22 @@ class ParticleSystem {
     // Miscellaneous <I coulnd't find a group>
     void closeProfiler(){output_profiler_str.close(); }
 
-    // New Update Function Code (untested)
+    // New Update Function Code (tested)
     void generateResSplits(Particle * &cur, PartPtrVec & gathered);
     void mergeSimilarParticles(Particle * &cur, PartPtrVec & gathered);
     void mergeGlobalParticles(double dist);
     void resolveCollisions(Particle * &cur);
     void removeDeadParticles();
     void addNewParticles(); // adds new particles to main vector
+
+    // Relaxation used for inital sphere
     double simulatedannealing(Particle * p, PartPtrVec & gathered); // Moves based on gathered
-    bool maintainDensity(Particle * cur,PartPtrVec & gathered_particles, Attractor * ap);
-    bool shouldSplit(Particle * cur,PartPtrVec & gathered_particles);
-    double constrainedNudge(Particle * p, PartPtrVec & gathered_particles, glm::vec3 ap_pos);
-    void constrainedAnnealing( AttractorVector & av, unsigned int iterations,double prevForce );
-
-    // expirmental totaly
-    void localAnnealing(unsigned int iterations, double prevForce, 
-        std::vector<bool> & fixed, PartPtrVec & gutted_mask_created);
-    void prepareMask(PartPtrVec & tmpvec, Mask & m, std::vector<bool> & fixed, PartPtrVec & exposed);
-
-
     void annealing(unsigned int iterations, double prevForce);
     void recompute_collisions();
-    
+    glm::vec3 interParticleForce(Particle * & cur, PartPtrVec & partv);
 
     // New Update Function Code (tested)
     void moveParticle(Particle * & cur); // moves a particle
-
-    // Freeflow code (NEW)
-    glm::vec3 interParticleForce(Particle * & cur, PartPtrVec & partv);
-
 
     // Merge helper functions
     Particle * particlePairMerge(Particle * &a, Particle * &b); 
@@ -134,13 +122,24 @@ class ParticleSystem {
 
     // Audio based functions
     double absorbFunc(const std::string & materialName, const double freq);
-    
-    // Public render functions
+
+    // Analysis code
+    void analyze();
+
+    // Failed attempt at annealing localized (REMOVE)
+    bool maintainDensity(Particle * cur,PartPtrVec & gathered_particles, Attractor * ap);
+    bool shouldSplit(Particle * cur,PartPtrVec & gathered_particles);
+    double constrainedNudge(Particle * p, PartPtrVec & gathered_particles, glm::vec3 ap_pos);
+    void constrainedAnnealing( AttractorVector & av, unsigned int iterations,double prevForce );
+    void localAnnealing(unsigned int iterations, double prevForce, 
+        std::vector<bool> & fixed, PartPtrVec & gutted_mask_created);
+    void prepareMask(PartPtrVec & tmpvec, Mask & m, std::vector<bool> & fixed, PartPtrVec & exposed);
+
+    // Public render functions used by glCanvas
     void initializeVBOs();
     void setupVBOs();
     void drawVBOs();
     void cleanupVBOs();
-
 
   private:
 
@@ -174,7 +173,7 @@ class ParticleSystem {
     KDTree particle_kdtree; // Where we store particles in a td tre
     BVHNode * root; // We we will store our mesh for fast accesses
     UniformGrid uniform_grid; // Where we store our mesh object fo easy access
-
+    Stats stats; // Where we will keep stats for analysis 
 
     // Simuation Important Varibles
     double            TIME_STEP;  // how much time is passed in seconds

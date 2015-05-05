@@ -344,8 +344,7 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       mesh->setupVBOs();
       break;
     case 'o': case 'O':
-      args->render_outline = !args->render_outline;
-      particleSystem->setupVBOs();
+      particleSystem->analyze();
       break;
     case 'e': case 'E':
       args->render_edges = !args->render_edges;
