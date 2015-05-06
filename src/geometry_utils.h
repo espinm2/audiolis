@@ -99,4 +99,8 @@ glm::vec3 CalcRepulsiveForces(const glm::vec3 & p, const glm::vec3 & q,
 // Used to compute the angle between vectors
 double angleBetweenVectors(const glm::vec3 & p, const glm::vec3 & q);
 
+// Used to find the absolute angle between vectors, a and r are angle, and c
+// is the center
+double getAbsAngle(const glm::vec3 &a, const glm::vec3 &r, const glm::vec3 &c);
+
 #endif

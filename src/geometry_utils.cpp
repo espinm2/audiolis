@@ -1,6 +1,7 @@
 #include "geometry_utils.h"
 #include "argparser.h" // This if only for the MTRand obj
 #include <cstdlib>
+#include <glm/gtx/vector_angle.hpp>
 
 typedef std::vector<std::vector<double>> doubleMatrix;
 
@@ -308,3 +309,22 @@ double angleBetweenVectors(const glm::vec3 & p, const glm::vec3 & q){
   return acos( glm::dot( p, q ) / (glm::length(p) * glm::length(q)) );
 }
 
+double getAbsAngle(const glm::vec3 &a, const glm::vec3 &r, const glm::vec3 &c){
+  // inputs
+  //        a and b are the two vector whos absolute angle i am looking for
+  //        c is the vector i am using as a refrence.
+  // output
+  //        the absolute angle [0,360] between both a and r (angle NOT radians)
+
+  glm::vec3 a_dir = glm::normalize(a-c);
+  glm::vec3 r_dir = glm::normalize(r-c);
+
+  // build a axis to spin around
+  glm::vec3 axis = glm::cross(a_dir,r_dir);
+  axis = glm::normalize(axis);
+
+  double result = glm::orientedAngle(a_dir,r_dir,axis);
+
+  return result;
+
+}

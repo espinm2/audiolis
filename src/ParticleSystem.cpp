@@ -2050,11 +2050,27 @@ double ParticleSystem::constrainedNudge(Particle * p,
 }
 
 
-void ParticleSystem::analyze(){
+class particleCMP{
 
-  // Clear
-  stats.clearStats();
-  printf("Calculating Stats\n");
+  glm::vec3 c; // center particle we will use to compare
+
+public:
+
+  particleCMP(const glm::vec3 & center){
+    c = center;
+  }
+
+  bool operator() (Particle * lhs ,Particle * rhs) const{
+    glm::vec3 l = lhs->getOldPos(); glm::vec3 r = rhs->getOldPos();
+    double dist_l_squared = pow(c.x - l.x ,2) + pow(c.y - l.y ,2) + pow(c.z - l.z ,2);
+    double dist_r_squared = pow(c.x - r.x ,2) + pow(c.y - r.y ,2) + pow(c.z - r.z ,2);
+
+    return dist_l_squared < dist_r_squared;
+  }
+};
+
+
+void ParticleSystem::analyze(){
 
   for(Particle * cur : particles){
 
@@ -2069,40 +2085,79 @@ void ParticleSystem::analyze(){
       GATHER_ANGLE,                     // if angle beyond this do not gather
       gathered_particles);              // where we will place these particles
 
-    // If we do not gather anything at all then try next particle
-    if(gathered_particles.empty()){
-      printf("Collected None ************* \n");
-      stats.saveShape(0); continue; }
+    uint sides_shape = 5; 
 
-    // I want to sort these by their distances from me
-    std::vector <double> distances;
-    for(Particle * g: gathered_particles)
-      distances.push_back(glm::distance(g->getOldPos(), cur->getPos() ));
-    // I want to sort this by lowest to highest
-    std::sort (distances.begin(), distances.end()); 
-
-
-    // I want to find the band in which they lie
-    // I will walk across until I find a gap in distance
-    uint particles_before_gap = 0;
-
-    for( uint i = 0; i < distances.size()-1; i++){
-      double gap = distances[i+1] - distances[i];
-      if( gap < args->gap_threshold ){
-        particles_before_gap++;
-      } else{
-        particles_before_gap++;
-        break;
-      }
+    if(gathered_particles.size() < sides_shape ){
+      printf("Problem: We have gathered too few particles for analysis\n");
+      stats.saveShape(0);
+      continue;
     }
 
-    // Save this in our stats generator
-    stats.saveShape(particles_before_gap);
-    stats.saveRange(distances[0], distances[particles_before_gap-1]);
+    // Find the nearest 6 (sort by distance to ref particle)
+    const glm::vec3 centerPos = cur->getOldPos();
+
+    std::sort(
+      gathered_particles.begin(), 
+      gathered_particles.end(), 
+      particleCMP(centerPos));
+
+    PartPtrVec nearbyInOrder(
+      gathered_particles.begin(), 
+      gathered_particles.begin() + sides_shape);
+
+    assert(nearbyInOrder.size() == sides_shape );
+
+    // Pick a refrence particle
+    Particle * ref = nearbyInOrder[0];
+
+    std::vector<double> angles;
+    for( uint i = 0; i < nearbyInOrder.size(); i++ ){
+
+      double absAngle =                                   // TODO
+      getAbsAngle(
+        nearbyInOrder[i]->getOldPos(),
+        ref->getOldPos(),
+        cur->getOldPos() 
+      );
+
+      angles.push_back(absAngle);
+
+    }
+
+    // Sort by angle
+    std::sort(angles.begin(),angles.end());
+
+    std::vector<double> error; // where i will keep all my error
+
+    // Dies here
+    for(uint i = 0; i < angles.size(); i++){
+      double deg = (360 / sides_shape) * i;
+      error.push_back(pow( deg - angles[i]  ,2));
+    }
+
+    // Detailed printout ===================
+    printf("%10s ","expected");
+    for(uint deg = 0; deg < 360; deg+=(360/sides_shape))
+      printf("%8d ",deg );
+
+    printf("\n%10s ", "gotten");
+    for(double a: angles)
+      printf("%8.2f ",a );
+
+    printf("\n%10s ","error" );
+    for(double e: error)
+      printf("%8.2f ",e);
+    printf("\n");
+
+    printf("total error: ");
+    double error_total = 0;
+    for(double e: error)
+      error_total += e;
+
+    printf("Total Error: %5.5f\n",error_total);
+
 
   }// all particles
-
-  stats.printout();
 
 }//funct
 
