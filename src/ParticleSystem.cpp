@@ -2145,8 +2145,13 @@ void ParticleSystem::analyze(){
         error.push_back(pow( deg - angles[i]  ,2));
       }
 
-      // Detailed printout ===================
-      /*
+      double error_total = 0;
+      for(double e: error)
+        error_total += e;
+      error_total /= sides_shape;
+
+      // // Detailed printout ===================
+      printf("=========================================\n");
       printf("%10s ","expected");
       for(uint deg = 0; deg < 360; deg+=(360/sides_shape))
         printf("%8d ",deg );
@@ -2160,12 +2165,9 @@ void ParticleSystem::analyze(){
         printf("%8.2f ",e);
       printf("\n");
 
-      */
-      // printf("total error: ");
-      double error_total = 0;
-      for(double e: error)
-        error_total += e;
+      printf("total error: %f\n", error_total);
 
+      error_total /= sides_shape; // divide by number of sides
       // printf("Total Error: %5.5f\n",error_total);
 
       scoreVector.push_back(error_total);

@@ -316,14 +316,26 @@ double getAbsAngle(const glm::vec3 &a, const glm::vec3 &r, const glm::vec3 &c){
   // output
   //        the absolute angle [0,360] between both a and r (angle NOT radians)
 
-  glm::vec3 a_dir = glm::normalize(a-c);
-  glm::vec3 r_dir = glm::normalize(r-c);
+  glm::vec3 _a = glm::normalize(a-c);
+  glm::vec3 _b = glm::normalize(r-c);
 
-  // build a axis to spin around
-  glm::vec3 axis = glm::cross(a_dir,r_dir);
-  axis = glm::normalize(axis);
+  glm::vec3 _n = glm::cross(_a,_b);
+  _n = glm::normalize(_n);
 
-  double result = glm::orientedAngle(a_dir,r_dir,axis);
+  double dot = glm::dot(_a,_b);
+
+  double det = (a.x * _b.y * _n.z) + (_b.x * _n.y * _a.z) + (_n.x * _a.y *_b.z) 
+  - (_a.z*_b.y*_n.x) - (_b.z*_n.y*_a.x) - (_n.z*_a.y*_b.x);
+
+
+  double square_dist = pow((_a.x - _b.x),2) + pow((_a.y - _b.y),2) + pow((_a.z - _b.z),2);
+  if(square_dist < 0.00001){return 0;}
+
+  double result = atan2(det,dot) * ( 180 / M_PI );
+  if(result < 0 ){
+    result += 360;
+  }
+
 
   return result;
 
