@@ -2072,6 +2072,8 @@ public:
 
 void ParticleSystem::analyze(){
 
+  stats.clearStats();
+
   for(Particle * cur : particles){
 
     // skip the dead
@@ -2085,79 +2087,108 @@ void ParticleSystem::analyze(){
       GATHER_ANGLE,                     // if angle beyond this do not gather
       gathered_particles);              // where we will place these particles
 
-    uint sides_shape = 5; 
 
-    if(gathered_particles.size() < sides_shape ){
-      printf("Problem: We have gathered too few particles for analysis\n");
+    // Not enough particles to run
+    if(gathered_particles.size() < 4 ){
       stats.saveShape(0);
       continue;
     }
 
-    // Find the nearest 6 (sort by distance to ref particle)
-    const glm::vec3 centerPos = cur->getOldPos();
+    // Populate scoreVector
+    std::vector <double > scoreVector;
+    for( uint sides_shape = 4; sides_shape < 10; sides_shape++){
 
-    std::sort(
-      gathered_particles.begin(), 
-      gathered_particles.end(), 
-      particleCMP(centerPos));
+      if(gathered_particles.size() < sides_shape ){
+        scoreVector.push_back(std::numeric_limits<double>::max());
+        continue;
+      }
 
-    PartPtrVec nearbyInOrder(
-      gathered_particles.begin(), 
-      gathered_particles.begin() + sides_shape);
+      // Find the nearest 6 (sort by distance to ref particle)
+      const glm::vec3 centerPos = cur->getOldPos();
 
-    assert(nearbyInOrder.size() == sides_shape );
+      std::sort(
+        gathered_particles.begin(), 
+        gathered_particles.end(), 
+        particleCMP(centerPos));
 
-    // Pick a refrence particle
-    Particle * ref = nearbyInOrder[0];
+      PartPtrVec nearbyInOrder(
+        gathered_particles.begin(), 
+        gathered_particles.begin() + sides_shape);
 
-    std::vector<double> angles;
-    for( uint i = 0; i < nearbyInOrder.size(); i++ ){
+      assert(nearbyInOrder.size() == sides_shape );
 
-      double absAngle =                                   // TODO
-      getAbsAngle(
-        nearbyInOrder[i]->getOldPos(),
-        ref->getOldPos(),
-        cur->getOldPos() 
-      );
+      // Pick a refrence particle
+      Particle * ref = nearbyInOrder[0];
 
-      angles.push_back(absAngle);
+      std::vector<double> angles;
+      for( uint i = 0; i < nearbyInOrder.size(); i++ ){
 
+        double absAngle =                                   // TODO
+        getAbsAngle(
+          nearbyInOrder[i]->getOldPos(),
+          ref->getOldPos(),
+          cur->getOldPos() 
+        );
+
+        angles.push_back(absAngle);
+
+      }
+
+      // Sort by angle
+      std::sort(angles.begin(),angles.end());
+
+      std::vector<double> error; // where i will keep all my error
+
+      // Dies here
+      for(uint i = 0; i < angles.size(); i++){
+        double deg = (360 / sides_shape) * i;
+        error.push_back(pow( deg - angles[i]  ,2));
+      }
+
+      // Detailed printout ===================
+      /*
+      printf("%10s ","expected");
+      for(uint deg = 0; deg < 360; deg+=(360/sides_shape))
+        printf("%8d ",deg );
+
+      printf("\n%10s ", "gotten");
+      for(double a: angles)
+        printf("%8.2f ",a );
+
+      printf("\n%10s ","error" );
+      for(double e: error)
+        printf("%8.2f ",e);
+      printf("\n");
+
+      */
+      // printf("total error: ");
+      double error_total = 0;
+      for(double e: error)
+        error_total += e;
+
+      // printf("Total Error: %5.5f\n",error_total);
+
+      scoreVector.push_back(error_total);
+    }// for shape size n
+
+    unsigned int best_shape_fit = -1;
+    double min_score = std::numeric_limits<double>::max();
+
+    // Finding Max
+    for(int i = 0; i < scoreVector.size(); i++){
+
+      if(min_score > scoreVector[i]){
+        best_shape_fit = i;
+        min_score = scoreVector[i];
+      }
     }
 
-    // Sort by angle
-    std::sort(angles.begin(),angles.end());
-
-    std::vector<double> error; // where i will keep all my error
-
-    // Dies here
-    for(uint i = 0; i < angles.size(); i++){
-      double deg = (360 / sides_shape) * i;
-      error.push_back(pow( deg - angles[i]  ,2));
-    }
-
-    // Detailed printout ===================
-    printf("%10s ","expected");
-    for(uint deg = 0; deg < 360; deg+=(360/sides_shape))
-      printf("%8d ",deg );
-
-    printf("\n%10s ", "gotten");
-    for(double a: angles)
-      printf("%8.2f ",a );
-
-    printf("\n%10s ","error" );
-    for(double e: error)
-      printf("%8.2f ",e);
-    printf("\n");
-
-    printf("total error: ");
-    double error_total = 0;
-    for(double e: error)
-      error_total += e;
-
-    printf("Total Error: %5.5f\n",error_total);
-
+    assert(best_shape_fit != -1);
+    stats.saveShape(best_shape_fit + 4);
 
   }// all particles
+
+  stats.printout();
 
 }//funct
 

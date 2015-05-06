@@ -39,13 +39,13 @@ public:
 
   void printout(){
     
-    // Sort the ranges to the medium of all of them
-    std::sort(minRange.begin(), minRange.end());
-    std::sort(maxRange.begin(), maxRange.end());
-    int midpoint = minRange.size() / 2;
-    double min = minRange[midpoint];
-    double max = maxRange[midpoint];
-    printf("Median Range from Min: %3.6fcm to %3.6fcm\n", min * 100, max * 100);
+    // // Sort the ranges to the medium of all of them
+    // std::sort(minRange.begin(), minRange.end());
+    // std::sort(maxRange.begin(), maxRange.end());
+    // int midpoint = minRange.size() / 2;
+    // double min = minRange[midpoint];
+    // double max = maxRange[midpoint];
+    // printf("Median Range from Min: %3.6fcm to %3.6fcm\n", min * 100, max * 100);
 
     // Make a print out of the map
     std::map<uint,uint>::const_iterator it;
