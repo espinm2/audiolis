@@ -864,7 +864,48 @@ void ParticleSystem::drawDelusionalConnections(){
   HandleGLError("leaving drawDelusionalConnections");
 }
 
+void ParticleSystem::setupSphere(){
+  // This will setup the memeber functions so that you can render them
+  // std::vector<VBOPosNormalColor> sphere_verts;
+  // std::vector<VBOIndexedTri>     sphere_tri_indices;
 
+  HandleGLError("enter drawSphereVisual");
+
+  // if we are viewing our fitting types
+  if(args->viz_type == 4){
+  
+    glBindBuffer(GL_ARRAY_BUFFER, sphere_verts_VBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphere_tri_indices_VBO);
+  
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE, 2*sizeof(glm::vec3) + sizeof(glm::vec4), (void*)0);
+
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE, 2*sizeof(glm::vec3) + sizeof(glm::vec4), (void*)sizeof(glm::vec3));
+
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2,3,GL_FLOAT,GL_FALSE, 2*sizeof(glm::vec3) + sizeof(glm::vec4), (void*)(sizeof(glm::vec3)*2));
+
+    glDrawElements(GL_TRIANGLES, sphere_tri_indices.size()*3,
+        GL_UNSIGNED_INT, BUFFER_OFFSET(0));
+
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(2);
+
+  }
+
+  HandleGLError("leave drawSphereVisual");
+}
+
+void ParticleSystem::drawSphere(){
+  // Will render this triangle mesh
+
+  // ASSIGMENT TAKE CODE FROM HOMEWORK WITH SPHERE
+
+
+
+}
 
 
 

@@ -162,6 +162,9 @@ class ParticleSystem {
     void drawDelusionalParticles();
     void drawDelusionalConnections();
 
+    void setupSphere();
+    void drawSphere();
+
     // Memebers Borrowed from GLCanvas
     ArgParser * args;
     BoundingBox * bbox;
@@ -216,6 +219,10 @@ class ParticleSystem {
     GLuint delusional_verts_VBO; 
     GLuint connection_verts_VBO; 
 
+    GLuint sphere_verts_VBO;
+    GLuint sphere_tri_indices_VBO;
+
+
     // Vertices for VBOs
     std::vector<VBOPosNormalColor> particle_verts;
     std::vector<VBOPosNormalColor> cursor_verts;
@@ -228,7 +235,9 @@ class ParticleSystem {
     std::vector<VBOPosNormalColor> delusional_verts; // TODO
     std::vector<VBOPosNormalColor> connection_verts; // TODO
 
-
+    // Sphere
+    std::vector<VBOPosNormalColor> sphere_verts;
+    std::vector<VBOIndexedTri>     sphere_tri_indices;
 
 };
 
