@@ -125,6 +125,7 @@ class ParticleSystem {
 
     // Analysis code
     void analyze();
+    uint getLowestCostShape(Particle * cur);
 
     // Failed attempt at annealing localized (REMOVE)
     bool maintainDensity(Particle * cur,PartPtrVec & gathered_particles, Attractor * ap);
@@ -228,7 +229,29 @@ class ParticleSystem {
     std::vector<VBOPosNormalColor> connection_verts; // TODO
 
 
+
 };
 
-// ===================================================
+
+
+// Utility class to sort particles by their distance relative to another
+class particleCMP{
+
+  glm::vec3 c; // center particle we will use to compare
+
+public:
+
+  particleCMP(const glm::vec3 & center){
+    c = center;
+  }
+
+  bool operator() (Particle * lhs ,Particle * rhs) const{
+    glm::vec3 l = lhs->getOldPos(); glm::vec3 r = rhs->getOldPos();
+    double dist_l_squared = pow(c.x - l.x ,2) + pow(c.y - l.y ,2) + pow(c.z - l.z ,2);
+    double dist_r_squared = pow(c.x - r.x ,2) + pow(c.y - r.y ,2) + pow(c.z - r.z ,2);
+
+    return dist_l_squared < dist_r_squared;
+  }
+};
+
 #endif
