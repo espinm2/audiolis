@@ -1508,103 +1508,17 @@ void ParticleSystem::createDebugParticle(){
 
 void ParticleSystem::debug(){
 
-  glm::vec3 a(0,1,0);
-  glm::vec3 b(0,0,0);
-  glm::vec3 c(1,0,0);
-  glm::vec3 d(1,1,0);
-  
-  // Create a fake mesh to work on
-  Mesh * debug = new Mesh(args);
-  
-  Vertex * va = debug->addVertex(a);
-  Vertex * vb = debug->addVertex(b);
-  Vertex * vc = debug->addVertex(c);
-  Vertex * vd = debug->addVertex(d);
+  glm::vec3 cen(0,0,0); // center
+  glm::vec3 norm(0,0,1); // normal
+  glm::vec3 a(0,1,0); // ref
+  glm::vec3 b(1,0,0); 
+  glm::vec3 d(0,-1,0);
+  glm::vec3 e(-1,0,0);
 
-  debug->addTriangle("DEBUG",va,vb,vc);
-  debug->addTriangle("DEBUG",vc,vd,va);
+  double angle = getAbsAngle(a,cen,cen,norm);
+  printf("Angle: %3.3f\n", angle);
 
-  glm::vec3 ray_start(0.2,0.2,1); 
-  glm::vec3 ray_dir(0,0,-1); 
-
-  Ray ray(ray_start, ray_dir, 340);
-  Hit h; bool hitTriangle = false; bool backface = false;
-
-
-  BoundingBox box(glm::vec3(0,0,-1), glm::vec3(1,1,0));
-
-  // When i should hit about
-  double t = 1 / VELOCITY_OF_MEDIUM;
-
-  double steps = t / TIME_STEP;
-
-  std::cout << "steps:" << steps << std::endl;
-
-  double stepOneBefore = (int)steps-1;
-  double stepOneAfter = (int)steps + 1;
-
-  hitTriangle =  box.hitbox(ray,0,TIME_STEP*stepOneBefore);
-
-  std::cout << " one before Should miss " <<  std::endl;
-
-  if(hitTriangle){
-
-    std::cout << "Hit"  << std::endl;
-
-  }else{
-
-    std::cout << "Missed" << std::endl;
-
-  }
-
-  hitTriangle =  box.hitbox(ray,0,TIME_STEP*stepOneAfter);
-
-  std::cout << "one after Should hit " <<  std::endl;
-
-  if(hitTriangle){
-
-    std::cout << "Hit"  << std::endl;
-
-  }else{
-
-    std::cout << "Missed" << std::endl;
-
-  }
-
-  // BVHNode * r = new BVHNode(tv,0);
-
-  // glm::vec3 ray_start(0.1,0.1,1); 
-  // glm::vec3 ray_dir(0,0,-1); // Given this setup the bbox (b,d)
-
-
-  // std::vector < Triangle *> hits;
-  // r->getTriangles(ray,2.0,hits);
-
-  // std::cout << "DEBUG HIT SHOULD RETURN 0: " << hits.size() << std::endl;
-
-  // // I should hit this triangle
-  // Hit h; bool hitTriangle = false; bool backface = false;
-  
-  // for(uint i = 0; i < hits.size();i++){
-  
-  //   Triangle *t = hits[i];
-
-  //   glm::vec3 a = (*t)[0]->getPos();
-  //   glm::vec3 b = (*t)[1]->getPos();
-  //   glm::vec3 c = (*t)[2]->getPos();    
-
-
-  //   if(triangle_intersect(ray,h,a,b,c,backface)){
-  //     hitTriangle = true;
-  //     h.setMaterial(t->getMaterial());
-  //   }
-  // }
-
-  // // We didnt hit anything
-  // if(hitTriangle == true)
-  //   std::cout << "We hit our goal" << std::endl;
-  // else
-  //   std::cout << "We missed our goal" << std::endl;
+  printf("Exiting the Program because debug is active in source\n");
 }
 
 
@@ -2050,11 +1964,29 @@ double ParticleSystem::constrainedNudge(Particle * p,
 }
 
 
+class particleCMP{
+
+  glm::vec3 c; // center particle we will use to compare
+
+public:
+
+  particleCMP(const glm::vec3 & center){
+    c = center;
+  }
+
+  bool operator() (Particle * lhs ,Particle * rhs) const{
+    glm::vec3 l = lhs->getOldPos(); glm::vec3 r = rhs->getOldPos();
+    double dist_l_squared = pow(c.x - l.x ,2) + pow(c.y - l.y ,2) + pow(c.z - l.z ,2);
+    double dist_r_squared = pow(c.x - r.x ,2) + pow(c.y - r.y ,2) + pow(c.z - r.z ,2);
+
+    return dist_l_squared < dist_r_squared;
+  }
+};
+
+
 void ParticleSystem::analyze(){
 
-  // Clear
   stats.clearStats();
-  printf("Calculating Stats\n");
 
   for(Particle * cur : particles){
 
@@ -2065,40 +1997,138 @@ void ParticleSystem::analyze(){
     PartPtrVec gathered_particles;        
     particle_kdtree.GatherParticles(
       cur,                              // This particle we collect around
-      RADIUS_PARTICLE_WAVE * 2.5,       // collect a bit beyond mask
+      RADIUS_PARTICLE_WAVE * 3.0,       // collect a bit beyond mask
       GATHER_ANGLE,                     // if angle beyond this do not gather
       gathered_particles);              // where we will place these particles
 
-    // If we do not gather anything at all then try next particle
-    if(gathered_particles.empty()){
-      printf("Collected None ************* \n");
-      stats.saveShape(0); continue; }
 
-    // I want to sort these by their distances from me
-    std::vector <double> distances;
-    for(Particle * g: gathered_particles)
-      distances.push_back(glm::distance(g->getOldPos(), cur->getPos() ));
-    // I want to sort this by lowest to highest
-    std::sort (distances.begin(), distances.end()); 
+    // Not enough particles to run
+    if(gathered_particles.size() < 4 ){
+      stats.saveShape(0);
+      continue;
+    }
+
+    // Populate scoreVector
+    std::vector <double > scoreVector;
+    for( uint sides_shape = 4; sides_shape < 10; sides_shape++){
 
 
-    // I want to find the band in which they lie
-    // I will walk across until I find a gap in distance
-    uint particles_before_gap = 0;
+      if(gathered_particles.size() < sides_shape ){
+        scoreVector.push_back(std::numeric_limits<double>::max());
+        continue;
+      }
 
-    for( uint i = 0; i < distances.size()-1; i++){
-      double gap = distances[i+1] - distances[i];
-      if( gap < args->gap_threshold ){
-        particles_before_gap++;
-      } else{
-        particles_before_gap++;
-        break;
+      // Find the nearest 6 (sort by distance to center particle)
+      const glm::vec3 centerPos = cur->getOldPos();
+
+      // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
+      // PartPtrVec copy(gathered_particles);
+      // std::sort(
+      //   copy.begin(), 
+      //   copy.end(), 
+      //   particleCMP(centerPos)
+      // );
+
+      // int less_180 = 0; int more_180 = 0;
+      // for(int i = 0; i < 100; i++)
+      //   printf("_");
+      // printf("\n");
+      // printf("%10s","distance" );
+      // for(Particle * p : copy)
+      //   printf("%8.2f ",glm::distance(p->getOldPos(),centerPos));
+      // printf("\n");
+
+      // printf("%10s","angle" );
+      // for(Particle * p : copy){
+      //   double ang = getAbsAngle(copy[0]->getOldPos(),p->getOldPos(),centerPos, glm::normalize(centerPos-cur->getCenter()));
+      //   ( ang > 180 )?more_180++ : less_180++;
+      //   printf("%8.2f ",ang);
+      // }
+      // printf("\n");
+      // printf("%s", (more_180 > less_180) ? "more_180":"less_180");
+      // END DEBUG END DEBUG END DEBUG END DEBUG END DEBUG END DEBUG END DEBUG 
+
+      std::sort(
+        gathered_particles.begin(), 
+        gathered_particles.end(), 
+        particleCMP(centerPos)
+      );
+
+      PartPtrVec nearbyInOrder(
+        gathered_particles.begin(), 
+        gathered_particles.begin() + sides_shape
+      );
+
+      assert(nearbyInOrder.size() == sides_shape );
+
+      // Pick a refrence particle
+      Particle * ref = nearbyInOrder[0];
+
+      std::vector<double> angles;
+      for( uint i = 0; i < nearbyInOrder.size(); i++ ){
+
+        double absAngle =                                   
+        getAbsAngle(
+          ref->getOldPos(),
+          nearbyInOrder[i]->getOldPos(),
+          cur->getOldPos(),
+          glm::normalize(cur->getOldPos() - cur->getCenter())
+        );
+
+        angles.push_back(absAngle);
+
+      }
+
+      // Sort by angle 
+      std::sort(angles.begin(),angles.end());
+
+      // Get the squared error
+      std::vector<double> error; // where i will keep all my error
+      for(uint i = 0; i < angles.size(); i++){
+        double deg = (360 / sides_shape) * i;
+        error.push_back(pow( deg - angles[i]  ,2));
+      }
+
+      double error_total = 0;
+      for(double e: error)
+        error_total += e;
+      error_total /= sides_shape;
+
+      // // Detailed printout ===================
+      printf("=========================================\n");
+      printf("%10s ","expected");
+      for(uint deg = 0; deg < 360; deg+=(360/sides_shape))
+        printf("%8d ",deg );
+
+      printf("\n%10s ", "gotten");
+      for(double a: angles)
+        printf("%8.2f ",a );
+
+      printf("\n%10s ","error" );
+      for(double e: error)
+        printf("%8.2f ",e);
+      printf("\n");
+
+      printf("total error: %f\n", error_total);
+
+
+      scoreVector.push_back(error_total);
+    }// for shape size n
+
+    unsigned int best_shape_fit = -1;
+    double min_score = std::numeric_limits<double>::max();
+
+    // Finding Max
+    for(int i = 0; i < scoreVector.size(); i++){
+
+      if(min_score > scoreVector[i]){
+        best_shape_fit = i;
+        min_score = scoreVector[i];
       }
     }
 
-    // Save this in our stats generator
-    stats.saveShape(particles_before_gap);
-    stats.saveRange(distances[0], distances[particles_before_gap-1]);
+    assert(best_shape_fit != -1);
+    stats.saveShape(best_shape_fit + 4);
 
   }// all particles
 

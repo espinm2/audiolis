@@ -1,6 +1,7 @@
 #include "geometry_utils.h"
 #include "argparser.h" // This if only for the MTRand obj
 #include <cstdlib>
+#include <glm/gtx/vector_angle.hpp>
 
 typedef std::vector<std::vector<double>> doubleMatrix;
 
@@ -308,3 +309,39 @@ double angleBetweenVectors(const glm::vec3 & p, const glm::vec3 & q){
   return acos( glm::dot( p, q ) / (glm::length(p) * glm::length(q)) );
 }
 
+double getAbsAngle(const glm::vec3 &a, const glm::vec3 &b,
+  const glm::vec3 &c, const glm::vec3 &n){
+  // inputs
+  //        we are finding the absolute angle between a--->b clockwise
+  //        a : is the refence position we are find angle between
+  //        b : is the position we "going" towards clockwise
+  //        c : is the center position, used to get directions of a & b
+  //        n : is the normal we are using, needs to be consistant for all
+  //  
+  // output
+  //        the absolute angle [0,360] between both position a and b around
+  //        position c
+
+  glm::vec3 _a = glm::normalize(a-c);
+  glm::vec3 _b = glm::normalize(b-c);
+  glm::vec3 _n = n;
+
+  // gotten from stackoverflow
+  double dot = glm::dot(_a,_b);
+  double det = (a.x * _b.y * _n.z) + (_b.x * _n.y * _a.z) + (_n.x * _a.y *_b.z) 
+  - (_a.z*_b.y*_n.x) - (_b.z*_n.y*_a.x) - (_n.z*_a.y*_b.x);
+
+  // Incase we have the same point
+  double square_dist = pow((_a.x - _b.x),2) + pow((_a.y - _b.y),2) + pow((_a.z - _b.z),2);
+  if(square_dist < 0.00001){return 0;}
+
+  // Result
+  double result = atan2(det,dot) * ( 180 / M_PI );
+  if(result < 0 ){
+    result += 360;
+  }
+
+
+  return result;
+
+}
