@@ -26,6 +26,7 @@
 #include <algorithm>
 #include "BVHNode.h"
 #include "Stats.h"
+#include "sphere.h"
 
 #include "ParticleSystem.h"
 
@@ -183,6 +184,10 @@ void ParticleSystem::createInitWave(){
   // Testing function to create circle in 3d space
   printf("createInitWave()\n");
 
+  // Creating Sphere
+  Sphere tmp(cursor,RADIUS_INIT_SPHERE * 0.9);
+  sphere = tmp;
+
   // Using cursor
   double s = RADIUS_INIT_SPHERE;
   
@@ -191,9 +196,9 @@ void ParticleSystem::createInitWave(){
 
     // printf("Creating Particle %i\n", i);
     // Find x,y,z
-    float x = cursor.x - s/2.0 + (float) args->randomGen.rand(s);
-    float y = cursor.y - s/2.0 + (float) args->randomGen.rand(s);
-    float z = cursor.z - s/2.0 + (float) args->randomGen.rand(s);
+    float x = cursor.x - s / 2.0 + (float) args->randomGen.rand(s);
+    float y = cursor.y - s / 2.0 + (float) args->randomGen.rand(s);
+    float z = cursor.z - s / 2.0 + (float) args->randomGen.rand(s);
   
     glm::vec3 pos(x,y,z);
   

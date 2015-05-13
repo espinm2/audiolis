@@ -21,6 +21,7 @@
 #include "KDTree.h"
 #include "UniformGrid.h"
 #include "Stats.h"
+#include "sphere.h"
 
 typedef std::vector<std::vector<int>> vMat;
 typedef std::vector<Particle *> PartPtrVec;
@@ -34,6 +35,7 @@ class Particle;
 class BoundingBox;
 class Mesh;
 class BVHNode;
+class Sphere;
 
 class ParticleSystem {
 
@@ -178,6 +180,7 @@ class ParticleSystem {
     BVHNode * root; // We we will store our mesh for fast accesses
     UniformGrid uniform_grid; // Where we store our mesh object fo easy access
     Stats stats; // Where we will keep stats for analysis 
+    Sphere sphere; // sphere we used to help us visualize mask
 
     // Simuation Important Varibles
     double            TIME_STEP;  // how much time is passed in seconds
@@ -219,6 +222,7 @@ class ParticleSystem {
     GLuint delusional_verts_VBO; 
     GLuint connection_verts_VBO; 
 
+    // Sphere  ids
     GLuint sphere_verts_VBO;
     GLuint sphere_tri_indices_VBO;
 

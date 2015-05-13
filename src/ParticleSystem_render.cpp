@@ -8,6 +8,7 @@
 #include "argparser.h"
 #include "render_utils.h"
 #include "geometry_utils.h"
+#include "sphere.h"
 
 #define MAX_ITERATIONS 6000
 #define MAX_ITERATIONS 6000
@@ -35,6 +36,9 @@ void ParticleSystem::initializeVBOs(){
   glGenBuffers(1,&happyness_verts_VBO);
   glGenBuffers(1,&delusional_verts_VBO);
   glGenBuffers(1,&connection_verts_VBO);
+  glGenBuffers(1,&sphere_verts_VBO);
+  glGenBuffers(1,&sphere_tri_indices_VBO);
+
   particle_kdtree.initializeVBOs();
   uniform_grid.initializeVBOs(); 
 }
@@ -51,6 +55,8 @@ void ParticleSystem::setupVBOs(){
   happyness_verts.clear();
   delusional_verts.clear();
   connection_verts.clear();
+  sphere_verts.clear();            // verts
+  sphere_tri_indices.clear();
   
   // Setup new Data
   if(args->kdtree_render)
@@ -63,6 +69,9 @@ void ParticleSystem::setupVBOs(){
 
   if(args->direction)
     setupVelocityVisual();
+
+  if(args->viz_type==4)
+    setupSphere();
 
   setupParticles(); 
 
@@ -94,6 +103,9 @@ void ParticleSystem::drawVBOs(){
   if(args->ugrid_render)
     uniform_grid.drawVBOs();
 
+  if(args->viz_type == 4)
+    drawSphere();
+
   drawParticles();
 
   HandleGLError("leaving draw vbos");
@@ -110,8 +122,8 @@ void ParticleSystem::cleanupVBOs(){
   glDeleteBuffers(1,&happyness_verts_VBO);
   glDeleteBuffers(1,&delusional_verts_VBO);
   glDeleteBuffers(1,&connection_verts_VBO);
-
-
+  glDeleteBuffers(1,&sphere_verts_VBO);
+  glDeleteBuffers(1,&sphere_tri_indices_VBO);
 
   HandleGLError("Space clean enter");
   particle_kdtree.cleanupVBOs();
@@ -865,6 +877,33 @@ void ParticleSystem::drawDelusionalConnections(){
 }
 
 void ParticleSystem::setupSphere(){
+
+
+  sphere.setup(10,10, sphere_verts,sphere_tri_indices );
+
+  // Create and setup velocity_tri_indices, velocity_verts
+  // Setup the VBOS here
+  glBindBuffer(GL_ARRAY_BUFFER,sphere_verts_VBO);
+  glBufferData( 
+      GL_ARRAY_BUFFER,
+      sizeof(VBOPosNormalColor)*sphere_verts.size(),
+      &sphere_verts[0],
+      GL_STATIC_DRAW );
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,sphere_tri_indices_VBO);
+
+  glBufferData(
+      GL_ELEMENT_ARRAY_BUFFER,
+      sizeof(VBOIndexedTri)*sphere_tri_indices.size(),
+      &sphere_tri_indices[0],
+      GL_STATIC_DRAW );
+
+  HandleGLError("leave setupVelocityVisual");
+
+}
+
+void ParticleSystem::drawSphere(){
+  
   // This will setup the memeber functions so that you can render them
   // std::vector<VBOPosNormalColor> sphere_verts;
   // std::vector<VBOIndexedTri>     sphere_tri_indices;
@@ -896,14 +935,6 @@ void ParticleSystem::setupSphere(){
   }
 
   HandleGLError("leave drawSphereVisual");
-}
-
-void ParticleSystem::drawSphere(){
-  // Will render this triangle mesh
-
-  // ASSIGMENT TAKE CODE FROM HOMEWORK WITH SPHERE
-
-
 
 }
 
