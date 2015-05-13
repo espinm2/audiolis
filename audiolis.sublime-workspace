@@ -1,0 +1,1044 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"cur_",
+				"cur_max"
+			],
+			[
+				"cur",
+				"cur_i"
+			],
+			[
+				"max",
+				"maximal_score_mask"
+			],
+			[
+				"ne",
+				"next_score"
+			],
+			[
+				"sc",
+				"scores"
+			],
+			[
+				"is",
+				"isCar"
+			],
+			[
+				"isC",
+				"isCarList"
+			],
+			[
+				"cla",
+				"classification"
+			],
+			[
+				"gap",
+				"gap_threshold"
+			],
+			[
+				"particle",
+				"particle_size"
+			],
+			[
+				"parti",
+				"particles"
+			],
+			[
+				"particl",
+				"particle_size"
+			],
+			[
+				"pari",
+				"particle_before_gap"
+			],
+			[
+				"be",
+				"beyond_level"
+			],
+			[
+				"dis",
+				"distances"
+			],
+			[
+				"poin",
+				"point_num"
+			],
+			[
+				"shap",
+				"shapeBin"
+			],
+			[
+				"inc",
+				"include"
+			],
+			[
+				"Sc",
+				"SCORES"
+			],
+			[
+				"con",
+				"conf_mat"
+			],
+			[
+				"conf",
+				"conf_mat"
+			],
+			[
+				"ca",
+				"catagory"
+			],
+			[
+				"oc",
+				"ocean"
+			],
+			[
+				"ro",
+				"road"
+			],
+			[
+				"class",
+				"classification"
+			],
+			[
+				"im",
+				"imagepath"
+			],
+			[
+				"clas",
+				"classification"
+			],
+			[
+				"fea",
+				"feature_num"
+			],
+			[
+				"M",
+				"Massive_Y"
+			],
+			[
+				"red",
+				"redcarpet"
+			],
+			[
+				"wh",
+				"wheatfield"
+			],
+			[
+				"feat",
+				"feature_vectors"
+			],
+			[
+				"ou",
+				"out_filename"
+			],
+			[
+				"pah",
+				"path_read"
+			],
+			[
+				"nu",
+				"num_im"
+			],
+			[
+				"creat",
+				"createTrainSaveClassifers"
+			],
+			[
+				"load",
+				"loadTrainedClassifers"
+			],
+			[
+				"whe",
+				"wheatfield_score"
+			],
+			[
+				"grass",
+				"grass_score"
+			],
+			[
+				"ocea",
+				"ocean_score"
+			],
+			[
+				"train",
+				"trainClassifiers"
+			],
+			[
+				"road",
+				"road_classifer"
+			],
+			[
+				"roa",
+				"road_classifer"
+			],
+			[
+				"FEATR",
+				"feature_num"
+			],
+			[
+				"pat",
+				"path_write"
+			],
+			[
+				"extrac",
+				"extract_and_save"
+			],
+			[
+				"extra",
+				"extract_feature1"
+			],
+			[
+				"del",
+				"delta_w"
+			],
+			[
+				"de",
+				"delta_w"
+			],
+			[
+				"resi",
+				"resized_image"
+			],
+			[
+				"ex",
+				"extract_color_histagram"
+			],
+			[
+				"num",
+				"num_in_bin"
+			],
+			[
+				"bin",
+				"bin_g_index"
+			],
+			[
+				"extr",
+				"extract_feature1"
+			],
+			[
+				"if",
+				"ifmain	if __name__ == '__main__'"
+			],
+			[
+				"res",
+				"resize_img"
+			],
+			[
+				"an",
+				"annaeling"
+			],
+			[
+				"Part",
+				"PartPtrVec"
+			],
+			[
+				"Atr",
+				"Attractor"
+			],
+			[
+				"ve",
+				"vec3"
+			],
+			[
+				"angle",
+				"angleBetweenVectors"
+			],
+			[
+				"sq",
+				"square_dist"
+			],
+			[
+				"ANG",
+				"GATHER_ANGLE"
+			],
+			[
+				"angl",
+				"angleBetweenVectors"
+			],
+			[
+				"ang",
+				"angl_okay"
+			],
+			[
+				"ga",
+				"gathered"
+			],
+			[
+				"glm",
+				"glm::vec3"
+			],
+			[
+				"newP",
+				"newParticles"
+			],
+			[
+				"debug",
+				"debug_index"
+			],
+			[
+				"par",
+				"particles"
+			],
+			[
+				"new",
+				"new_positions"
+			],
+			[
+				"debu",
+				"debugcount"
+			],
+			[
+				"gutt",
+				"gutted_mask"
+			],
+			[
+				"Par",
+				"Particle"
+			],
+			[
+				"gut",
+				"gutted_mask_created"
+			],
+			[
+				"mergeS",
+				"mergeSimilarParticles"
+			],
+			[
+				"FIXED",
+				"fixedVec"
+			],
+			[
+				"Pari",
+				"Particle"
+			],
+			[
+				"getMAsk",
+				"getMaskParticle"
+			],
+			[
+				"before",
+				"before_annealing"
+			],
+			[
+				"PArt",
+				"PartPtrVec"
+			],
+			[
+				"local",
+				"localAnnealing"
+			],
+			[
+				"Particle",
+				"ParticleSystem"
+			],
+			[
+				"pre",
+				"prevForce"
+			],
+			[
+				"iteration",
+				"iterations"
+			],
+			[
+				"cr",
+				"created"
+			],
+			[
+				"getMa",
+				"getMaskParticles"
+			],
+			[
+				"fixe",
+				"fixed_position"
+			],
+			[
+				"create",
+				"created_particles"
+			],
+			[
+				"push",
+				"push_back"
+			],
+			[
+				"created",
+				"created_particles"
+			],
+			[
+				"crea",
+				"created_particles"
+			],
+			[
+				"mask",
+				"maskParticles"
+			],
+			[
+				"p",
+				"partilces"
+			],
+			[
+				"getT",
+				"getTotalCost"
+			],
+			[
+				"cost",
+				"costVector"
+			],
+			[
+				"conci",
+				"conciderForMask"
+			],
+			[
+				"gne",
+				"generateMask"
+			],
+			[
+				"gener",
+				"generateMask"
+			],
+			[
+				"hex",
+				"hexagon"
+			],
+			[
+				"gath",
+				"gathered_particles"
+			],
+			[
+				"tota",
+				"total_forces"
+			],
+			[
+				"gathere",
+				"gathered_particles"
+			],
+			[
+				"GATHER",
+				"GATHER_DISTANCE"
+			],
+			[
+				"GATH",
+				"GATHER_ANGLE"
+			],
+			[
+				"GAT",
+				"GATHER_DISTANCE"
+			],
+			[
+				"RAD",
+				"RADIUS_PARTICLE_WAVE"
+			],
+			[
+				"radi",
+				"radius"
+			],
+			[
+				"dir",
+				"direction"
+			],
+			[
+				"force",
+				"force_mag"
+			],
+			[
+				"newf",
+				"new_force_mag"
+			],
+			[
+				"simul",
+				"simulatedannealingAux"
+			],
+			[
+				"RE",
+				"REST_LENGTH"
+			],
+			[
+				"getpos",
+				"getOldPos"
+			],
+			[
+				"sim",
+				"simulatedannealing"
+			],
+			[
+				"part",
+				"partv"
+			],
+			[
+				"for",
+				"for	For Loop"
+			],
+			[
+				"PartV",
+				"PartPtrVec"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"settings":
+			{
+				"buffer_size": 0,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "audiolis.sublime-project",
+			"settings":
+			{
+				"buffer_size": 0,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/home/espinm2/.config/sublime-text-2/Packages/User/cmake.sublime-build",
+			"settings":
+			{
+				"buffer_size": 356,
+				"line_ending": "Unix",
+				"name": "untitled.sublime-build"
+			}
+		}
+	],
+	"build_system": "Packages/User/cmake.sublime-build",
+	"command_palette":
+	{
+		"height": 222.0,
+		"selected_items":
+		[
+			[
+				":w",
+				":w - Save"
+			],
+			[
+				":close",
+				"Project: Close"
+			],
+			[
+				":W",
+				":w - Save"
+			],
+			[
+				":e",
+				":$ - EOF"
+			],
+			[
+				":pac",
+				"Package Control: Install Package"
+			],
+			[
+				":package",
+				"Package Control: Install Package"
+			],
+			[
+				":s",
+				":w - Save"
+			],
+			[
+				":",
+				":w - Save"
+			],
+			[
+				":r",
+				":e - Revert"
+			],
+			[
+				"Snippet: CD",
+				"Snippet: CDATA"
+			],
+			[
+				":install ",
+				"Package Control: Install Package"
+			],
+			[
+				"Snippet: ",
+				"Snippet: Functor"
+			],
+			[
+				":install",
+				"Package Control: Install Package"
+			],
+			[
+				":instal",
+				"Package Control: Install Package"
+			],
+			[
+				":package ",
+				"Preferences: Browse Packages"
+			]
+		],
+		"width": 449.0
+	},
+	"console":
+	{
+		"height": 139.0
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/home/espinm2/Code/car_detection/prototype_detector.py",
+		"/home/espinm2/Dropbox/computer_vision/homework_04/problem3.py",
+		"/home/espinm2/Code/audiolis/src/ParticleSystem.cpp",
+		"/home/espinm2/Code/audiolis/build/output.txt",
+		"/home/espinm2/Code/audiolis/src/ParticleSystem_render.cpp",
+		"/home/espinm2/Code/audiolis/src/ParticleSystem.h",
+		"/home/espinm2/Code/audiolis/src/mask.h",
+		"/home/espinm2/Code/audiolis/src/mask.cpp",
+		"/home/espinm2/Code/audiolis/src/geometry_utils.cpp",
+		"/home/espinm2/Code/audiolis/src/geometry_utils.h",
+		"/home/espinm2/Code/audiolis/src/particle.h",
+		"/home/espinm2/Code/audiolis/src/render_utils.h",
+		"/home/espinm2/Code/audiolis/src/render_utils.cpp",
+		"/home/espinm2/Code/audiolis/src/mask_hex.h",
+		"/home/espinm2/Code/audiolis/src/argparser.h",
+		"/home/espinm2/.config/sublime-text-2/Packages/C++/docs.sublime-snippet",
+		"/home/espinm2/Code/audiolis/src/BVHNode.h",
+		"/home/espinm2/.config/sublime-text-2/Packages/User/Preferences.sublime-settings",
+		"/home/espinm2/.config/sublime-text-2/Packages/Default/Preferences.sublime-settings",
+		"/usr/share/applications/defaults.list",
+		"/usr/share/applications/sublime.desktop"
+	],
+	"find":
+	{
+		"height": 40.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+			""
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"crop_image",
+			"for i in range(10):",
+			"createTrainSaveClassifers",
+			"extract_feature2",
+			"RELAXATION_MERGE_TRIGGER",
+			"mergeSimilarParticles",
+			"annealing",
+			"I hope you`re having a good day too!\nJerrica P.: at 14:05:37\nI am having a good day, thanks! What was your question?\nYou: at 14:06:46\nI had a question about my next phone upgrade-- I noticed that all of the phones on the account say that they are eligible for upgrades in 2016... however, one of the one lines hasn`t upgraded since 2013 I believe.\nYou: at 14:07:02\nI thought that they would be eligible for an upgrade this year.\nJerrica P.: at 14:08:23\nDo you know if that line upgrade had been used by another line?]\nYou: at 14:08:36\nI don`t believe so.\nJerrica P.: at 14:09:04\nMay i have yourn mobile number?\nJerrica P.: at 14:09:06\n*your\nYou: at 14:09:21\ndistancences",
+			"generateResSplits",
+			"munkresMatching",
+			"print",
+			"path_read",
+			"  createTrainSaveClassifers(2)\n  createTrainSaveClassifers(3)\n  createTrainSaveClassifers(4)\n",
+			"main",
+			"tile_histagram",
+			"simulatedannealing",
+			"localAnnealing",
+			"generateResSplits",
+			"angleBetweenVectors",
+			"angle",
+			"update()",
+			"// DEBUG",
+			"MERGE_DISTANCE",
+			"addNewParticles",
+			"mergeSimilarParticles",
+			"ressPlit",
+			"mergeSimilarParticles",
+			"merge",
+			"maskfitting",
+			"removeDeadParticles",
+			"mergeSimilarParticles",
+			"interParticleForce",
+			"moveParticle",
+			"SPLIT_AMOUNT",
+			"mergeSimilarParticles",
+			"generateResSplits",
+			"mergeSimilarParticles",
+			"addNewParticles",
+			"removeDeadParticles",
+			"mergeSimilarParticles",
+			"local annealing",
+			"glpoint",
+			"update",
+			"local",
+			"update",
+			"prepareMask",
+			"simulated",
+			"prepareMask",
+			"localAnnealing",
+			"annealing",
+			"prepareMask",
+			"interparticle",
+			"ressplits",
+			"interParticleForce",
+			"localAnnealing",
+			"addEdgeGeometry",
+			"generateResSplits",
+			"mergeSimilarParticles",
+			"maskfitting",
+			"merge_trigger",
+			"merge_tr",
+			"mergesimilar",
+			"gutted_mask_created",
+			"mergeSimilarParticles",
+			"merge",
+			"localAnnealing",
+			"prepareMask",
+			"getMaskParticle",
+			"generateResSplits",
+			"resplit",
+			"localAnnealing",
+			"generateResSplits",
+			"update",
+			"generateResSplits",
+			"update",
+			"mergeSimilarParticles",
+			"generateResSplits",
+			"spike",
+			"resSpit",
+			"generateResSplits",
+			"generate",
+			"generateResSplits",
+			"maskFitting",
+			"Mask(",
+			"maskfitting",
+			"generateMask",
+			"munkresMatching",
+			"createParticle",
+			"generateMask",
+			"delusionalParticleLocations",
+			"munkresMatching",
+			"generateMask",
+			"RADIUS_PARTICLE_WAVE",
+			"annealing",
+			"interParticleForce",
+			"simulatedannealing",
+			"RADIUS_PARTICLE_WAVE",
+			"REST_LE",
+			"interparticleforce",
+			"particleSplit",
+			"annealing",
+			"update",
+			"interparticleforce",
+			"interparticle",
+			"particles",
+			"delusionalParticleLocations",
+			"maskPositions",
+			"delusional particles",
+			"direction_dist",
+			"munkresMatching",
+			"gather",
+			"simulatedannealing",
+			"cost",
+			"mask",
+			"collisionDetection",
+			"annealing",
+			"MERGE_DISTANCE",
+			"interParticleForce",
+			"cout <<",
+			"removeDeadParticles",
+			"printf",
+			"cout",
+			"printf",
+			"RADIUS_PARTICLE_WAVE",
+			"interParticleForce",
+			"update",
+			"merge",
+			"interParticleForce"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"for i in range(1000):",
+			"# print",
+			"path",
+			"maskFitting",
+			"sublime.desktop"
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 2,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"settings":
+					{
+						"buffer_size": 0,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "audiolis.sublime-project",
+					"settings":
+					{
+						"buffer_size": 0,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JSON.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "/home/espinm2/.config/sublime-text-2/Packages/User/cmake.sublime-build",
+					"settings":
+					{
+						"buffer_size": 356,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								20,
+								20
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JSON.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 34.0
+	},
+	"input":
+	{
+		"height": 34.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 533.0
+	},
+	"replace":
+	{
+		"height": 64.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+			[
+				"arg",
+				"argparser.h"
+			],
+			[
+				"parti",
+				"ParticleSystem.cpp"
+			],
+			[
+				"par",
+				"particle.h"
+			],
+			[
+				"glca",
+				"glCanvas.cpp"
+			],
+			[
+				"args",
+				"argparser.h"
+			],
+			[
+				"",
+				"ParticleSystem.cpp"
+			],
+			[
+				"kd",
+				"KDTree.cpp"
+			],
+			[
+				"kdt",
+				"KDTree.cpp"
+			],
+			[
+				"mtr",
+				"MersenneTwister.h"
+			],
+			[
+				"fea",
+				"/home/espinm2/Dropbox/computer_vision/homework_06/feature_extractor.py"
+			],
+			[
+				"mask",
+				"mask.h"
+			],
+			[
+				"geome",
+				"geometry_utils.cpp"
+			],
+			[
+				"kdtr",
+				"KDTree.cpp"
+			],
+			[
+				"glc",
+				"glCanvas.cpp"
+			],
+			[
+				"particlesystem.cpp",
+				"ParticleSystem.cpp"
+			],
+			[
+				"mask.cpp",
+				"mask.cpp"
+			],
+			[
+				"part",
+				"ParticleSystem.cpp"
+			],
+			[
+				"particle",
+				"ParticleSystem.cpp"
+			],
+			[
+				"render",
+				"render_utils.cpp"
+			],
+			[
+				"render_",
+				"render_utils.h"
+			],
+			[
+				"pa",
+				"ParticleSystem.cpp"
+			],
+			[
+				"particles",
+				"ParticleSystem.h"
+			],
+			[
+				"partic",
+				"ParticleSystem.cpp"
+			],
+			[
+				"particl",
+				"ParticleSystem.h"
+			],
+			[
+				"ge",
+				"geometry_utils.h"
+			],
+			[
+				"geom",
+				"geometry_utils.cpp"
+			],
+			[
+				"pati",
+				"ParticleSystem.cpp"
+			],
+			[
+				"mask.h",
+				"mask.h"
+			],
+			[
+				"parit",
+				"ParticleSystem.h"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 249.0,
+	"status_bar_visible": true
+}

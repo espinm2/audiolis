@@ -19,6 +19,7 @@ add_executable(audiolis
   munkers.cpp
   KDTree.cpp
   UniformGrid.cpp
+  sphere.cpp
   BVHNode.h
 )
 

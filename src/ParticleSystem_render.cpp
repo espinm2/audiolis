@@ -7,6 +7,8 @@
 #include "camera.h"
 #include "argparser.h"
 #include "render_utils.h"
+#include "geometry_utils.h"
+#include "sphere.h"
 
 #define MAX_ITERATIONS 6000
 #define MAX_ITERATIONS 6000
@@ -34,6 +36,9 @@ void ParticleSystem::initializeVBOs(){
   glGenBuffers(1,&happyness_verts_VBO);
   glGenBuffers(1,&delusional_verts_VBO);
   glGenBuffers(1,&connection_verts_VBO);
+  glGenBuffers(1,&sphere_verts_VBO);
+  glGenBuffers(1,&sphere_tri_indices_VBO);
+
   particle_kdtree.initializeVBOs();
   uniform_grid.initializeVBOs(); 
 }
@@ -50,6 +55,8 @@ void ParticleSystem::setupVBOs(){
   happyness_verts.clear();
   delusional_verts.clear();
   connection_verts.clear();
+  sphere_verts.clear();            // verts
+  sphere_tri_indices.clear();
   
   // Setup new Data
   if(args->kdtree_render)
@@ -62,6 +69,9 @@ void ParticleSystem::setupVBOs(){
 
   if(args->direction)
     setupVelocityVisual();
+
+  if(args->viz_type==4)
+    setupSphere();
 
   setupParticles(); 
 
@@ -93,6 +103,9 @@ void ParticleSystem::drawVBOs(){
   if(args->ugrid_render)
     uniform_grid.drawVBOs();
 
+  if(args->viz_type == 4)
+    drawSphere();
+
   drawParticles();
 
   HandleGLError("leaving draw vbos");
@@ -109,8 +122,8 @@ void ParticleSystem::cleanupVBOs(){
   glDeleteBuffers(1,&happyness_verts_VBO);
   glDeleteBuffers(1,&delusional_verts_VBO);
   glDeleteBuffers(1,&connection_verts_VBO);
-
-
+  glDeleteBuffers(1,&sphere_verts_VBO);
+  glDeleteBuffers(1,&sphere_tri_indices_VBO);
 
   HandleGLError("Space clean enter");
   particle_kdtree.cleanupVBOs();
@@ -121,6 +134,105 @@ void ParticleSystem::cleanupVBOs(){
   HandleGLError("leave clean vbos");
 }
 
+
+uint ParticleSystem::getLowestCostShape(Particle * cur){
+  // inputs:
+  //      cur is the particle we are looking to find the best fit around it
+  // output:
+  //      uint a number from 0,[4:7]
+
+  // Gather the particles I will use to make an analysis of points 
+  PartPtrVec gathered_particles;        
+  particle_kdtree.GatherParticles(
+    cur,                              // This particle we collect around
+    RADIUS_PARTICLE_WAVE * 3.0,       // collect a bit beyond mask
+    GATHER_ANGLE,                     // if angle beyond this do not gather
+    gathered_particles);              // where we will place these particles
+
+
+  // Not enough particles to run, just return 0
+  if(gathered_particles.size() < 4 )
+    return 0;
+
+  // Populate scoreVector
+  std::vector <double > scoreVector;
+  for( uint sides_shape = 4; sides_shape < 10; sides_shape++){
+
+    if(gathered_particles.size() < sides_shape ){
+      scoreVector.push_back(std::numeric_limits<double>::max());
+      continue;
+    }
+
+    // Find the nearest 6 (sort by distance to center particle)
+    const glm::vec3 centerPos = cur->getOldPos();
+
+    std::sort(
+      gathered_particles.begin(), 
+      gathered_particles.end(), 
+      particleCMP(centerPos)
+    );
+
+    PartPtrVec nearbyInOrder(
+      gathered_particles.begin(), 
+      gathered_particles.begin() + sides_shape
+    );
+
+    assert(nearbyInOrder.size() == sides_shape );
+
+    // Pick a refrence particle
+    Particle * ref = nearbyInOrder[0];
+
+    std::vector<double> angles;
+    for( uint i = 0; i < nearbyInOrder.size(); i++ ){
+
+      double absAngle =                                   
+      getAbsAngle(
+        ref->getOldPos(),
+        nearbyInOrder[i]->getOldPos(),
+        cur->getOldPos(),
+        glm::normalize(cur->getOldPos() - cur->getCenter())
+      );
+
+      angles.push_back(absAngle);
+
+    }
+
+    // Sort by angle 
+    std::sort(angles.begin(),angles.end());
+
+    // Get the squared error
+    std::vector<double> error; // where i will keep all my error
+    for(uint i = 0; i < angles.size(); i++){
+      double deg = (360 / sides_shape) * i;
+      error.push_back(pow( deg - angles[i]  ,2));
+    }
+
+    double error_total = 0;
+    for(double e: error)
+      error_total += e;
+    error_total /= sides_shape;
+
+    scoreVector.push_back(error_total);
+  }// for shape size n
+
+  unsigned int best_shape_fit = -1;
+  double min_score = std::numeric_limits<double>::max();
+
+  // Finding Max
+  for(int i = 0; i < scoreVector.size(); i++){
+
+    if(min_score > scoreVector[i]){
+      best_shape_fit = i;
+      min_score = scoreVector[i];
+    }
+  }
+
+  assert(best_shape_fit != -1);
+
+  return best_shape_fit + 4;
+
+}
+
 void ParticleSystem::setupParticles(){
 
   // Push everything into particle_verts
@@ -129,10 +241,10 @@ void ParticleSystem::setupParticles(){
     // Cur Particle
     Particle * part = particles[i];
 
-    // Getting pos
+    // Getting pos (current)
     glm::vec3 pos = part->getPos();
 
-    // Picking Normal
+    // Picking Normal (normal direction)
     glm::vec3 normal =part->getDir(); 
 
     
@@ -153,9 +265,7 @@ void ParticleSystem::setupParticles(){
       color.r = colorA.r + val * (colorB.r - colorA.r);
       color.g = colorA.g + val * (colorB.g - colorA.g);
       color.b = colorA.b + val * (colorB.b - colorA.b);
-    
     } 
-    
     
     else if (args->viz_type == 1){
 
@@ -176,11 +286,10 @@ void ParticleSystem::setupParticles(){
       color.r = colorA.r + val * (colorB.r - colorA.r);
       color.g = colorA.g + val * (colorB.g - colorA.g);
       color.b = colorA.b + val * (colorB.b - colorA.b);
-
     }
 
     else if (args->viz_type == 2){
-      // Visaulizaing both ////////////////////////////////////////////////////
+      // Visaulizaing both //
 
       glm::vec4 colorA;
       glm::vec4 colorB;
@@ -235,8 +344,9 @@ void ParticleSystem::setupParticles(){
       }
       
       color.a = dbs_val; // opacit
+    }
 
-    }else if (args->viz_type == 3){
+    else if (args->viz_type == 3){
 
      // Visualizing wave fronts
      glm::vec3 dir = part->getDir();
@@ -246,57 +356,38 @@ void ParticleSystem::setupParticles(){
      double rel_z =  (dir.z + 1) / 2.0;
 
      color = glm::vec4(rel_x, rel_y, rel_z,1);
+    }
 
-    }else{
+    else{
 
-      // DEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUG 
+      // We will color by how best we fit to a shape
+      // Colors we will use are
+      // Not enough -- White
+      // 4sides  = Red
+      // 5sides  = Green
+      // 6sides  = Blue
+      // 7sides  = Magenta
+      // 8+sides = Black
 
-      // We want to to color based on how happy a particle is
-      // We can do this by finding the munkres and using cost
-      // Higher the cost, the sadder the particle is
-      
-      std::vector<Particle *> conciderForMask;
-      conciderForMask.push_back(part);
-      for(Particle* other: particles){
-      
-        if(part == other)
-          continue;
-
-        if( glm::distance(part->getPos(),other->getPos()) <= 1.5*RADIUS_PARTICLE_WAVE)
-          conciderForMask.push_back(other);
-      
-      }
-    
-      vMat cost;
-      vMat matching;
-
-      // Calculate munkres
-      munkresMatching(conciderForMask,matching,cost);
-
-      // Faster way to do this is matrix multiplication maybe?
-      int sum = 0;
-      if(matching.size() < 7) sum+= (10000*(7-matching.size()));
-      for(int i = 0; i < matching.size(); i++){
-      
-      
-        for(int j = 0; j < matching[i].size(); j++){
-        
-          if(matching[i][j] == 1){
-            sum += cost[i][j];
-          }
-      
-        
-        }
-      
+      // What I require to get value
+      uint shape = getLowestCostShape(part);
+      printf("Particle %p, Shape: %d\n",part,shape);
+      switch(shape){
+        case 0:
+          color = glm::vec4(1,1,1,1); break; // white
+        case 4:
+          color = glm::vec4(1,0,0,1); break; // red
+        case 5:
+          color = glm::vec4(0,1,0,1); break; // green
+        case 6:
+          color = glm::vec4(0,0,1,1); break; // blue
+        case 7:
+          color = glm::vec4(0,0,0,1); break; // black
+        default:
+          color = glm::vec4(0,0,0,1); break; // black
       }
 
-      // std::cout <<"Overall Sum" << sum << std::endl;
-
-     int percentHappy = sum / 6 * 10000;
-     color = glm::vec4(sum, sum, sum, 1);
-      
-    
-    }//typesend
+    }//vizType
 
 
     // DEBUG///////////////////////////////////////////////////////////////////
@@ -785,7 +876,67 @@ void ParticleSystem::drawDelusionalConnections(){
   HandleGLError("leaving drawDelusionalConnections");
 }
 
+void ParticleSystem::setupSphere(){
 
+
+  sphere.setup(10,10, sphere_verts,sphere_tri_indices );
+
+  // Create and setup velocity_tri_indices, velocity_verts
+  // Setup the VBOS here
+  glBindBuffer(GL_ARRAY_BUFFER,sphere_verts_VBO);
+  glBufferData( 
+      GL_ARRAY_BUFFER,
+      sizeof(VBOPosNormalColor)*sphere_verts.size(),
+      &sphere_verts[0],
+      GL_STATIC_DRAW );
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,sphere_tri_indices_VBO);
+
+  glBufferData(
+      GL_ELEMENT_ARRAY_BUFFER,
+      sizeof(VBOIndexedTri)*sphere_tri_indices.size(),
+      &sphere_tri_indices[0],
+      GL_STATIC_DRAW );
+
+  HandleGLError("leave setupVelocityVisual");
+
+}
+
+void ParticleSystem::drawSphere(){
+  
+  // This will setup the memeber functions so that you can render them
+  // std::vector<VBOPosNormalColor> sphere_verts;
+  // std::vector<VBOIndexedTri>     sphere_tri_indices;
+
+  HandleGLError("enter drawSphereVisual");
+
+  // if we are viewing our fitting types
+  if(args->viz_type == 4){
+  
+    glBindBuffer(GL_ARRAY_BUFFER, sphere_verts_VBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphere_tri_indices_VBO);
+  
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE, 2*sizeof(glm::vec3) + sizeof(glm::vec4), (void*)0);
+
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE, 2*sizeof(glm::vec3) + sizeof(glm::vec4), (void*)sizeof(glm::vec3));
+
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2,3,GL_FLOAT,GL_FALSE, 2*sizeof(glm::vec3) + sizeof(glm::vec4), (void*)(sizeof(glm::vec3)*2));
+
+    glDrawElements(GL_TRIANGLES, sphere_tri_indices.size()*3,
+        GL_UNSIGNED_INT, BUFFER_OFFSET(0));
+
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(2);
+
+  }
+
+  HandleGLError("leave drawSphereVisual");
+
+}
 
 
 

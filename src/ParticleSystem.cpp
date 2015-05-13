@@ -26,6 +26,7 @@
 #include <algorithm>
 #include "BVHNode.h"
 #include "Stats.h"
+#include "sphere.h"
 
 #include "ParticleSystem.h"
 
@@ -183,6 +184,10 @@ void ParticleSystem::createInitWave(){
   // Testing function to create circle in 3d space
   printf("createInitWave()\n");
 
+  // Creating Sphere
+  Sphere tmp(cursor,RADIUS_INIT_SPHERE * 0.9);
+  sphere = tmp;
+
   // Using cursor
   double s = RADIUS_INIT_SPHERE;
   
@@ -191,9 +196,9 @@ void ParticleSystem::createInitWave(){
 
     // printf("Creating Particle %i\n", i);
     // Find x,y,z
-    float x = cursor.x - s/2.0 + (float) args->randomGen.rand(s);
-    float y = cursor.y - s/2.0 + (float) args->randomGen.rand(s);
-    float z = cursor.z - s/2.0 + (float) args->randomGen.rand(s);
+    float x = cursor.x - s / 2.0 + (float) args->randomGen.rand(s);
+    float y = cursor.y - s / 2.0 + (float) args->randomGen.rand(s);
+    float z = cursor.z - s / 2.0 + (float) args->randomGen.rand(s);
   
     glm::vec3 pos(x,y,z);
   
@@ -1963,25 +1968,6 @@ double ParticleSystem::constrainedNudge(Particle * p,
   // simulatedannealingAux(p,gathered,change);
 }
 
-
-class particleCMP{
-
-  glm::vec3 c; // center particle we will use to compare
-
-public:
-
-  particleCMP(const glm::vec3 & center){
-    c = center;
-  }
-
-  bool operator() (Particle * lhs ,Particle * rhs) const{
-    glm::vec3 l = lhs->getOldPos(); glm::vec3 r = rhs->getOldPos();
-    double dist_l_squared = pow(c.x - l.x ,2) + pow(c.y - l.y ,2) + pow(c.z - l.z ,2);
-    double dist_r_squared = pow(c.x - r.x ,2) + pow(c.y - r.y ,2) + pow(c.z - r.z ,2);
-
-    return dist_l_squared < dist_r_squared;
-  }
-};
 
 
 void ParticleSystem::analyze(){

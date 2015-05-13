@@ -21,6 +21,7 @@
 #include "KDTree.h"
 #include "UniformGrid.h"
 #include "Stats.h"
+#include "sphere.h"
 
 typedef std::vector<std::vector<int>> vMat;
 typedef std::vector<Particle *> PartPtrVec;
@@ -34,6 +35,7 @@ class Particle;
 class BoundingBox;
 class Mesh;
 class BVHNode;
+class Sphere;
 
 class ParticleSystem {
 
@@ -125,6 +127,7 @@ class ParticleSystem {
 
     // Analysis code
     void analyze();
+    uint getLowestCostShape(Particle * cur);
 
     // Failed attempt at annealing localized (REMOVE)
     bool maintainDensity(Particle * cur,PartPtrVec & gathered_particles, Attractor * ap);
@@ -161,6 +164,9 @@ class ParticleSystem {
     void drawDelusionalParticles();
     void drawDelusionalConnections();
 
+    void setupSphere();
+    void drawSphere();
+
     // Memebers Borrowed from GLCanvas
     ArgParser * args;
     BoundingBox * bbox;
@@ -174,6 +180,7 @@ class ParticleSystem {
     BVHNode * root; // We we will store our mesh for fast accesses
     UniformGrid uniform_grid; // Where we store our mesh object fo easy access
     Stats stats; // Where we will keep stats for analysis 
+    Sphere sphere; // sphere we used to help us visualize mask
 
     // Simuation Important Varibles
     double            TIME_STEP;  // how much time is passed in seconds
@@ -215,6 +222,11 @@ class ParticleSystem {
     GLuint delusional_verts_VBO; 
     GLuint connection_verts_VBO; 
 
+    // Sphere  ids
+    GLuint sphere_verts_VBO;
+    GLuint sphere_tri_indices_VBO;
+
+
     // Vertices for VBOs
     std::vector<VBOPosNormalColor> particle_verts;
     std::vector<VBOPosNormalColor> cursor_verts;
@@ -227,8 +239,32 @@ class ParticleSystem {
     std::vector<VBOPosNormalColor> delusional_verts; // TODO
     std::vector<VBOPosNormalColor> connection_verts; // TODO
 
+    // Sphere
+    std::vector<VBOPosNormalColor> sphere_verts;
+    std::vector<VBOIndexedTri>     sphere_tri_indices;
 
 };
 
-// ===================================================
+
+
+// Utility class to sort particles by their distance relative to another
+class particleCMP{
+
+  glm::vec3 c; // center particle we will use to compare
+
+public:
+
+  particleCMP(const glm::vec3 & center){
+    c = center;
+  }
+
+  bool operator() (Particle * lhs ,Particle * rhs) const{
+    glm::vec3 l = lhs->getOldPos(); glm::vec3 r = rhs->getOldPos();
+    double dist_l_squared = pow(c.x - l.x ,2) + pow(c.y - l.y ,2) + pow(c.z - l.z ,2);
+    double dist_r_squared = pow(c.x - r.x ,2) + pow(c.y - r.y ,2) + pow(c.z - r.z ,2);
+
+    return dist_l_squared < dist_r_squared;
+  }
+};
+
 #endif
