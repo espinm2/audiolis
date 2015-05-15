@@ -38,9 +38,11 @@ void ParticleSystem::initializeVBOs(){
   glGenBuffers(1,&connection_verts_VBO);
   glGenBuffers(1,&sphere_verts_VBO);
   glGenBuffers(1,&sphere_tri_indices_VBO);
+  glGenBuffers(1,&half_edges_verts_VBO);
 
   particle_kdtree.initializeVBOs();
   uniform_grid.initializeVBOs(); 
+  
 }
 
 void ParticleSystem::setupVBOs(){
@@ -57,6 +59,7 @@ void ParticleSystem::setupVBOs(){
   connection_verts.clear();
   sphere_verts.clear();            // verts
   sphere_tri_indices.clear();
+  half_edges_verts.clear();
   
   // Setup new Data
   if(args->kdtree_render)
@@ -70,8 +73,10 @@ void ParticleSystem::setupVBOs(){
   if(args->direction)
     setupVelocityVisual();
 
-  if(args->viz_type==4)
+  if(args->viz_type == 4){
     setupSphere();
+    setupHalfEdges();
+  }
 
   setupParticles(); 
 
@@ -103,8 +108,10 @@ void ParticleSystem::drawVBOs(){
   if(args->ugrid_render)
     uniform_grid.drawVBOs();
 
-  if(args->viz_type == 4)
+  if(args->viz_type == 4){
     drawSphere();
+    drawHalfEdges();
+  }
 
   drawParticles();
 
@@ -124,6 +131,7 @@ void ParticleSystem::cleanupVBOs(){
   glDeleteBuffers(1,&connection_verts_VBO);
   glDeleteBuffers(1,&sphere_verts_VBO);
   glDeleteBuffers(1,&sphere_tri_indices_VBO);
+  glDeleteBuffers(1,&half_edges_verts_VBO);
 
   HandleGLError("Space clean enter");
   particle_kdtree.cleanupVBOs();
@@ -937,11 +945,87 @@ void ParticleSystem::drawSphere(){
 
 }
 
+void ParticleSystem::setupHalfEdges(){
+  // This function setups out vertex buffer to run
+
+  // for each particle in the system
+  for( Particle  *  cur : particles ){
+
+    // Get all the points that fit around us the best
+    std::vector <glm::vec3> best_fit_points;
+    getBestFit(cur, best_fit_points);
+
+    // Create the edges we require
+    for(glm::vec3 pos : best_fit_points){
+
+      // start position
+      half_edges_verts.push_back(
+        VBOPosNormalColor(
+        cur->getPos(),        // Pos
+        cur->getDir(),        // Normal
+        glm::vec4(1,1,1,1))   // Color
+      );
+      // end position
+      half_edges_verts.push_back(
+        VBOPosNormalColor(
+        pos,        // Pos
+        cur->getDir(),        // Normal
+        glm::vec4(1,1,1,0))   // Color
+      );
+
+    }//each mask
+    
+  }//forallparticles
 
 
+  // Assume that everything we need is inside of the half_edges_verts
+  HandleGLError("entering setupHalfEdges");
 
+  // Bind the happyness
+  glBindBuffer(GL_ARRAY_BUFFER,half_edges_verts_VBO); 
 
+  glBufferData(
+      GL_ARRAY_BUFFER,
+      sizeof(VBOPosNormalColor)*half_edges_verts.size(),
+      &half_edges_verts[0],
+      GL_STATIC_DRAW); 
 
+  HandleGLError("leaving setupHalfEdges");
+
+}
+
+void ParticleSystem::drawHalfEdges(){
+  // This function draws our vertex buffer after we are done
+
+  HandleGLError("entering drawHalfEdges");
+
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  glBindBuffer(GL_ARRAY_BUFFER, half_edges_verts_VBO);
+
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,
+      sizeof(VBOPosNormalColor),(void*)0);
+
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,
+      sizeof(VBOPosNormalColor),(void*)sizeof(glm::vec3) );
+
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(2, 4, GL_FLOAT,GL_FALSE,
+      sizeof(VBOPosNormalColor), (void*)(sizeof(glm::vec3)*2));
+
+  glDrawArrays(GL_LINES, 0, half_edges_verts.size());
+
+  glDisableVertexAttribArray(0);
+  glDisableVertexAttribArray(1);
+  glDisableVertexAttribArray(2);
+
+  glDisable(GL_BLEND);
+
+  HandleGLError("leaving drawHalfEdges");
+}
 
 
 

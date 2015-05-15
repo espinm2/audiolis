@@ -1969,7 +1969,6 @@ double ParticleSystem::constrainedNudge(Particle * p,
 }
 
 
-
 void ParticleSystem::analyze(){
 
   stats.clearStats();
@@ -2121,4 +2120,168 @@ void ParticleSystem::analyze(){
   stats.printout();
 
 }//funct
+
+bool ParticleSystem::getBestFit(Particle * cur, std::vector<glm::vec3> & points){
+  // inputs
+  //    cur -> is our refrence particle we are using to find a best shape for
+  //    points -> is where we will output by refrence all the points that make
+  //              up the shape of best fit. to be used in the rendering code
+  // assumptions
+  assert( cur != NULL );
+  assert( points.empty() );
+
+  // Run an analysis on this point
+
+  // Gather the particles I will use to make an analysis of points 
+  PartPtrVec gathered_particles;        
+  particle_kdtree.GatherParticles(
+    cur,                              // This particle we collect around
+    RADIUS_PARTICLE_WAVE * 3.0,       // collect a bit beyond mask
+    GATHER_ANGLE,                     // if angle beyond this do not gather
+    gathered_particles);              // where we will place these particles
+
+  // Not enough particles to run
+  if(gathered_particles.size() < 4 ){return false; }
+
+  // Sort these by their position from my center
+  const glm::vec3 centerPos = cur->getOldPos();
+  std::sort(
+    gathered_particles.begin(), 
+    gathered_particles.end(), 
+    particleCMP(centerPos)
+  );
+
+  // For all shapes of side squares to 7
+  std::vector <double > scoreVector;
+  for( uint sides_shape = 4; sides_shape < 8; sides_shape++){
+
+    // If we do not have enough particles to make this shape
+    // set it to the numberical max
+    if( gathered_particles.size() < sides_shape ){
+      scoreVector.push_back(std::numeric_limits<double>::max());
+      continue;
+    }
+
+    /* Debug Print Statements
+      // DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG DEBUG
+      PartPtrVec copy(gathered_particles); // std::sort(//   copy.begin(),
+        copy.end(), 
+        particleCMP(centerPos)
+      );
+
+      int less_180 = 0; int more_180 = 0;
+      for(int i = 0; i < 100; i++)
+        printf("_");
+      printf("\n");
+      printf("%10s","distance" );
+      for(Particle * p : copy)
+        printf("%8.2f ",glm::distance(p->getOldPos(),centerPos));
+      printf("\n");
+
+      printf("%10s","angle" );
+      for(Particle * p : copy){
+        double ang = getAbsAngle(copy[0]->getOldPos(),p->getOldPos(),centerPos, glm::normalize(centerPos-cur->getCenter()));
+        ( ang > 180 )?more_180++ : less_180++;
+        printf("%8.2f ",ang);
+      }
+      printf("\n");
+      printf("%s", (more_180 > less_180) ? "more_180":"less_180");
+      // END DEBUG END DEBUG END DEBUG END DEBUG END DEBUG END DEBUG END DEBUG 
+    */
+
+    // Create a copy of the vector with only the particles 
+    // we need to make that shape
+    PartPtrVec nearbyInOrder(
+      gathered_particles.begin(), 
+      gathered_particles.begin() + sides_shape
+    );
+
+    // Make sure we have just enough for the shape
+    assert(nearbyInOrder.size() == sides_shape );
+
+    // Pick a static refrence to find the angle to
+    Particle * ref = nearbyInOrder[0];
+
+    // Get the angle relative to refence of those particles near me
+    std::vector<double> angles;
+    for( uint i = 0; i < nearbyInOrder.size(); i++ ){
+
+      double absAngle =                                   
+      getAbsAngle(
+        ref->getOldPos(),
+        nearbyInOrder[i]->getOldPos(),
+        cur->getOldPos(),
+        glm::normalize(cur->getOldPos() - cur->getCenter())
+      );
+
+      angles.push_back(absAngle);
+    }
+
+    // Sort by angle so we can compare
+    std::sort(angles.begin(),angles.end());
+
+    // Get the squared error
+    std::vector<double> error; // where i will keep all my error
+    for(uint i = 0; i < angles.size(); i++){
+      double deg = (360 / sides_shape) * i;
+      error.push_back(pow( deg - angles[i]  ,2));
+    }
+
+    // Get the total error
+    double error_total = 0;
+    for(double e: error)
+      error_total += e;
+    error_total /= sides_shape;
+
+    /* Debug print statements
+      // Detailed print out of the scores
+      printf("=========================================\n");
+      printf("%10s ","expected");
+      for(uint deg = 0; deg < 360; deg+=(360/sides_shape))
+        printf("%8d ",deg );
+
+      printf("\n%10s ", "gotten");
+      for(double a: angles)
+        printf("%8.2f ",a );
+
+      printf("\n%10s ","error" );
+      for(double e: error)
+        printf("%8.2f ",e);
+      printf("\n");
+
+      printf("total error: %f\n", error_total);
+    */
+
+    // Save the grand total error of each possible mask
+    scoreVector.push_back(error_total);
+  }//for,squares,pent,hex,sep
+
+  unsigned int best_shape_fit = -1;
+  double min_score = std::numeric_limits<double>::max();
+
+  // Finding the score with least amount error
+  for(int i = 0; i < scoreVector.size(); i++){
+
+    if(min_score > scoreVector[i]){
+      best_shape_fit = i;
+      min_score = scoreVector[i];
+    }
+  }
+
+  // I know which points contirubed
+  assert(best_shape_fit != -1);
+  best_shape_fit = best_shape_fit + 4;
+
+  // generate output
+  PartPtrVec result(gathered_particles.begin(),
+    gathered_particles.begin() + best_shape_fit );
+
+  // build our output
+  for(Particle * p : result )
+    points.push_back(p->getPos());
+
+
+  return true;
+
+}
 

@@ -128,6 +128,8 @@ class ParticleSystem {
     // Analysis code
     void analyze();
     uint getLowestCostShape(Particle * cur);
+    void getBestFit(Particle * cur, std::vector<glm::vec3> & points);
+
 
     // Failed attempt at annealing localized (REMOVE)
     bool maintainDensity(Particle * cur,PartPtrVec & gathered_particles, Attractor * ap);
@@ -166,6 +168,9 @@ class ParticleSystem {
 
     void setupSphere();
     void drawSphere();
+
+    void setupHalfEdges();
+    void drawHalfEdges();
 
     // Memebers Borrowed from GLCanvas
     ArgParser * args;
@@ -226,6 +231,8 @@ class ParticleSystem {
     GLuint sphere_verts_VBO;
     GLuint sphere_tri_indices_VBO;
 
+    // Half edges
+    GLuint half_edges_verts_VBO;
 
     // Vertices for VBOs
     std::vector<VBOPosNormalColor> particle_verts;
@@ -242,6 +249,9 @@ class ParticleSystem {
     // Sphere
     std::vector<VBOPosNormalColor> sphere_verts;
     std::vector<VBOIndexedTri>     sphere_tri_indices;
+
+    // Half edges
+    std::vector<VBOPosNormalColor> half_edges_verts;
 
 };
 
