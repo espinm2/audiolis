@@ -128,7 +128,7 @@ class ParticleSystem {
     // Analysis code
     void analyze();
     uint getLowestCostShape(Particle * cur);
-    void getBestFit(Particle * cur, std::vector<glm::vec3> & points);
+    bool getBestFit(Particle * cur, std::vector<glm::vec3> & points);
 
 
     // Failed attempt at annealing localized (REMOVE)

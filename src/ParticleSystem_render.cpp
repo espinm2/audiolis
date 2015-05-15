@@ -110,6 +110,9 @@ void ParticleSystem::drawVBOs(){
 
   if(args->viz_type == 4){
     drawSphere();
+  }
+
+  if(args->viz_type == 4){
     drawHalfEdges();
   }
 
@@ -429,6 +432,9 @@ void ParticleSystem::drawParticles(){
 
   HandleGLError("enter drawParticles");
   glPointSize(4) ;  // CHANGE ME <------------------------------- back to 2
+
+  if(args->viz_type == 4){glPointSize(6); }
+
   glBindBuffer(GL_ARRAY_BUFFER, particle_verts_VBO);
 
   glEnableVertexAttribArray(0);
@@ -965,16 +971,21 @@ void ParticleSystem::setupHalfEdges(){
         cur->getDir(),        // Normal
         glm::vec4(1,1,1,1))   // Color
       );
+
+
+      // make a half edge
+      float r = glm::distance(pos,cur->getPos());
+      glm::vec3 dirToMidPt = glm::normalize(pos - cur->getPos());
       // end position
       half_edges_verts.push_back(
         VBOPosNormalColor(
-        pos,        // Pos
-        cur->getDir(),        // Normal
-        glm::vec4(1,1,1,0))   // Color
+        cur->getPos() + dirToMidPt * r / 2.0f,        // Pos
+        cur->getDir(),                               // Normal
+        glm::vec4(1,1,1,0))                          // Color
       );
 
     }//each mask
-    
+
   }//forallparticles
 
 
