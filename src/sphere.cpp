@@ -30,7 +30,7 @@ void Sphere::setup(
   assert (h % 2 == 0);
   int i,j,start; int va,vb,vc,vd;
   glm::vec3 a,b,c,d; std::vector<glm::vec3> spherePoints;
-  glm::vec4 color(1,1,1,1);
+  glm::vec4 color(0.3,0.3,0.3,1);
 
   // place vertices into my temp array spherePoints
   spherePoints.push_back(center+radius*glm::vec3(0,-1,0));  // bottom

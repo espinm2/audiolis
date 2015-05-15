@@ -878,8 +878,7 @@ void ParticleSystem::drawDelusionalConnections(){
 
 void ParticleSystem::setupSphere(){
 
-
-  sphere.setup(10,10, sphere_verts,sphere_tri_indices );
+  sphere.setup(30,30, sphere_verts,sphere_tri_indices );
 
   // Create and setup velocity_tri_indices, velocity_verts
   // Setup the VBOS here
