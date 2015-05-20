@@ -140,6 +140,10 @@ class ParticleSystem {
         std::vector<bool> & fixed, PartPtrVec & gutted_mask_created);
     void prepareMask(PartPtrVec & tmpvec, Mask & m, std::vector<bool> & fixed, PartPtrVec & exposed);
 
+    // This function
+    void crunchGaps(const std::vector<double> & sorted_angles, 
+        std::vector<double> & gaps);
+
     // Public render functions used by glCanvas
     void initializeVBOs();
     void setupVBOs();

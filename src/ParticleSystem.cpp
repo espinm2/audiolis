@@ -37,6 +37,7 @@
 
 #define USE_BVH true
 #define FUTURE_VISION 10
+#define GAP_TOLERANCE 10  // Degreess of tolerance in gap finding
 typedef unsigned int uint;
 typedef short unsigned int uint8;
 typedef std::vector<Particle *>  PartPtrVec;
@@ -2140,18 +2141,17 @@ bool ParticleSystem::getBestFit(Particle * cur, std::vector<glm::vec3> & points)
     GATHER_ANGLE,                     // if angle beyond this do not gather
     gathered_particles);              // where we will place these particles
 
-  // Not enough particles to run
+  // Not enough particles
   if(gathered_particles.size() < 4 ){return false; }
 
-  // Sort these by their position from my center
+  // Sort all gathered particles by their position relative to cur
   const glm::vec3 centerPos = cur->getOldPos();
   std::sort(
     gathered_particles.begin(), 
     gathered_particles.end(), 
-    particleCMP(centerPos)
-  );
+    particleCMP(centerPos) );
 
-  // For all shapes of side squares to 7
+  // For each possible shape
   std::vector <double > scoreVector;
   for( uint sides_shape = 4; sides_shape < 8; sides_shape++){
 
@@ -2159,7 +2159,7 @@ bool ParticleSystem::getBestFit(Particle * cur, std::vector<glm::vec3> & points)
     // set it to the numberical max
     if( gathered_particles.size() < sides_shape ){
       scoreVector.push_back(std::numeric_limits<double>::max());
-      continue;
+      continue; 
     }
 
     /* Debug Print Statements
@@ -2213,12 +2213,44 @@ bool ParticleSystem::getBestFit(Particle * cur, std::vector<glm::vec3> & points)
         cur->getOldPos(),
         glm::normalize(cur->getOldPos() - cur->getCenter())
       );
-
       angles.push_back(absAngle);
     }
 
     // Sort by angle so we can compare
     std::sort(angles.begin(),angles.end());
+    // =========================================================
+    // TODO: Insert advance rules filtering
+    //       (+) Removal of points that are too close
+    //       (+) Search for particles when large gap is present
+
+    // Get the gap distances
+    glm::vector<double> gaps; crunchGaps(angles,gaps);
+
+    // search through to remove small gaps
+    double expected_gap = 360.0 / sides_shape;
+    double ub = expected_gap + GAP_TOLERANCE;
+    double lb = expected_gap - GAP_TOLERANCE;
+
+    for(uint i = 0; i < gaps.size(); i++ ){
+
+      in_bounds = lb <= gaps[i] && gaps[i] < ub;
+
+      if(!in_bounds){
+
+        // TODO implement rules for guided searching
+
+      }else if( gaps[i] < expected_gap - GAP_TOLERANCE ) {
+
+        // TODO implement rules for removal and retrying
+
+      }
+
+    }
+
+
+
+
+    // =========================================================
 
     // Get the squared error
     std::vector<double> error; // where i will keep all my error
@@ -2249,27 +2281,19 @@ bool ParticleSystem::getBestFit(Particle * cur, std::vector<glm::vec3> & points)
         printf("%8.2f ",e);
       printf("\n");
 
-      printf("total error: %f\n", error_total);
+      printf("total error: %f\n", error_total); 
     */
 
     // Save the grand total error of each possible mask
     scoreVector.push_back(error_total);
-  }//for,squares,pent,hex,sep
+  }//for each shape
 
-  unsigned int best_shape_fit = -1;
-  double min_score = std::numeric_limits<double>::max();
-
+  uint best_shape_fit = 0;
   // Finding the score with least amount error
-  for(int i = 0; i < scoreVector.size(); i++){
-
-    if(min_score > scoreVector[i]){
+  for(int i = 1; i < scoreVector.size(); i++){
+    if( scoreVector[i] < scoreVector[best_shape_fit] )
       best_shape_fit = i;
-      min_score = scoreVector[i];
-    }
-  }
 
-  // I know which points contirubed
-  assert(best_shape_fit != -1);
   best_shape_fit = best_shape_fit + 4;
 
   // generate output
@@ -2280,8 +2304,30 @@ bool ParticleSystem::getBestFit(Particle * cur, std::vector<glm::vec3> & points)
   for(Particle * p : result )
     points.push_back(p->getPos());
 
-
   return true;
+
+}
+
+
+void ParticleSystem::crunchGaps(const std::vector<double> & sorted_angles, 
+  std::vector<double> & gaps){
+
+  // inputs
+  //    sorted_angles : given angles that already sorted we will crunch gaps
+  //                    assuming this is all in degrees
+  //  
+  // outputs
+  //    gaps : vector of gaps 
+
+  assert(gaps.empty());
+  assert( sorted_angles.size() > 1 );
+
+  for(uint i = 0; i < sorted_angles.size()-1; i++)
+    gaps.push_back(sorted_angles[i+1] - sorted_angles[i]);
+
+  gaps.push_back( sorted_angles[sorted_angles.size()-1] - (sorted_angles[0] + 360) );
+
+  assert( gaps.size() == sorted_angles.size() );
 
 }
 
